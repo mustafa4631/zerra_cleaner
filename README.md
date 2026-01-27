@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="resources/logo.png" width="128" alt="Uygulama Logosu">
+  <img src="zerra-system-cleaner/resources/logo.png" width="128" alt="Uygulama Logosu">
 </p>
 
 <h1 align="center">Pardus System Cleaner</h1>
