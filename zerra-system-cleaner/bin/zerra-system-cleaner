@@ -1,3 +1,13 @@
 #!/bin/sh
-export PYTHONPATH=/usr/share/zerra-system-cleaner
-exec python3 /usr/share/zerra-system-cleaner/src/main.py "$@"
+# Flatpak launcher for Zerra System Cleaner
+# Detects if running in Flatpak or system install
+
+if [ -n "$FLATPAK_ID" ]; then
+    # Running inside Flatpak
+    export PYTHONPATH=/app/share/zerra-system-cleaner
+    exec python3 /app/share/zerra-system-cleaner/src/main.py "$@"
+else
+    # System installation
+    export PYTHONPATH=/usr/share/zerra-system-cleaner
+    exec python3 /usr/share/zerra-system-cleaner/src/main.py "$@"
+fi

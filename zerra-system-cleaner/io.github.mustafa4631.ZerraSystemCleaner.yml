@@ -1,0 +1,58 @@
+app-id: io.github.mustafa4631.ZerraSystemCleaner
+runtime: org.gnome.Platform
+runtime-version: '46'
+sdk: org.gnome.Sdk
+command: zerra-system-cleaner
+
+finish-args:
+  # X11 + Wayland
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  # Filesystem access for cleaning
+  - --filesystem=home
+  - --filesystem=xdg-cache
+  - --filesystem=xdg-cache/thumbnails
+  - --filesystem=/var/cache:ro
+  - --filesystem=/var/log:ro
+  - --filesystem=/tmp
+  # System bus for PolicyKit
+  - --system-talk-name=org.freedesktop.PolicyKit1
+  # Notifications
+  - --talk-name=org.freedesktop.Notifications
+
+modules:
+  - name: zerra-system-cleaner
+    buildsystem: simple
+    build-commands:
+      # Create directories
+      - mkdir -p /app/bin
+      - mkdir -p /app/share/zerra-system-cleaner/src
+      - mkdir -p /app/share/zerra-system-cleaner/resources
+      - mkdir -p /app/share/applications
+      - mkdir -p /app/share/metainfo
+      - mkdir -p /app/share/icons/hicolor/scalable/apps
+      - mkdir -p /app/share/icons/hicolor/64x64/apps
+      - mkdir -p /app/share/icons/hicolor/128x128/apps
+      - mkdir -p /app/share/icons/hicolor/256x256/apps
+      
+      # Copy application files
+      - cp -r src/* /app/share/zerra-system-cleaner/src/
+      - cp -r resources/* /app/share/zerra-system-cleaner/resources/
+      
+      # Create launcher script
+      - install -Dm755 bin/zerra-system-cleaner /app/bin/zerra-system-cleaner
+      
+      # Install desktop file and metainfo
+      - install -Dm644 io.github.mustafa4631.ZerraSystemCleaner.desktop /app/share/applications/io.github.mustafa4631.ZerraSystemCleaner.desktop
+      - install -Dm644 io.github.mustafa4631.ZerraSystemCleaner.metainfo.xml /app/share/metainfo/io.github.mustafa4631.ZerraSystemCleaner.metainfo.xml
+      
+      # Install icons
+      - install -Dm644 icons/hicolor/scalable/apps/io.github.mustafa4631.ZerraSystemCleaner.svg /app/share/icons/hicolor/scalable/apps/io.github.mustafa4631.ZerraSystemCleaner.svg
+      - install -Dm644 icons/hicolor/64x64/apps/io.github.mustafa4631.ZerraSystemCleaner.png /app/share/icons/hicolor/64x64/apps/io.github.mustafa4631.ZerraSystemCleaner.png
+      - install -Dm644 icons/hicolor/128x128/apps/io.github.mustafa4631.ZerraSystemCleaner.png /app/share/icons/hicolor/128x128/apps/io.github.mustafa4631.ZerraSystemCleaner.png
+      - install -Dm644 icons/hicolor/256x256/apps/io.github.mustafa4631.ZerraSystemCleaner.png /app/share/icons/hicolor/256x256/apps/io.github.mustafa4631.ZerraSystemCleaner.png
+    
+    sources:
+      - type: dir
+        path: .

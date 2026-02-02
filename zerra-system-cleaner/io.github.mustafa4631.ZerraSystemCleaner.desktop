@@ -1,0 +1,12 @@
+[Desktop Entry]
+Name=Zerra System Cleaner
+Name[tr]=Zerra Sistem Temizleyici
+Comment=Lightweight system cleaning utility
+Comment[tr]=Sisteminizi gereksiz dosyalardan temizleyin
+Exec=zerra-system-cleaner
+Icon=io.github.mustafa4631.ZerraSystemCleaner
+Terminal=false
+Type=Application
+Categories=System;Utility;
+Keywords=cleaner;system;clean;cache;disk;temizlik;sistem;
+StartupNotify=true

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.mustafa4631.ZerraSystemCleaner</id>
+  
+  <name>Zerra System Cleaner</name>
+  <summary>Lightweight system cleaning utility for Linux</summary>
+  
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  
+  <developer id="io.github.mustafa4631">
+    <name>Mustafa Gökpınar</name>
+  </developer>
+  
+  <description>
+    <p>
+      Zerra System Cleaner is a lightweight and safe system cleaning utility designed for Linux.
+      It helps users recover disk space by cleaning unnecessary files while keeping your system safe.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Clean APT cache and package archives</li>
+      <li>Remove old system logs and journals</li>
+      <li>Clear application caches (browser, thumbnails, etc.)</li>
+      <li>Automatic maintenance scheduling</li>
+      <li>Cleaning history tracking</li>
+      <li>Native GTK interface</li>
+    </ul>
+  </description>
+  
+  <launchable type="desktop-id">io.github.mustafa4631.ZerraSystemCleaner.desktop</launchable>
+  
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main window showing cleanable items</caption>
+      <image>https://raw.githubusercontent.com/mustafa4631/zerra-system-cleaner/main/screenshots/main-window.png</image>
+    </screenshot>
+  </screenshots>
+  
+  <url type="homepage">https://github.com/mustafa4631/zerra-system-cleaner</url>
+  <url type="bugtracker">https://github.com/mustafa4631/zerra-system-cleaner/issues</url>
+  
+  <content_rating type="oars-1.1" />
+  
+  <releases>
+    <release version="0.1.0" date="2026-01-27">
+      <description>
+        <p>Initial release of Zerra System Cleaner</p>
+        <ul>
+          <li>System scanning and cleaning functionality</li>
+          <li>APT cache, logs, and application cache cleaning</li>
+          <li>Automatic maintenance scheduling</li>
+          <li>Cleaning history</li>
+          <li>Turkish and English language support</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+  
+  <categories>
+    <category>System</category>
+    <category>Utility</category>
+  </categories>
+  
+  <keywords>
+    <keyword>cleaner</keyword>
+    <keyword>system</keyword>
+    <keyword>clean</keyword>
+    <keyword>cache</keyword>
+    <keyword>disk</keyword>
+    <keyword>temizlik</keyword>
+    <keyword>sistem</keyword>
+  </keywords>
+  
+  <requires>
+    <display_length compare="ge">600</display_length>
+  </requires>
+  
+  <supports>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+</component>

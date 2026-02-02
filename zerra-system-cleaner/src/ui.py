@@ -42,11 +42,17 @@ class MainWindow(Gtk.Window):
         # Get Main Window
         self.window: Gtk.Window = builder.get_object("main_window")
         
-        # Set Application Icon
+        # Set Application Icon (works for both Flatpak and system install)
         try:
-            icon_path = os.path.join(os.path.dirname(__file__), "../resources/zerra-system-cleaner.png")
-            if os.path.exists(icon_path):
-                self.window.set_icon_from_file(icon_path)
+            # Try themed icon first (Flatpak uses this)
+            icon_theme = Gtk.IconTheme.get_default()
+            if icon_theme.has_icon("io.github.mustafa4631.ZerraSystemCleaner"):
+                self.window.set_icon_name("io.github.mustafa4631.ZerraSystemCleaner")
+            else:
+                # Fallback to local file
+                icon_path = os.path.join(os.path.dirname(__file__), "../resources/zerra-system-cleaner.png")
+                if os.path.exists(icon_path):
+                    self.window.set_icon_from_file(icon_path)
         except Exception as e:
             print(f"Error setting icon: {e}")
 
@@ -236,21 +242,38 @@ class MainWindow(Gtk.Window):
 
     def check_auto_maintenance(self) -> bool:
         """Periodic check for auto-maintenance conditions every 1 minute."""
-        if self.is_cleaning_in_progress:
-            return True # Try again in a minute
+        if self.is_cleaning_in_progress or self.is_auto_maintenance_run:
+            # Re-schedule check if already busy
+            GLib.timeout_add_seconds(60, self.check_auto_maintenance)
+            return False
 
         if self.auto_maintenance_manager.can_run_maintenance(force_disk_check=True):
             print("Starting intelligence auto-maintenance...")
-            res = self.auto_maintenance_manager.run_maintenance()
-            if res and self.settings_manager.get("notify_on_completion"):
+            self.is_auto_maintenance_run = True
+            
+            # Run in thread
+            thread = threading.Thread(target=self.run_auto_maintenance_thread)
+            thread.daemon = True
+            thread.start()
+        
+        # Change to 1 minute interval after first check
+        GLib.timeout_add_seconds(60, self.check_auto_maintenance)
+        return False # Stop current timer
+
+    def run_auto_maintenance_thread(self) -> None:
+        """Executes auto maintenance in a background thread."""
+        res = self.auto_maintenance_manager.run_maintenance()
+        GLib.idle_add(self.on_auto_maintenance_finished, res)
+
+    def on_auto_maintenance_finished(self, res: Optional[dict]) -> None:
+        """Callback when auto maintenance is complete."""
+        self.is_auto_maintenance_run = False
+        if res:
+            if self.settings_manager.get("notify_on_completion"):
                 self.show_notification(_("auto_maintenance_title"), 
                                      _("auto_maintenance_finished_msg").format(res['freed']))
             self.populate_history()
             self._sync_settings_ui()
-        
-        # Change to 1 minute interval after first check
-        GLib.timeout_add_seconds(60, self.check_auto_maintenance)
-        return False # Stop current 1s timer
 
     def on_settings_clicked(self, widget: Gtk.Button) -> None:
         self._sync_settings_ui()

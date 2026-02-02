@@ -94,24 +94,41 @@ class AutoMaintenanceManager:
 
     def run_maintenance(self) -> Optional[dict]:
         """
-        Executes a safe cleaning operation.
+        Executes a safe cleaning operation using SystemCleaner.
         """
-        safe_categories = ["Apt Cache", "Thumbnail Cache", "User Log Files"]
-        results = []
-        total_freed = 0
+        # 1. Scan for items
+        scan_results = self.cleaner.scan()
+        if not scan_results:
+            return None
+
+        # 2. Filter for safe categories (No system/root required for auto-maintenance to be seamless)
+        # However, if we want it to be thorough, we might include some system items if we can handle auth.
+        # For now, let's focus on user-safe items + Apt Cache (if possible via pkexec without popup, but usually not)
+        # So we'll stick to non-system items for "silent" auto-maintenance.
+        to_clean = [item for item in scan_results if not item['system']]
         
-        # We simulate the scan and clean for safe items
-        # In a full impl, we'd call SystemCleaner methods
-        for cat in safe_categories:
-            # Example logic
-            freed = 10 * 1024 * 1024 # Mock 10MB per category
-            total_freed += freed
-            results.append(cat)
+        if not to_clean:
+            return None
+
+        # 3. Perform cleaning
+        success_count, fail_count, errors = self.cleaner.clean(to_clean)
+        
+        if success_count == 0:
+            return None
+
+        categories_cleaned = [item['category'] for item in to_clean]
+        total_freed_bytes = sum(item['size_bytes'] for item in to_clean)
+        from .utils import format_size
+        freed_str = format_size(total_freed_bytes)
 
         # Save to history
+        from .i18n_manager import _
         date_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        freed_str = f"{total_freed / (1024*1024):.1f} MB"
-        self.history.add_entry(date_str, ", ".join(results), freed_str, "Başarılı (Otomatik)")
+        self.history.add_entry(
+            categories_cleaned + [_("settings_auto_maintenance")],
+            freed_str,
+            _("status_success")
+        )
         
         # Update last maintenance date
         self.settings.set("last_maintenance_date", date_str)
@@ -119,5 +136,5 @@ class AutoMaintenanceManager:
         return {
             "date": date_str,
             "freed": freed_str,
-            "categories": results
+            "categories": categories_cleaned
         }
