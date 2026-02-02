@@ -83,3 +83,10 @@ venv.bak/
 ehthumbs.db
 Thumbs.db
 *~
+
+# Flatpak / Meson Build
+.flatpak-builder/
+build-dir/
+_build/
+build/
+bin/zerra-system-cleaner

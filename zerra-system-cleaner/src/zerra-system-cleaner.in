@@ -1,4 +1,4 @@
 #!/bin/sh
 
-export PYTHONPATH="@DATADIR@/zerra-system-cleaner/src:$PYTHONPATH"
+export PYTHONPATH="@DATADIR@/zerra-system-cleaner:$PYTHONPATH"
 exec @PYTHON@ "@DATADIR@/zerra-system-cleaner/src/main.py" "$@"
