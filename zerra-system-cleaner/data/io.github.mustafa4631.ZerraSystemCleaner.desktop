@@ -1,4 +1,6 @@
 [Desktop Entry]
+Version=1.0
+Type=Application
 Name=Zerra System Cleaner
 Name[tr]=Zerra Sistem Temizleyici
 Comment=Lightweight system cleaning utility
@@ -6,8 +8,9 @@ Comment[tr]=Sisteminizi gereksiz dosyalardan temizleyin
 Exec=zerra-system-cleaner
 Icon=io.github.mustafa4631.ZerraSystemCleaner
 Terminal=false
-Type=Application
-Categories=System;Utility;GTK;
-Keywords=cleaner;system;clean;cache;disk;temizlik;sistem;
+Categories=GTK;System;Utility;Settings;
+Keywords=cleaner;system;clean;cache;disk;maintenance;temizlik;sistem;bakim;
 StartupNotify=true
+StartupWMClass=main.py
+X-Flatpak-Renamed-From=zerra-system-cleaner.desktop
 DBusActivatable=false

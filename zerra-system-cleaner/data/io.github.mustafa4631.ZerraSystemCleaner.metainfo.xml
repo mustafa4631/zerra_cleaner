@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>io.github.mustafa4631.ZerraSystemCleaner</id>
-  
   <name>Zerra System Cleaner</name>
-  <summary>Lightweight system cleaning utility for Linux</summary>
+  <summary>Recover disk space by cleaning unnecessary system and application files</summary>
   
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>GPL-3.0-or-later</project_license>
@@ -12,21 +11,21 @@
     <name>Mustafa Gökpınar</name>
   </developer>
 
-  <update_contact>mustafagokpinar@example.com</update_contact>
+  <update_contact>mustafagokpinar@gmail.com</update_contact>
   
   <description>
     <p>
-      Zerra System Cleaner is a lightweight and safe system cleaning utility designed for Linux.
-      It helps users recover disk space by cleaning unnecessary files while keeping your system safe.
+      Zerra System Cleaner is a professional, lightweight system cleaning utility for Linux desktops. 
+      It provides a safe and efficient way to recover disk space by identifying and removing redundant files 
+      without compromising system stability.
     </p>
-    <p>Features:</p>
+    <p>Key Features:</p>
     <ul>
-      <li>Clean APT cache and package archives</li>
-      <li>Remove old system logs and journals</li>
-      <li>Clear application caches (browser, thumbnails, etc.)</li>
-      <li>Automatic maintenance scheduling</li>
-      <li>Cleaning history tracking</li>
-      <li>Native GTK interface</li>
+      <li>APT Environment: Clean package archives and cache</li>
+      <li>System Maintenance: Remove redundant logs and vacuum journald</li>
+      <li>Application Hygiene: Clear browser caches (Firefox, Chrome) and thumbnails</li>
+      <li>Intelligent Automation: Schedule maintenance based on idle time or disk usage</li>
+      <li>Detailed History: Track every cleaning operation and space recovered</li>
     </ul>
   </description>
   
@@ -34,27 +33,28 @@
   
   <screenshots>
     <screenshot type="default">
-      <caption>Main window showing cleanable items</caption>
-      <image>https://raw.githubusercontent.com/mustafa4631/zerra-system-cleaner/main/screenshots/main-window.png</image>
+      <caption>The main window displaying available cleaning categories and estimated space recovery.</caption>
+      <image type="source">https://raw.githubusercontent.com/mustafa4631/zerra-system-cleaner/master/screenshots/main-window.png</image>
     </screenshot>
   </screenshots>
   
   <url type="homepage">https://github.com/mustafa4631/zerra-system-cleaner</url>
   <url type="bugtracker">https://github.com/mustafa4631/zerra-system-cleaner/issues</url>
   <url type="vcs-browser">https://github.com/mustafa4631/zerra-system-cleaner</url>
+  <url type="donation">https://www.paypal.me/mustafagokpinar</url>
   
+  <translation type="gettext">zerra-system-cleaner</translation>
   <content_rating type="oars-1.1" />
   
   <releases>
     <release version="0.1.0" date="2026-01-27">
       <description>
-        <p>Initial release of Zerra System Cleaner</p>
+        <p>Stable initial release for Flathub.</p>
         <ul>
-          <li>System scanning and cleaning functionality</li>
-          <li>APT cache, logs, and application cache cleaning</li>
-          <li>Automatic maintenance scheduling</li>
-          <li>Cleaning history</li>
-          <li>Turkish and English language support</li>
+          <li>Full support for APT and Journald cleaning</li>
+          <li>Automated background maintenance engine</li>
+          <li>Themed GTK 3 interface with dark mode support</li>
+          <li>Localization for English and Turkish</li>
         </ul>
       </description>
     </release>
@@ -63,24 +63,23 @@
   <categories>
     <category>System</category>
     <category>Utility</category>
+    <category>Settings</category>
   </categories>
   
   <keywords>
     <keyword>cleaner</keyword>
     <keyword>system</keyword>
-    <keyword>clean</keyword>
-    <keyword>cache</keyword>
     <keyword>disk</keyword>
-    <keyword>temizlik</keyword>
-    <keyword>sistem</keyword>
+    <keyword>maintenance</keyword>
+    <keyword>cache</keyword>
+    <keyword>optimization</keyword>
   </keywords>
+  
+  <provides>
+    <id>io.github.mustafa4631.ZerraSystemCleaner.desktop</id>
+  </provides>
   
   <requires>
     <display_length compare="ge">600</display_length>
   </requires>
-  
-  <supports>
-    <control>pointing</control>
-    <control>keyboard</control>
-  </supports>
 </component>
