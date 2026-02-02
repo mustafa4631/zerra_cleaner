@@ -11,6 +11,8 @@
   <developer id="io.github.mustafa4631">
     <name>Mustafa Gökpınar</name>
   </developer>
+
+  <update_contact>mustafagokpinar@example.com</update_contact>
   
   <description>
     <p>
@@ -39,6 +41,7 @@
   
   <url type="homepage">https://github.com/mustafa4631/zerra-system-cleaner</url>
   <url type="bugtracker">https://github.com/mustafa4631/zerra-system-cleaner/issues</url>
+  <url type="vcs-browser">https://github.com/mustafa4631/zerra-system-cleaner</url>
   
   <content_rating type="oars-1.1" />
   
