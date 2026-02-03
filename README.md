@@ -17,6 +17,7 @@ Zerra System Cleaner is a professional, lightweight system maintenance utility d
 
 ## Technology Stack
 
+
 - **Language:** [Python 3](https://www.python.org/)
 - **GUI Toolkit:** [GTK 3 (PyGObject)](https://pygobject.readthedocs.io/)
 - **Build System:** [Meson](https://mesonbuild.com/)
@@ -52,17 +53,15 @@ meson setup _build
 sudo meson install -C _build
 ```
 
-## Local Flatpak Build Instructions
+## Packaging
 
-To build and test the Flatpak package locally:
+The official Flatpak package is maintained in a separate repository to follow Flathub standards.
 
-```bash
-# Install flatpak-builder
-sudo apt install flatpak-builder
+- **Source Repository:** `mustafa4631/zerra_cleaner` (This repository)
+- **Packaging Repository:** `mustafa4631/flathub` (Contains the Flatpak manifest)
+- **Manifest File:** `flathub_submission.yml` (Template for the packaging repo)
 
-# Build and install locally
-flatpak-builder --user --install --force-clean build-dir io.github.mustafa4631.ZerraSystemCleaner.yml
-```
+To build locally, you can use the provided `flathub_submission.yml` but ensure you commit your changes to the source repo first, as it pulls from Git.
 
 ## Contributing Guidelines
 
