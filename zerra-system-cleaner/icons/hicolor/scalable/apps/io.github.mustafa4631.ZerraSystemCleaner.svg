@@ -10,17 +10,18 @@
   <!-- Broom Icon -->
   <g transform="translate(64,69) rotate(35)">
      <!-- Handle -->
-     <rect x="-4" y="-55" width="8" height="55" rx="3" fill="#81d4fa" />
+     <rect x="-4" y="-55" width="8" height="52" rx="2" fill="#81d4fa" />
      
-     <!-- Head Base -->
-     <path d="M-10,0 L10,0 L14,12 L-14,12 Z" fill="#81d4fa" />
+     <!-- Cap holding bristles -->
+     <path d="M-7,0 L7,0 L9,6 L-9,6 Z" fill="#81d4fa" />
+     <path d="M-9,6 L9,6" stroke="#606060" stroke-width="1" />
+
+     <!-- Bristles with jagged bottom for texture -->
+     <path d="M-9,6 L9,6 L16,32 L11,30 L6,33 L0,30 L-6,33 L-11,30 L-16,32 Z" fill="#81d4fa" />
      
-     <!-- Bristles -->
-     <path d="M-14,12 L14,12 Q18,35 0,35 Q-18,35 -14,12 Z" fill="#81d4fa" />
-     
-     <!-- Detail gap -->
-     <path d="M0,12 L0,28" stroke="#606060" stroke-width="2" stroke-linecap="round"/>
-     <path d="M-6,12 L-8,24" stroke="#606060" stroke-width="2" stroke-linecap="round"/>
-     <path d="M6,12 L8,24" stroke="#606060" stroke-width="2" stroke-linecap="round"/>
+     <!-- Detail lines to separate bristles -->
+     <path d="M0,8 L0,28" stroke="#606060" stroke-width="2" stroke-linecap="round"/>
+     <path d="M-5,8 L-7,28" stroke="#606060" stroke-width="2" stroke-linecap="round"/>
+     <path d="M5,8 L7,28" stroke="#606060" stroke-width="2" stroke-linecap="round"/>
   </g>
 </svg>
