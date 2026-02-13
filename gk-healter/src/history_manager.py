@@ -6,10 +6,10 @@ from typing import List, Dict, Any
 class HistoryManager:
     """
     Manages the cleaning history by saving and retrieving records from a JSON file.
-    The history is stored in ~/.local/share/zerra-system-cleaner/history.json
+    The history is stored in ~/.local/share/gk-healter/history.json
     """
     def __init__(self):
-        self.history_dir = os.path.expanduser("~/.local/share/zerra-system-cleaner")
+        self.history_dir = os.path.expanduser("~/.local/share/gk-healter")
         self.history_file = os.path.join(self.history_dir, "history.json")
         self._ensure_dir_exists()
 

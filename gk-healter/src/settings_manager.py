@@ -5,10 +5,10 @@ import datetime
 class SettingsManager:
     """
     Manages application settings, including automatic maintenance configuration.
-    Stored in ~/.config/zerra-system-cleaner/settings.json
+    Stored in ~/.config/gk-healter/settings.json
     """
     def __init__(self):
-        self.config_dir = os.path.expanduser("~/.config/zerra-system-cleaner")
+        self.config_dir = os.path.expanduser("~/.config/gk-healter")
         self.config_file = os.path.join(self.config_dir, "settings.json")
         self.defaults = {
             "auto_maintenance_enabled": False,

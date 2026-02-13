@@ -1,16 +1,16 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=Zerra System Cleaner
-Name[tr]=Zerra Sistem Temizleyici
+Name=GK Healter
+Name[tr]=GK Healter
 Comment=Lightweight system cleaning utility
 Comment[tr]=Sisteminizi gereksiz dosyalardan temizleyin
-Exec=zerra-system-cleaner
-Icon=io.github.mustafa4631.ZerraSystemCleaner
+Exec=gk-healter
+Icon=io.github.gkdevelopers.GKHealter
 Terminal=false
 Categories=GTK;System;Utility;Settings;
-Keywords=cleaner;system;clean;cache;disk;maintenance;temizlik;sistem;bakim;
+Keywords=cleaner;system;clean;cache;disk;maintenance;temizlik;sistem;bakim;healter;
 StartupNotify=true
 StartupWMClass=main.py
-X-Flatpak-Renamed-From=zerra-system-cleaner.desktop
+X-Flatpak-Renamed-From=gk-healter.desktop
 DBusActivatable=false

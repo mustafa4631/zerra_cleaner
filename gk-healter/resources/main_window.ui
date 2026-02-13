@@ -809,10 +809,10 @@
   </object>
 
   <object class="GtkAboutDialog" id="about_dialog">
-    <property name="program_name">Sistem Temizlik Aracı</property>
+    <property name="program_name">GK Healter</property>
     <property name="version">0.1.0</property>
-    <property name="copyright">© 2026 Topluluğu</property>
-    <property name="authors">Mustafa GÖKPINAR</property>
+    <property name="copyright">© 2026 GK Developers</property>
+    <property name="authors">Egehan KAHRAMAN, Mustafa GÖKPINAR</property>
     <property name="logo_icon_name">system-file-manager</property>
     <property name="transient_for">main_window</property>
   </object>

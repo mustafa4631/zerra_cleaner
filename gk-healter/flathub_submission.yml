@@ -1,8 +1,8 @@
-app-id: io.github.mustafa4631.ZerraSystemCleaner
+app-id: io.github.gkdevelopers.GKHealter
 runtime: org.gnome.Platform
 runtime-version: '46'
 sdk: org.gnome.Sdk
-command: zerra-system-cleaner
+command: gk-healter
 
 finish-args:
   - --share=ipc
@@ -20,9 +20,9 @@ finish-args:
   - --talk-name=org.freedesktop.portal.Notification
 
 modules:
-  - name: zerra-system-cleaner
+  - name: gk-healter
     buildsystem: meson
     sources:
       - type: git
-        url: https://github.com/mustafa4631/zerra_cleaner
+        url: github.com/GK-Developers/GK-Healter
         branch: master

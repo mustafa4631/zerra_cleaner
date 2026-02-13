@@ -1,6 +1,8 @@
-# Zerra System Cleaner
+# GK Healter
 
-Zerra System Cleaner is a professional, lightweight system maintenance utility designed for Linux desktops. It emphasizes safety and efficiency, providing users with a reliable way to recover disk space by identifying and removing redundant files without compromising system stability.
+GK Healter is a professional, lightweight system maintenance utility designed for Linux desktops. It emphasizes safety and efficiency, providing users with a reliable way to recover disk space by identifying and removing redundant files without compromising system stability.
+
+Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**.
 
 ## Key Features
 
@@ -13,7 +15,7 @@ Zerra System Cleaner is a professional, lightweight system maintenance utility d
 
 ## Screenshot
 
-![Zerra System Cleaner Main Window](screenshots/main-window.png)
+![GK Healter Main Window](screenshots/main-window.png)
 
 ## Technology Stack
 
@@ -28,13 +30,13 @@ Zerra System Cleaner is a professional, lightweight system maintenance utility d
 Once the application is published on Flathub, you can install it using:
 
 ```bash
-flatpak install flathub io.github.mustafa4631.ZerraSystemCleaner
+flatpak install flathub io.github.gkdevelopers.GKHealter
 ```
 
 To run the application:
 
 ```bash
-flatpak run io.github.mustafa4631.ZerraSystemCleaner
+flatpak run io.github.gkdevelopers.GKHealter
 ```
 
 ## Build from Source
@@ -43,8 +45,8 @@ To build and install the application directly onto your system using Meson:
 
 ```bash
 # Clone the repository
-git clone https://github.com/mustafa4631/zerra-system-cleaner.git
-cd zerra-system-cleaner
+git clone github.com/GK-Developers/GK-Healter.git
+cd gk-healter
 
 # Setup the build directory
 meson setup _build
@@ -57,15 +59,15 @@ sudo meson install -C _build
 
 The official Flatpak package is maintained in a separate repository to follow Flathub standards.
 
-- **Source Repository:** `mustafa4631/zerra_cleaner` (This repository)
-- **Packaging Repository:** `mustafa4631/flathub` (Contains the Flatpak manifest)
+- **Source Repository:** `gkdevelopers/gk-healter` (This repository)
+- **Packaging Repository:** `gkdevelopers/flathub` (Contains the Flatpak manifest)
 - **Manifest File:** `flathub_submission.yml` (Template for the packaging repo)
 
 To build locally, you can use the provided `flathub_submission.yml` but ensure you commit your changes to the source repo first, as it pulls from Git.
 
 ## Contributing Guidelines
 
-Contributions are welcome to help improve Zerra System Cleaner. You can contribute by reporting bugs, suggesting new cleaning modules, or submitting pull requests for code improvements and translations.
+Contributions are welcome to help improve GK Healter. You can contribute by reporting bugs, suggesting new cleaning modules, or submitting pull requests for code improvements and translations.
 
 ## Support
 
@@ -77,6 +79,6 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 
 ## Project Links
 
-- **Homepage:** [https://github.com/mustafa4631/zerra-system-cleaner](https://github.com/mustafa4631/zerra-system-cleaner)
-- **Bug Tracker:** [https://github.com/mustafa4631/zerra-system-cleaner/issues](https://github.com/mustafa4631/zerra-system-cleaner/issues)
-- **Source Code:** [https://github.com/mustafa4631/zerra-system-cleaner](https://github.com/mustafa4631/zerra-system-cleaner)
+- **Homepage:** [github.com/GK-Developers/GK-Healter](github.com/GK-Developers/GK-Healter)
+- **Bug Tracker:** [github.com/GK-Developers/GK-Healter/issues](github.com/GK-Developers/GK-Healter/issues)
+- **Source Code:** [github.com/GK-Developers/GK-Healter](github.com/GK-Developers/GK-Healter)

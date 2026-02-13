@@ -40,14 +40,14 @@ def render_icon(svg_path, output_path, size):
 
 def main():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    svg_path = os.path.join(base_dir, "icons/hicolor/scalable/apps/io.github.mustafa4631.ZerraSystemCleaner.svg")
+    svg_path = os.path.join(base_dir, "icons/hicolor/scalable/apps/io.github.gkdevelopers.GKHealter.svg")
     
     sizes = [64, 128, 256]
     
     for size in sizes:
         out_dir = os.path.join(base_dir, f"icons/hicolor/{size}x{size}/apps")
         os.makedirs(out_dir, exist_ok=True)
-        out_path = os.path.join(out_dir, "io.github.mustafa4631.ZerraSystemCleaner.png")
+        out_path = os.path.join(out_dir, "io.github.gkdevelopers.GKHealter.png")
         
         render_icon(svg_path, out_path, size)
 

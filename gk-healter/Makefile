@@ -1,7 +1,7 @@
 .PHONY: run clean build deb
 
 # Configuration
-APP_NAME = zerra-system-cleaner
+APP_NAME = gk-healter
 VERSION = 0.1.0
 PYTHON = python3
 MAIN_SCRIPT = src/main.py
@@ -46,7 +46,7 @@ deb: clean
 	# 3. Copy launcher and desktop file
 	cp bin/$(APP_NAME) $(DESTDIR)$(BINDIR)/
 	cp $(APP_NAME).desktop $(DESTDIR)$(APPS_DIR)/
-	cp resources/zerra-system-cleaner.png $(DESTDIR)$(DATADIR)/pixmaps/
+	cp resources/gk-healter.png $(DESTDIR)$(DATADIR)/pixmaps/
 	
 	# 4. Copy Control files
 	cp debian/control $(DESTDIR)/DEBIAN/

@@ -15,7 +15,7 @@ import datetime
 
 class MainWindow(Gtk.Window):
     """
-    Main application window for the Zerra System Cleaner.
+    Main application window for the GK Healter.
     Handles UI events, signal connections, and interacts with the SystemCleaner logic.
     """
     def __init__(self) -> None:
@@ -46,11 +46,11 @@ class MainWindow(Gtk.Window):
         try:
             # Try themed icon first (Flatpak uses this)
             icon_theme = Gtk.IconTheme.get_default()
-            if icon_theme.has_icon("io.github.mustafa4631.ZerraSystemCleaner"):
-                self.window.set_icon_name("io.github.mustafa4631.ZerraSystemCleaner")
+            if icon_theme.has_icon("io.github.gkdevelopers.GKHealter"):
+                self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
             else:
                 # Fallback to local file
-                icon_path = os.path.join(os.path.dirname(__file__), "../resources/zerra-system-cleaner.png")
+                icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.png")
                 if os.path.exists(icon_path):
                     self.window.set_icon_from_file(icon_path)
         except Exception as e:
@@ -207,7 +207,7 @@ class MainWindow(Gtk.Window):
 
         # About Dialog
         self.about_dialog.set_property("program_name", _("app_title"))
-        self.about_dialog.set_property("copyright", "© 2026 Mustafa Gökpınar")
+        self.about_dialog.set_property("copyright", "© 2026 GK Developers")
 
         # Confirm Dialog
         self.clean_confirm_dialog.set_property("text", _("confirm_title"))

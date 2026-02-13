@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export PYTHONPATH="@DATADIR@/gk-healter:$PYTHONPATH"
+exec @PYTHON@ "@DATADIR@/gk-healter/src/main.py" "$@"
