@@ -3,7 +3,7 @@ Version: 0.1.0
 Section: utils
 Priority: optional
 Architecture: all
-Maintainer: GK Developers <gkdevelopers@gmail.com>
+Maintainer: GK Developers <vastseaoffical0@outlook.com>
 Depends: python3, python3-gi, gir1.2-gtk-3.0, policykit-1
 Description: GK Healter
  A lightweight and safe system cleaning utility for Linux.

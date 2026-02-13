@@ -19,51 +19,83 @@ Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**
 
 ## Technology Stack
 
-
 - **Language:** [Python 3](https://www.python.org/)
 - **GUI Toolkit:** [GTK 3 (PyGObject)](https://pygobject.readthedocs.io/)
-- **Build System:** [Meson](https://mesonbuild.com/)
-- **Packaging:** [Flatpak](https://flatpak.org/)
+- **Build System:** [Meson](https://mesonbuild.com/) / Make
+- **Packaging:** [Flatpak](https://flatpak.org/), Debian (.deb), Arch (PKGBUILD), RPM (.spec)
 
-## Installation from Flathub
+## Installation
 
-Once the application is published on Flathub, you can install it using:
+### Flatpak (any distro)
 
 ```bash
 flatpak install flathub io.github.gkdevelopers.GKHealter
-```
-
-To run the application:
-
-```bash
 flatpak run io.github.gkdevelopers.GKHealter
 ```
 
-## Build from Source
-
-To build and install the application directly onto your system using Meson:
+### Arch Linux (AUR / PKGBUILD)
 
 ```bash
-# Clone the repository
-git clone github.com/GK-Developers/GK-Healter.git
+# Using the bundled PKGBUILD
+cd packaging/arch
+makepkg -si
+```
+
+### Debian / Ubuntu (.deb)
+
+```bash
 cd gk-healter
+make deb
+sudo dpkg -i gk-healter_0.1.0_all.deb
+```
 
-# Setup the build directory
+### Fedora / openSUSE (RPM)
+
+```bash
+# Build via rpmbuild using the bundled spec
+rpmbuild -ba packaging/rpm/gk-healter.spec
+```
+
+### Generic install (any distro)
+
+```bash
+cd gk-healter
+sudo make install
+# To remove:
+sudo make uninstall
+```
+
+## Build from Source (Meson)
+
+```bash
+git clone github.com/GK-Developers/GK-Healter.git
+cd GK-Healter/gk-healter
+
 meson setup _build
-
-# Compile and install
+meson compile -C _build
 sudo meson install -C _build
 ```
 
+### Build Dependencies
+
+| Dependency | Arch | Debian/Ubuntu | Fedora |
+|---|---|---|---|
+| Python 3 | `python` | `python3` | `python3` |
+| PyGObject | `python-gobject` | `python3-gi` | `python3-gobject` |
+| GTK 3 | `gtk3` | `gir1.2-gtk-3.0` | `gtk3` |
+| Polkit | `polkit` | `policykit-1` | `polkit` |
+| Meson | `meson` | `meson` | `meson` |
+
 ## Packaging
 
-The official Flatpak package is maintained in a separate repository to follow Flathub standards.
+Packaging files for each distribution are included in the repository:
 
-- **Source Repository:** `gkdevelopers/gk-healter` (This repository)
-- **Packaging Repository:** `gkdevelopers/flathub` (Contains the Flatpak manifest)
-- **Manifest File:** `flathub_submission.yml` (Template for the packaging repo)
-
-To build locally, you can use the provided `flathub_submission.yml` but ensure you commit your changes to the source repo first, as it pulls from Git.
+| Format | File | Location |
+|---|---|---|
+| Flatpak | `flathub_submission.yml` | `gk-healter/` |
+| Arch Linux | `PKGBUILD` | `gk-healter/packaging/arch/` |
+| RPM (Fedora/openSUSE) | `gk-healter.spec` | `gk-healter/packaging/rpm/` |
+| Debian/Ubuntu | `debian/control` | `gk-healter/debian/` |
 
 ## Contributing Guidelines
 
