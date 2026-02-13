@@ -50,9 +50,13 @@ class MainWindow(Gtk.Window):
                 self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
             else:
                 # Fallback to local file
-                icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.png")
-                if os.path.exists(icon_path):
-                    self.window.set_icon_from_file(icon_path)
+                svg_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.svg")
+                png_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.png")
+                
+                if os.path.exists(svg_icon_path):
+                    self.window.set_icon_from_file(svg_icon_path)
+                elif os.path.exists(png_icon_path):
+                    self.window.set_icon_from_file(png_icon_path)
         except Exception as e:
             print(f"Error setting icon: {e}")
 
@@ -208,6 +212,7 @@ class MainWindow(Gtk.Window):
         # About Dialog
         self.about_dialog.set_property("program_name", _("app_title"))
         self.about_dialog.set_property("copyright", "© 2026 GK Developers")
+        self.about_dialog.set_property("logo", self.window.get_icon())
 
         # Confirm Dialog
         self.clean_confirm_dialog.set_property("text", _("confirm_title"))
