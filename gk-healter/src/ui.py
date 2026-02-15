@@ -1,8 +1,15 @@
+"""
+GK Healter – Main UI Module
+All layout is defined in resources/main_window.ui (GTK Builder XML).
+This module handles signal connections, business logic, and dynamic content only.
+"""
+
 import os
-import gi
 import threading
+import datetime
 from typing import List, Dict, Any, Optional
 
+import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Gdk
 
@@ -17,666 +24,600 @@ from src.log_analyzer import LogAnalyzer
 from src.disk_analyzer import DiskAnalyzer
 from src.recommendation_engine import RecommendationEngine
 from src.ai_engine import AIEngine
-import datetime
+from src.utils import format_size
 
-class MainWindow(Gtk.Window):
+
+class MainWindow:
     """
-    Main application window for the GK Healter.
-    Handles UI events, signal connections, and interacts with the SystemCleaner logic.
+    Application controller.  Every visible widget lives in the .ui file;
+    this class only wires signals and feeds data into those widgets.
     """
+
+    # ── Construction ─────────────────────────────────────────────────────────
     def __init__(self) -> None:
-        """
-        Initializes the MainWindow by loading the UI from XML and connecting signals.
-        """
-        # We don't call super() init here because we are loading from XML
-        # Instead, we pull the window object from the builder.
-        
-        self.cleaner: SystemCleaner = SystemCleaner()
-        self.settings_manager: SettingsManager = SettingsManager()
-        self.history_manager: HistoryManager = HistoryManager()
-        self.auto_maintenance_manager: AutoMaintenanceManager = AutoMaintenanceManager(self.settings_manager, self.history_manager)
-
-        # Initialize New Engines
+        # Back-end services
+        self.cleaner = SystemCleaner()
+        self.settings_manager = SettingsManager()
+        self.history_manager = HistoryManager()
+        self.auto_maintenance_manager = AutoMaintenanceManager(
+            self.settings_manager, self.history_manager
+        )
         self.health_engine = HealthEngine()
         self.service_analyzer = ServiceAnalyzer()
         self.log_analyzer = LogAnalyzer()
         self.disk_analyzer = DiskAnalyzer()
         self.recommendation_engine = RecommendationEngine()
         self.ai_engine = AIEngine()
+
+        # State
         self.scan_data: List[Dict[str, Any]] = []
-        self.current_cleaning_info: Dict[str, Any] = {}
-        self.is_auto_maintenance_run: bool = False
         self.is_cleaning_in_progress: bool = False
+        self._health_timer_id: Optional[int] = None
 
-        # Load XML
-        builder = Gtk.Builder()
-        ui_path = os.path.join(os.path.dirname(__file__), "../resources/main_window.ui")
-        builder.add_from_file(ui_path)
+        # Load the builder file
+        self.builder = Gtk.Builder()
+        ui_path = os.path.join(
+            os.path.dirname(__file__), "..", "resources", "main_window.ui"
+        )
+        self.builder.add_from_file(ui_path)
 
-        # Get Main Window
-        self.window: Gtk.Window = builder.get_object("main_window")
-        
-        # Set Application Icon (works for both Flatpak and system install)
+        # Connect signals declared in XML to handler methods
+        self.builder.connect_signals(self)
+
+        # Grab references to widgets we will update at runtime
+        self._bind_widgets()
+
+        # Apply minimal CSS that cannot be expressed in XML
+        self._apply_css()
+
+        # Populate combos, restore saved settings, load history
+        self._init_settings_ui()
+        self._load_history_into_view()
+
+        # Set the application icon
+        self._set_app_icon()
+
+        # Show window and start background monitors
+        self.window.show_all()
+        # Re-hide auto-settings box if needed (show_all overrides)
+        if not self.settings_manager.get("auto_maintenance_enabled"):
+            self.box_auto_settings.set_visible(False)
+
+        self.health_engine.start_monitoring()
+        self._start_health_timer()
+        self._refresh_dashboard()
+
+    # ── Widget binding (from builder) ────────────────────────────────────────
+    def _bind_widgets(self) -> None:
+        """Retrieve widget references from the builder by their XML IDs."""
+        g = self.builder.get_object
+
+        # Main window
+        self.window: Gtk.Window = g("main_window")
+        self.window.connect("destroy", self.on_window_destroy)
+
+        # Stack
+        self.content_stack: Gtk.Stack = g("content_stack")
+
+        # ── Dashboard ──
+        self.lbl_score_value: Gtk.Label = g("lbl_score_value")
+        self.lbl_score_status: Gtk.Label = g("lbl_score_status")
+        self.lbl_score_detail: Gtk.Label = g("lbl_score_detail")
+        self.lbl_dash_cpu_val: Gtk.Label = g("lbl_dash_cpu_val")
+        self.lbl_dash_ram_val: Gtk.Label = g("lbl_dash_ram_val")
+        self.lbl_dash_disk_val: Gtk.Label = g("lbl_dash_disk_val")
+        self.level_dash_cpu: Gtk.LevelBar = g("level_dash_cpu")
+        self.level_dash_ram: Gtk.LevelBar = g("level_dash_ram")
+        self.level_dash_disk: Gtk.LevelBar = g("level_dash_disk")
+        self.lbl_systemd_state: Gtk.Label = g("lbl_systemd_state")
+        self.lbl_failed_count: Gtk.Label = g("lbl_failed_count")
+        self.lbl_errors_24h: Gtk.Label = g("lbl_errors_24h")
+        self.lbl_dash_last_maintenance: Gtk.Label = g("lbl_dash_last_maintenance")
+
+        # ── Cleaner ──
+        self.file_list_store: Gtk.ListStore = g("file_list_store")
+        self.info_label: Gtk.Label = g("info_label")
+        self.info_bar: Gtk.InfoBar = g("info_bar")
+        self.summary_label: Gtk.Label = g("summary_label")
+        self.btn_scan: Gtk.Button = g("btn_scan")
+        self.btn_clean: Gtk.Button = g("btn_clean")
+
+        # ── Health monitor ──
+        self.lbl_health_score_big: Gtk.Label = g("lbl_health_score_big")
+        self.lbl_health_status_text: Gtk.Label = g("lbl_health_status_text")
+        self.lbl_health_cpu_val: Gtk.Label = g("lbl_health_cpu_val")
+        self.lbl_health_ram_val: Gtk.Label = g("lbl_health_ram_val")
+        self.lbl_health_disk_val: Gtk.Label = g("lbl_health_disk_val")
+        self.level_health_cpu: Gtk.LevelBar = g("level_health_cpu")
+        self.level_health_ram: Gtk.LevelBar = g("level_health_ram")
+        self.level_health_disk: Gtk.LevelBar = g("level_health_disk")
+
+        # ── Insights ──
+        self.txt_insights: Gtk.TextView = g("txt_insights")
+
+        # ── History ──
+        self.history_list_store: Gtk.ListStore = g("history_list_store")
+
+        # ── Settings ──
+        self.combo_language: Gtk.ComboBoxText = g("combo_language")
+        self.switch_auto_maintenance: Gtk.Switch = g("switch_auto_maintenance")
+        self.box_auto_settings: Gtk.Box = g("box_auto_settings")
+        self.combo_frequency: Gtk.ComboBoxText = g("combo_frequency")
+        self.spin_idle: Gtk.SpinButton = g("spin_idle")
+        self.switch_ac_power: Gtk.Switch = g("switch_ac_power")
+        self.switch_notify: Gtk.Switch = g("switch_notify")
+        self.switch_disk_threshold: Gtk.Switch = g("switch_disk_threshold")
+        self.spin_disk_percent: Gtk.SpinButton = g("spin_disk_percent")
+        self.lbl_last_maintenance: Gtk.Label = g("lbl_last_maintenance")
+
+        # ── Dialogs ──
+        self.about_dialog: Gtk.AboutDialog = g("about_dialog")
+        self.clean_confirm_dialog: Gtk.MessageDialog = g("clean_confirm_dialog")
+
+    # ── CSS ──────────────────────────────────────────────────────────────────
+    @staticmethod
+    def _apply_css() -> None:
+        """Inject minimal runtime CSS (theme-respecting, no hardcoded colours)."""
+        css = b"""
+            .card-button {
+                border-radius: 8px;
+                padding: 8px;
+            }
+            .card-button:hover {
+                background-color: alpha(@theme_fg_color, 0.08);
+            }
+        """
+        provider = Gtk.CssProvider()
+        provider.load_from_data(css)
+        Gtk.StyleContext.add_provider_for_screen(
+            Gdk.Screen.get_default(),
+            provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+        )
+
+    # ── Application icon ────────────────────────────────────────────────────
+    def _set_app_icon(self) -> None:
         try:
-            # Try themed icon first (Flatpak uses this)
             icon_theme = Gtk.IconTheme.get_default()
             if icon_theme.has_icon("io.github.gkdevelopers.GKHealter"):
                 self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
             else:
-                # Fallback to local file
-                icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.png")
+                icon_path = os.path.join(
+                    os.path.dirname(__file__), "..", "icons",
+                    "hicolor", "128x128", "apps",
+                    "io.github.gkdevelopers.GKHealter.png",
+                )
                 if os.path.exists(icon_path):
                     self.window.set_icon_from_file(icon_path)
-        except Exception as e:
-            print(f"Error setting icon: {e}")
-
-        self.window.connect("destroy", Gtk.main_quit)
-        
-        # Get Objects
-        self.main_stack: Gtk.Stack = builder.get_object("main_stack")
-        self.info_bar: Gtk.InfoBar = builder.get_object("info_bar")
-        self.info_label: Gtk.Label = builder.get_object("info_label")
-        self.treeview: Gtk.TreeView = builder.get_object("treeview")
-        self.store: Gtk.ListStore = builder.get_object("file_list_store")
-        self.summary_label: Gtk.Label = builder.get_object("summary_label")
-        self.btn_scan: Gtk.Button = builder.get_object("btn_scan")
-        self.btn_clean: Gtk.Button = builder.get_object("btn_clean")
-        self.btn_about: Gtk.Button = builder.get_object("btn_about")
-
-        # History Objects
-        self.history_treeview: Gtk.TreeView = builder.get_object("history_treeview")
-        self.history_store: Gtk.ListStore = builder.get_object("history_list_store")
-        self.notebook: Gtk.Notebook = builder.get_object("notebook")
-        self.btn_settings: Gtk.Button = builder.get_object("btn_settings")
-
-        # Settings Objects
-        self.switch_auto_maintenance: Gtk.Switch = builder.get_object("switch_auto_maintenance")
-        self.combo_frequency: Gtk.ComboBoxText = builder.get_object("combo_frequency")
-        self.spin_idle: Gtk.SpinButton = builder.get_object("spin_idle")
-        self.switch_disk_threshold: Gtk.Switch = builder.get_object("switch_disk_threshold")
-        self.spin_disk_percent: Gtk.SpinButton = builder.get_object("spin_disk_percent")
-        self.switch_ac_power: Gtk.Switch = builder.get_object("switch_ac_power")
-        self.switch_notify: Gtk.Switch = builder.get_object("switch_notify")
-        self.lbl_last_maintenance: Gtk.Label = builder.get_object("lbl_last_maintenance")
-        self.btn_back: Gtk.Button = builder.get_object("btn_back")
-        self.box_auto_settings: Gtk.Box = builder.get_object("box_auto_settings")
-        self.combo_language: Gtk.ComboBoxText = builder.get_object("combo_language")
-
-        # Translation labels (need IDs from UI file)
-        self.lbl_settings_language: Gtk.Label = builder.get_object("lbl_settings_language")
-        self.lbl_language_select: Gtk.Label = builder.get_object("lbl_language_select")
-        self.lbl_last_maintenance_title: Gtk.Label = builder.get_object("lbl_last_maintenance_title")
-        
-        # Other translated labels
-        self.lbl_settings_title: Gtk.Label = builder.get_object("lbl_settings_title")
-        self.lbl_auto_maintenance_title: Gtk.Label = builder.get_object("lbl_auto_maintenance_title")
-        self.lbl_auto_maintenance_desc: Gtk.Label = builder.get_object("lbl_auto_maintenance_desc")
-        self.lbl_scheduling_title: Gtk.Label = builder.get_object("lbl_scheduling_title")
-        self.lbl_frequency_title: Gtk.Label = builder.get_object("lbl_frequency_title")
-        self.lbl_conditions_title: Gtk.Label = builder.get_object("lbl_conditions_title")
-        self.lbl_idle_title: Gtk.Label = builder.get_object("lbl_idle_title")
-        self.lbl_minutes_suffix: Gtk.Label = builder.get_object("lbl_minutes_suffix")
-        self.lbl_ac_power_title: Gtk.Label = builder.get_object("lbl_ac_power_title")
-        self.lbl_notifications_title: Gtk.Label = builder.get_object("lbl_notifications_title")
-        self.lbl_notify_done_title: Gtk.Label = builder.get_object("lbl_notify_done_title")
-        self.expander_advanced: Gtk.Expander = builder.get_object("expander_advanced")
-        self.lbl_disk_threshold_title: Gtk.Label = builder.get_object("lbl_disk_threshold_title")
-
-        # Get Dialogs
-        self.about_dialog: Gtk.AboutDialog = builder.get_object("about_dialog")
-        self.clean_confirm_dialog: Gtk.MessageDialog = builder.get_object("clean_confirm_dialog")
-
-        # Status Icon (programmatic addition to InfoBar)
-        self.status_icon = Gtk.Image()
-        info_content = self.info_bar.get_content_area()
-        # Add icon at the start of the box
-        info_content.pack_start(self.status_icon, False, False, 0)
-        info_content.reorder_child(self.status_icon, 0)
-        self.status_icon.show()
-
-        # Connect Signals
-        builder.connect_signals(self)
-        
-        # Initial History Load
-        self.populate_history()
-
-        # Translate UI
-        self._translate_ui()
-
-        # Load Settings UI
-        self._sync_settings_ui()
-
-        self._setup_extended_ui()
-        self.window.show_all()
-
-        # Check for auto maintenance after a short delay
-        GLib.timeout_add(1000, self.check_auto_maintenance)
-
-    def _translate_ui(self) -> None:
-        """Updates all UI text elements using the translation manager."""
-        self.window.set_title(_("app_title"))
-        # self.header_bar.set_title(_("header_title")) # HeaderBar title is usually set via property
-        self.btn_about.set_tooltip_text(_("btn_about"))
-        self.btn_settings.set_tooltip_text(_("tooltip_settings"))
-        
-        self.info_label.set_text(_("info_ready"))
-        
-        # Tabs
-        self.notebook.get_nth_page(0).get_parent().set_tab_label_text(self.notebook.get_nth_page(0), _("tab_clean"))
-        self.notebook.get_nth_page(1).get_parent().set_tab_label_text(self.notebook.get_nth_page(1), _("tab_history"))
-
-        # TreeViews
-        self.treeview.get_column(0).set_title(_("col_select"))
-        self.treeview.get_column(1).set_title(_("col_category"))
-        self.treeview.get_column(2).set_title(_("col_description"))
-        self.treeview.get_column(3).set_title(_("col_size"))
-        
-        self.history_treeview.get_column(0).set_title(_("col_date"))
-        self.history_treeview.get_column(1).set_title(_("col_category"))
-        self.history_treeview.get_column(2).set_title(_("col_size"))
-        self.history_treeview.get_column(3).set_title(_("col_status"))
-
-        # Main Buttons
-        self.btn_scan.set_label(_("btn_scan"))
-        self.btn_clean.set_label(_("btn_clean"))
-
-        # Settings Page
-        self.btn_back.set_tooltip_text(_("tooltip_back", "Geri Dön"))
-        # self.lbl_settings_title.set_text(_("settings_title")) # Need ID
-
-        # Language section labels are updated via sync_settings_ui or here
-        self.lbl_settings_language.set_text(_("settings_language"))
-        self.lbl_language_select.set_text(_("settings_language")) 
-        self.lbl_last_maintenance_title.set_text(_("settings_last_maintenance"))
-
-        self.lbl_settings_title.set_text(_("settings_title"))
-        self.lbl_auto_maintenance_title.set_text(_("settings_auto_maintenance"))
-        self.lbl_auto_maintenance_desc.set_text(_("settings_auto_desc"))
-        self.lbl_scheduling_title.set_text(_("settings_scheduling"))
-        self.lbl_frequency_title.set_text(_("settings_frequency"))
-        self.lbl_conditions_title.set_text(_("settings_conditions"))
-        self.lbl_idle_title.set_text(_("settings_idle"))
-        self.lbl_minutes_suffix.set_text(_("minutes_suffix", "dk"))
-        self.lbl_ac_power_title.set_text(_("settings_ac_power"))
-        self.lbl_notifications_title.set_text(_("settings_notifications"))
-        self.lbl_notify_done_title.set_text(_("settings_notify_done"))
-        if self.expander_advanced:
-            self.expander_advanced.set_label(_("advanced_options"))
-        self.lbl_disk_threshold_title.set_text(_("settings_disk_threshold"))
-
-        # Combo Frequency items (manual translation)
-        active_freq = self.combo_frequency.get_active_id()
-        self.combo_frequency.remove_all()
-        self.combo_frequency.append("7", _("freq_7"))
-        self.combo_frequency.append("30", _("freq_30"))
-        self.combo_frequency.append("180", _("freq_180"))
-        self.combo_frequency.append("365", _("freq_365"))
-        self.combo_frequency.set_active_id(active_freq)
-
-        # Sync combo items
-        self.combo_language.remove_all()
-        self.combo_language.append("auto", _("lang_auto"))
-        self.combo_language.append("tr", _("lang_tr"))
-        self.combo_language.append("en", _("lang_en"))
-        self.combo_language.set_active_id(self.settings_manager.get("language"))
-
-        # About Dialog
-        self.about_dialog.set_property("program_name", _("app_title"))
-        self.about_dialog.set_property("copyright", "© 2026 GK Developers")
-
-        # Confirm Dialog
-        self.clean_confirm_dialog.set_property("text", _("confirm_title"))
-        self.clean_confirm_dialog.set_title(_("confirm_title"))
-
-    def _sync_settings_ui(self) -> None:
-        """Syncs the settings UI with values from SettingsManager."""
-        self.switch_auto_maintenance.set_active(self.settings_manager.get("auto_maintenance_enabled"))
-        
-        freq = self.settings_manager.get("maintenance_frequency_days")
-        self.combo_frequency.set_active_id(str(freq))
-
-        self.spin_idle.set_value(self.settings_manager.get("idle_threshold_minutes"))
-        self.switch_disk_threshold.set_active(self.settings_manager.get("disk_threshold_enabled"))
-        self.spin_disk_percent.set_value(self.settings_manager.get("disk_threshold_percent"))
-        self.switch_ac_power.set_active(self.settings_manager.get("check_ac_power"))
-        self.switch_notify.set_active(self.settings_manager.get("notify_on_completion"))
-        
-        last_date = self.settings_manager.get("last_maintenance_date")
-        if last_date:
-            self.lbl_last_maintenance.set_text(last_date)
-        else:
-            self.lbl_last_maintenance.set_text(_("never_run"))
-
-        self.combo_language.set_active_id(self.settings_manager.get("language"))
-        self._update_settings_visibility()
-
-    def _update_settings_visibility(self) -> None:
-        """Shows/hides detailed maintenance settings based on the master switch."""
-        is_enabled = self.switch_auto_maintenance.get_active()
-        self.box_auto_settings.set_visible(is_enabled)
-
-    def check_auto_maintenance(self) -> bool:
-        """Periodic check for auto-maintenance conditions every 1 minute."""
-        if self.is_cleaning_in_progress or self.is_auto_maintenance_run:
-            # Re-schedule check if already busy
-            GLib.timeout_add_seconds(60, self.check_auto_maintenance)
-            return False
-
-        if self.auto_maintenance_manager.can_run_maintenance(force_disk_check=True):
-            print("Starting intelligence auto-maintenance...")
-            self.is_auto_maintenance_run = True
-            
-            # Run in thread
-            thread = threading.Thread(target=self.run_auto_maintenance_thread)
-            thread.daemon = True
-            thread.start()
-        
-        # Change to 1 minute interval after first check
-        GLib.timeout_add_seconds(60, self.check_auto_maintenance)
-        return False # Stop current timer
-
-    def run_auto_maintenance_thread(self) -> None:
-        """Executes auto maintenance in a background thread."""
-        res = self.auto_maintenance_manager.run_maintenance()
-        GLib.idle_add(self.on_auto_maintenance_finished, res)
-
-    def on_auto_maintenance_finished(self, res: Optional[dict]) -> None:
-        """Callback when auto maintenance is complete."""
-        self.is_auto_maintenance_run = False
-        if res:
-            if self.settings_manager.get("notify_on_completion"):
-                self.show_notification(_("auto_maintenance_title"), 
-                                     _("auto_maintenance_finished_msg").format(res['freed']))
-            self.populate_history()
-            self._sync_settings_ui()
-
-    def on_settings_clicked(self, widget: Gtk.Button) -> None:
-        self._sync_settings_ui()
-        self.main_stack.set_visible_child_name("page_settings")
-
-    def on_back_clicked(self, widget: Gtk.Button) -> None:
-        self.main_stack.set_visible_child_name("page_main")
-
-    def on_auto_maintenance_toggled(self, switch: Gtk.Switch, gparam: Any) -> None:
-        self.settings_manager.set("auto_maintenance_enabled", switch.get_active())
-        self._update_settings_visibility()
-
-    def on_frequency_changed(self, combo: Gtk.ComboBoxText) -> None:
-        active_id = combo.get_active_id()
-        if active_id:
-            self.settings_manager.set("maintenance_frequency_days", int(active_id))
-
-    def on_idle_changed(self, spin: Gtk.SpinButton) -> None:
-        self.settings_manager.set("idle_threshold_minutes", int(spin.get_value()))
-
-    def on_disk_threshold_toggled(self, switch: Gtk.Switch, gparam: Any) -> None:
-        self.settings_manager.set("disk_threshold_enabled", switch.get_active())
-
-    def on_disk_percent_changed(self, spin: Gtk.SpinButton) -> None:
-        self.settings_manager.set("disk_threshold_percent", int(spin.get_value()))
-
-    def on_ac_power_toggled(self, switch: Gtk.Switch, gparam: Any) -> None:
-        self.settings_manager.set("check_ac_power", switch.get_active())
-
-    def on_notify_toggled(self, switch: Gtk.Switch, gparam: Any) -> None:
-        self.settings_manager.set("notify_on_completion", switch.get_active())
-
-    def on_language_changed(self, combo: Gtk.ComboBoxText) -> None:
-        active_id = combo.get_active_id()
-        if active_id and active_id != self.settings_manager.get("language"):
-            self.settings_manager.set("language", active_id)
-            # Re-load language in manager
-            I18nManager().load_language(active_id)
-            # Refresh UI
-            self._translate_ui()
-            # Notify user
-            self.info_bar.set_message_type(Gtk.MessageType.INFO)
-            self.info_label.set_text(_("msg_reboot_required"))
-            self.info_bar.show()
-
-    def show_notification(self, title: str, message: str) -> None:
-        """Displays a system notification."""
-        try:
-            import subprocess
-            subprocess.run(['notify-send', title, message])
         except Exception:
             pass
 
-    def populate_history(self) -> None:
-        """
-        Loads cleaning history from the HistoryManager and populates the history treeview.
-        """
-        self.history_store.clear()
-        entries = self.history_manager.get_all_entries()
-        for entry in entries:
-            self.history_store.append([
-                entry.get("date", ""),
-                entry.get("categories", ""),
-                entry.get("total_freed", ""),
-                entry.get("status", "")
-            ])
+    # ══════════════════════════════════════════════════════════════════════════
+    #  SIGNAL HANDLERS  (names must match handler="" in XML)
+    # ══════════════════════════════════════════════════════════════════════════
 
-    def on_cell_toggled(self, widget: Gtk.CellRendererToggle, path: str) -> None:
-        """
-        Callback for when a checkbox in the treeview is toggled.
-        Updates the model and recalculates the summary.
-        """
-        self.store[path][0] = not self.store[path][0]
-        self.update_summary()
-
-    def update_summary(self) -> None:
-        """
-        Calculates the total size of selected items and updates the summary label.
-        Controls the clean button sensitivity.
-        """
-        total_bytes = 0
-        for row in self.store:
-            if row[0]: # If checked
-                total_bytes += row[4]
-        
-        mb = total_bytes / (1024 * 1024)
-        self.summary_label.set_text(_("summary_total").format(f"{mb:.2f}"))
-        self.btn_clean.set_sensitive(total_bytes > 0)
-
-    def on_scan_clicked(self, widget: Gtk.Button) -> None:
-        """
-        Callback for the 'Scan' button. Initiates the system scan in a separate thread.
-        """
-        self.btn_scan.set_sensitive(False)
-        self.store.clear()
-        self.info_label.set_text(_("info_scanning"))
-        self.info_bar.set_message_type(Gtk.MessageType.INFO)
-        
-        # Start scanning in a separate thread to keep UI responsive
-        thread = threading.Thread(target=self.run_scan_thread)
-        thread.daemon = True
-        thread.start()
-
-    def run_scan_thread(self) -> None:
-        """
-        Executed in a background thread. Performs the scan.
-        """
-        results = self.cleaner.scan()
-        GLib.idle_add(self.on_scan_finished, results)
-
-    def on_scan_finished(self, results: List[Dict[str, Any]]) -> None:
-        """
-        Callback invoked on the main thread when scanning is complete.
-        Populates the treeview with results.
-        """
-        self.store.clear()
-        for item in results:
-            # Checkbox, Category, Desc, Size Str, Size Bytes, Path, System
-            self.store.append([
-                True, 
-                item['category'], 
-                item['desc'], 
-                item['size_str'], 
-                item['size_bytes'],
-                item['path'],
-                item['system']
-            ])
-        
-        self.update_summary()
-        self.btn_scan.set_sensitive(True)
-        
-        if not results:
-            self.info_bar.set_message_type(Gtk.MessageType.WARNING)
-            self.status_icon.set_from_icon_name("dialog-warning-symbolic", Gtk.IconSize.BUTTON)
-            self.info_label.set_markup(f"<b>{_('info_no_items')}</b>")
-        else:
-            self.info_bar.set_message_type(Gtk.MessageType.INFO)
-            self.status_icon.set_from_icon_name("dialog-information-symbolic", Gtk.IconSize.BUTTON)
-            self.info_label.set_markup(f"<b>{_('info_scan_completed')}</b>")
-
-    def on_clean_clicked(self, widget: Gtk.Button) -> None:
-        """
-        Callback for the 'Clean' button. Confirms action and starts cleaning.
-        """
-        if self.is_cleaning_in_progress:
-            self.info_bar.set_message_type(Gtk.MessageType.WARNING)
-            self.status_icon.set_from_icon_name("dialog-warning-symbolic", Gtk.IconSize.BUTTON)
-            self.info_label.set_markup(f"<span weight='bold'>{_('msg_cleaning_in_progress')}</span>")
-            return
-
-        to_clean = []
-        for row in self.store:
-            if row[0]: # Checked
-                to_clean.append({
-                    'path': row[5],
-                    'system': row[6]
-                })
-
-        if not to_clean:
-            self.info_bar.set_message_type(Gtk.MessageType.WARNING)
-            self.status_icon.set_from_icon_name("dialog-warning-symbolic", Gtk.IconSize.BUTTON)
-            self.info_label.set_markup(f"<span weight='bold'>{_('msg_no_selection')}</span>")
-            return
-
-        # Update dialog text
-        self.clean_confirm_dialog.format_secondary_text(
-            _("confirm_text").format(len(to_clean))
-        )
-        
-        # Store current cleaning info for history logging
-        categories = []
-        total_bytes = 0
-        for row in self.store:
-            if row[0]:
-                categories.append(row[1])
-                total_bytes += row[4]
-        
-        from src.utils import format_size
-        self.current_cleaning_info = {
-            'categories': categories,
-            'total_freed_str': format_size(total_bytes)
-        }
-
-        response = self.clean_confirm_dialog.run()
-        self.clean_confirm_dialog.hide()
-        
-        if response == Gtk.ResponseType.OK:
-            self.is_cleaning_in_progress = True
-            self.btn_clean.set_sensitive(False)
-            self.btn_scan.set_sensitive(False)
-            self.info_label.set_text(_("info_cleaning"))
-            self.info_bar.set_message_type(Gtk.MessageType.INFO)
-            self.status_icon.set_from_icon_name("process-working-symbolic", Gtk.IconSize.BUTTON)
-            
-            # Threaded clean
-            thread = threading.Thread(target=self.run_clean_thread, args=(to_clean,))
-            thread.daemon = True
-            thread.start()
-
-    def run_clean_thread(self, to_clean: List[Dict[str, Any]]) -> None:
-        """
-        Executed in a background thread. Performs the cleaning operation.
-        """
-        success_count, fail_count, errors = self.cleaner.clean(to_clean)
-        GLib.idle_add(self.on_clean_finished, success_count, fail_count, errors)
-
-    def on_clean_finished(self, success_count: int, fail_count: int, errors: List[str]) -> None:
-        """
-        Callback invoked on the main thread when cleaning is complete.
-        Refreshes the scan and shows errors if any.
-        """
-        self.is_cleaning_in_progress = False
-        self.on_scan_clicked(None) # Refresh
-        
-        if fail_count > 0:
-            self.info_bar.set_message_type(Gtk.MessageType.ERROR)
-            self.status_icon.set_from_icon_name("dialog-error-symbolic", Gtk.IconSize.BUTTON)
-            error_text = "\n".join(errors)
-            dialog = Gtk.MessageDialog(
-                transient_for=self.window,
-                flags=0,
-                message_type=Gtk.MessageType.ERROR,
-                buttons=Gtk.ButtonsType.OK,
-                text=_("msg_error_title"),
-            )
-            dialog.format_secondary_text(_("msg_errors_detail").format(fail_count, error_text))
-            dialog.run()
-            dialog.destroy()
-            self.info_label.set_markup(_("info_cleaning_failed_msg").format(fail_count))
-            status = _("status_partial") if success_count > 0 else _("status_failed")
-        else:
-            self.info_bar.set_message_type(Gtk.MessageType.INFO)
-            self.status_icon.set_from_icon_name("emblem-ok-symbolic", Gtk.IconSize.BUTTON)
-            self.info_label.set_markup(f"<b>{_('info_cleaning_success')}</b> {success_count} {_('actions_done')}")
-            status = _("status_success")
-
-        # Log to history
-        if self.current_cleaning_info:
-            is_auto = self.current_cleaning_info.get('is_auto', False)
-            
-            cats = list(self.current_cleaning_info['categories'])
-            if is_auto:
-                cats.append("Otomatik bakım")
-
-            self.history_manager.add_entry(
-                cats,
-                self.current_cleaning_info['total_freed_str'],
-                status
-            )
-            
-            if is_auto:
-                # Update last maintenance date
-                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                self.settings_manager.set("last_maintenance_date", now_str)
-                self.is_auto_maintenance_run = False
-
-            self.populate_history()
-            self.current_cleaning_info = {}
-
-    def on_about_clicked(self, widget: Gtk.Button) -> None:
-        """
-        Callback for the 'About' button. Shows the about dialog.
-        """
+    # ── Header bar ───────────────────────────────────────────────────────────
+    def on_about_clicked(self, _btn: Gtk.Button) -> None:
         self.about_dialog.run()
         self.about_dialog.hide()
 
-    def _setup_extended_ui(self):
-        # --- System Health Tab ---
-        self.health_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        self.health_box.set_border_width(20)
-        
-        # CPU
-        self.lbl_cpu = Gtk.Label(label="CPU Usage: 0%")
-        self.level_cpu = Gtk.LevelBar()
-        self.level_cpu.set_min_value(0)
-        self.level_cpu.set_max_value(100)
-        
-        # RAM
-        self.lbl_ram = Gtk.Label(label="RAM Usage: 0%")
-        self.level_ram = Gtk.LevelBar()
-        self.level_ram.set_min_value(0)
-        self.level_ram.set_max_value(100)
-        
-        # Disk
-        self.lbl_disk = Gtk.Label(label="Disk Usage: 0%")
-        self.level_disk = Gtk.LevelBar()
-        self.level_disk.set_min_value(0)
-        self.level_disk.set_max_value(100)
+    def on_header_refresh_clicked(self, _btn: Gtk.Button) -> None:
+        self._refresh_dashboard()
 
-        # Score
-        self.lbl_score = Gtk.Label(label="System Health Score: Calculating...")
-        # self.lbl_score.get_style_context().add_class("h2")
+    # ── Dashboard quick-action cards ─────────────────────────────────────────
+    def on_dash_scan_clicked(self, _btn: Gtk.Button) -> None:
+        self.content_stack.set_visible_child_name("page_cleaner")
+        self.on_scan_clicked(None)
 
-        self.health_box.pack_start(self.lbl_score, False, False, 10)
-        self.health_box.pack_start(self.lbl_cpu, False, False, 0)
-        self.health_box.pack_start(self.level_cpu, False, False, 0)
-        self.health_box.pack_start(self.lbl_ram, False, False, 0)
-        self.health_box.pack_start(self.level_ram, False, False, 0)
-        self.health_box.pack_start(self.lbl_disk, False, False, 0)
-        self.health_box.pack_start(self.level_disk, False, False, 0)
+    def on_dash_health_clicked(self, _btn: Gtk.Button) -> None:
+        self.content_stack.set_visible_child_name("page_health")
 
-        self.notebook.append_page(self.health_box, Gtk.Label(label=_("tab_health", "System Health")))
+    def on_dash_insights_clicked(self, _btn: Gtk.Button) -> None:
+        self.content_stack.set_visible_child_name("page_insights")
+        self.on_refresh_insights_clicked(None)
 
-        # --- Insights Tab ---
-        self.insights_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        self.insights_box.set_border_width(20)
-        
-        self.btn_refresh_insights = Gtk.Button(label=_("btn_refresh", "Refresh Insights"))
-        self.btn_refresh_insights.connect("clicked", self._on_refresh_insights)
-        
-        self.txt_insights = Gtk.TextView()
-        self.txt_insights.set_editable(False)
-        self.txt_insights.set_wrap_mode(Gtk.WrapMode.WORD)
-        
-        scroll = Gtk.ScrolledWindow()
-        scroll.add(self.txt_insights)
-        
-        self.insights_box.pack_start(self.btn_refresh_insights, False, False, 0)
-        self.insights_box.pack_start(scroll, True, True, 0)
-        
-        self.notebook.append_page(self.insights_box, Gtk.Label(label=_("tab_insights", "Insights")))
-        
-        # Start Monitoring
-        self.health_engine.start_monitoring()
-        GLib.timeout_add(1000, self._update_health_ui)
+    # ── Window ───────────────────────────────────────────────────────────────
+    def on_window_destroy(self, _win: Gtk.Window) -> None:
+        self.health_engine.stop_monitoring()
+        if self._health_timer_id:
+            GLib.source_remove(self._health_timer_id)
+        Gtk.main_quit()
 
-    def _update_health_ui(self):
+    # ── Cleaner page ─────────────────────────────────────────────────────────
+    def on_scan_clicked(self, _btn: Optional[Gtk.Button]) -> None:
+        if self.is_cleaning_in_progress:
+            return
+        self.file_list_store.clear()
+        self.btn_clean.set_sensitive(False)
+        self._set_info(_("msg_scanning"), "info")
+        threading.Thread(target=self._scan_thread, daemon=True).start()
+
+    def on_clean_clicked(self, _btn: Gtk.Button) -> None:
+        if self.is_cleaning_in_progress or not self.scan_data:
+            return
+
+        # Collect selected items
+        selected = self._get_selected_items()
+        if not selected:
+            self._set_info(_("msg_nothing_selected"), "warning")
+            return
+
+        # Build confirmation message
+        total_bytes = sum(item['size_bytes'] for item in selected)
+        has_system = any(item['system'] for item in selected)
+        msg = _("msg_confirm_clean").replace("{size}", format_size(total_bytes))
+        if has_system:
+            msg += "\n\n" + _("msg_system_auth_warning")
+
+        self.clean_confirm_dialog.format_secondary_text(msg)
+        response = self.clean_confirm_dialog.run()
+        self.clean_confirm_dialog.hide()
+
+        if response == Gtk.ResponseType.OK:
+            self.is_cleaning_in_progress = True
+            self.btn_scan.set_sensitive(False)
+            self.btn_clean.set_sensitive(False)
+            self._set_info(_("msg_cleaning"), "info")
+            threading.Thread(
+                target=self._clean_thread, args=(selected,), daemon=True
+            ).start()
+
+    def on_cell_toggled(self, renderer: Gtk.CellRendererToggle, path: str) -> None:
+        self.file_list_store[path][0] = not self.file_list_store[path][0]
+        self._update_summary()
+
+    # ── Insights page ────────────────────────────────────────────────────────
+    def on_refresh_insights_clicked(self, _btn: Optional[Gtk.Button]) -> None:
+        buf = self.txt_insights.get_buffer()
+        buf.set_text(_("msg_analyzing"))
+        threading.Thread(target=self._run_analysis, daemon=True).start()
+
+    # ── Settings page ────────────────────────────────────────────────────────
+    def on_language_changed(self, combo: Gtk.ComboBoxText) -> None:
+        lang_id = combo.get_active_id()
+        if lang_id:
+            self.settings_manager.set("language", lang_id)
+            I18nManager().load_language(lang_id)
+
+    def on_auto_maintenance_toggled(self, switch: Gtk.Switch, _pspec) -> None:
+        active = switch.get_active()
+        self.settings_manager.set("auto_maintenance_enabled", active)
+        self.box_auto_settings.set_visible(active)
+
+    def on_frequency_changed(self, combo: Gtk.ComboBoxText) -> None:
+        freq_id = combo.get_active_id()
+        if freq_id:
+            self.settings_manager.set("maintenance_frequency_days", int(freq_id))
+
+    def on_idle_changed(self, spin: Gtk.SpinButton) -> None:
+        self.settings_manager.set(
+            "idle_threshold_minutes", int(spin.get_value())
+        )
+
+    def on_ac_power_toggled(self, switch: Gtk.Switch, _pspec) -> None:
+        self.settings_manager.set("check_ac_power", switch.get_active())
+
+    def on_notify_toggled(self, switch: Gtk.Switch, _pspec) -> None:
+        self.settings_manager.set("notify_on_completion", switch.get_active())
+
+    def on_disk_threshold_toggled(self, switch: Gtk.Switch, _pspec) -> None:
+        self.settings_manager.set("disk_threshold_enabled", switch.get_active())
+
+    def on_disk_percent_changed(self, spin: Gtk.SpinButton) -> None:
+        self.settings_manager.set(
+            "disk_threshold_percent", int(spin.get_value())
+        )
+
+    # ══════════════════════════════════════════════════════════════════════════
+    #  PRIVATE HELPERS
+    # ══════════════════════════════════════════════════════════════════════════
+
+    # ── Settings initialisation ──────────────────────────────────────────────
+    def _init_settings_ui(self) -> None:
+        """Populate combo-boxes and restore saved values into the Settings page."""
+        sm = self.settings_manager
+
+        # Language combo
+        self.combo_language.append("auto", "Auto")
+        self.combo_language.append("en", "English")
+        self.combo_language.append("tr", "Türkçe")
+        current_lang = sm.get("language") or "auto"
+        self.combo_language.set_active_id(current_lang)
+
+        # Frequency combo
+        self.combo_frequency.append("1", _("freq_daily"))
+        self.combo_frequency.append("7", _("freq_weekly"))
+        self.combo_frequency.append("14", _("freq_biweekly"))
+        self.combo_frequency.append("30", _("freq_monthly"))
+        freq = str(sm.get("maintenance_frequency_days"))
+        self.combo_frequency.set_active_id(freq)
+
+        # Restore switch / spin values (block signals temporarily)
+        self.switch_auto_maintenance.set_active(sm.get("auto_maintenance_enabled"))
+        self.box_auto_settings.set_visible(sm.get("auto_maintenance_enabled"))
+
+        self.spin_idle.set_value(sm.get("idle_threshold_minutes"))
+        self.switch_ac_power.set_active(sm.get("check_ac_power"))
+        self.switch_notify.set_active(sm.get("notify_on_completion"))
+        self.switch_disk_threshold.set_active(sm.get("disk_threshold_enabled"))
+        self.spin_disk_percent.set_value(sm.get("disk_threshold_percent"))
+
+        # Last maintenance label
+        last = sm.get("last_maintenance_date")
+        self.lbl_last_maintenance.set_text(last if last else _("lbl_never"))
+
+    # ── Health timer (periodic UI refresh) ───────────────────────────────────
+    def _start_health_timer(self) -> None:
+        """Tick every 2 seconds to update dashboard / health page metrics."""
+        self._health_timer_id = GLib.timeout_add_seconds(2, self._on_health_tick)
+
+    def _on_health_tick(self) -> bool:
         metrics = self.health_engine.get_metrics()
+        status = self.health_engine.get_detailed_status()
+
         cpu = metrics['cpu']
         ram = metrics['ram']
         disk = metrics['disk']
         score = metrics['score']
-        
-        self.lbl_cpu.set_text(f"CPU Usage: {cpu:.1f}%")
-        self.level_cpu.set_value(cpu)
-        
-        self.lbl_ram.set_text(f"RAM Usage: {ram:.1f}%")
-        self.level_ram.set_value(ram)
-        
-        self.lbl_disk.set_text(f"Disk Usage: {disk:.1f}%")
-        self.level_disk.set_value(disk)
-        
-        status = self.health_engine.get_detailed_status()
-        self.lbl_score.set_text(f"System Health Score: {score}/100 ({status})")
-        
-        return True
 
-    def _on_refresh_insights(self, widget):
-        buf = self.txt_insights.get_buffer()
-        buf.set_text("Analyzing system... please wait...")
-        
-        # Run in thread
-        threading.Thread(target=self._run_analysis, daemon=True).start()
-        
-    def _run_analysis(self):
+        # Dashboard meters
+        self.lbl_dash_cpu_val.set_text(f"{cpu:.0f}%")
+        self.lbl_dash_ram_val.set_text(f"{ram:.0f}%")
+        self.lbl_dash_disk_val.set_text(f"{disk:.0f}%")
+        self.level_dash_cpu.set_value(cpu)
+        self.level_dash_ram.set_value(ram)
+        self.level_dash_disk.set_value(disk)
+
+        # Dashboard score card
+        self.lbl_score_value.set_text(str(int(score)))
+        self.lbl_score_status.set_text(status)
+        self._set_score_detail(score)
+
+        # Health page (mirrors dashboard but bigger)
+        self.lbl_health_score_big.set_text(str(int(score)))
+        self.lbl_health_status_text.set_text(f"Health Score — {status}")
+        self.lbl_health_cpu_val.set_text(f"{cpu:.0f}%")
+        self.lbl_health_ram_val.set_text(f"{ram:.0f}%")
+        self.lbl_health_disk_val.set_text(f"{disk:.0f}%")
+        self.level_health_cpu.set_value(cpu)
+        self.level_health_ram.set_value(ram)
+        self.level_health_disk.set_value(disk)
+
+        return True  # keep the timer alive
+
+    def _set_score_detail(self, score: float) -> None:
+        if score >= 90:
+            self.lbl_score_detail.set_text(
+                "All systems running smoothly. No action needed."
+            )
+        elif score >= 70:
+            self.lbl_score_detail.set_text(
+                "System is mostly healthy. Minor resource pressure detected."
+            )
+        elif score >= 50:
+            self.lbl_score_detail.set_text(
+                "Moderate resource usage. Consider closing unused applications."
+            )
+        else:
+            self.lbl_score_detail.set_text(
+                "High resource usage detected. Immediate attention recommended."
+            )
+
+    # ── Dashboard refresh (system state section) ─────────────────────────────
+    def _refresh_dashboard(self) -> None:
+        """Fetch system-state info in a background thread."""
+        threading.Thread(target=self._fetch_dashboard_state, daemon=True).start()
+
+    def _fetch_dashboard_state(self) -> None:
+        state = self.service_analyzer.get_system_state()
+        failed = self.service_analyzer.get_failed_services()
+        errors = self.log_analyzer.get_error_count_24h()
+        last = self.settings_manager.get("last_maintenance_date") or _("lbl_never")
+
+        GLib.idle_add(self._apply_dashboard_state, state, failed, errors, last)
+
+    def _apply_dashboard_state(
+        self, state: str, failed: list, errors: int, last: str
+    ) -> None:
+        self.lbl_systemd_state.set_text(state)
+        self.lbl_failed_count.set_text(str(len(failed)))
+        self.lbl_errors_24h.set_text(str(errors))
+        self.lbl_dash_last_maintenance.set_text(last)
+
+    # ── Scan thread ──────────────────────────────────────────────────────────
+    def _scan_thread(self) -> None:
+        results = self.cleaner.scan()
+        GLib.idle_add(self._on_scan_done, results)
+
+    def _on_scan_done(self, results: List[Dict[str, Any]]) -> None:
+        self.scan_data = results
+        self.file_list_store.clear()
+
+        if not results:
+            self._set_info(_("msg_no_items"), "info")
+            return
+
+        for item in results:
+            self.file_list_store.append([
+                True,                    # toggle
+                item['category'],        # category
+                item['desc'],            # description
+                item['size_str'],        # size string
+                item['size_bytes'],      # size bytes (hidden)
+                item['path'],            # path (hidden)
+                item['system'],          # is_system (hidden)
+            ])
+
+        count = len(results)
+        self._set_info(
+            _("msg_scan_complete").replace("{count}", str(count)), "info"
+        )
+        self.btn_clean.set_sensitive(True)
+        self._update_summary()
+
+    # ── Clean thread ─────────────────────────────────────────────────────────
+    def _clean_thread(self, selected: List[Dict[str, Any]]) -> None:
+        success, fail, errors = self.cleaner.clean(selected)
+        categories = [item['category'] for item in selected]
+        total_bytes = sum(item['size_bytes'] for item in selected)
+        GLib.idle_add(
+            self._on_clean_done, success, fail, errors, categories, total_bytes
+        )
+
+    def _on_clean_done(
+        self,
+        success: int,
+        fail: int,
+        errors: List[str],
+        categories: List[str],
+        total_bytes: int,
+    ) -> None:
+        self.is_cleaning_in_progress = False
+        self.btn_scan.set_sensitive(True)
+
+        total_str = format_size(total_bytes)
+        if fail == 0:
+            status = _("status_success")
+            self._set_info(
+                _("msg_clean_success").replace("{size}", total_str), "info"
+            )
+        elif success > 0:
+            status = _("status_partial")
+            self._set_info(
+                _("msg_clean_partial").replace("{ok}", str(success)).replace(
+                    "{fail}", str(fail)
+                ),
+                "warning",
+            )
+        else:
+            status = _("status_failed")
+            self._set_info(_("msg_clean_failed"), "error")
+
+        self.history_manager.add_entry(categories, total_str, status)
+        self._load_history_into_view()
+
+        # Update last-maintenance timestamp
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.settings_manager.set("last_maintenance_date", now)
+        self.lbl_last_maintenance.set_text(now)
+        self.lbl_dash_last_maintenance.set_text(now)
+
+        self.file_list_store.clear()
+        self.scan_data = []
+        self.btn_clean.set_sensitive(False)
+        self.summary_label.set_text("Total: 0 MB")
+
+    # ── Analysis thread (Insights page) ──────────────────────────────────────
+    def _run_analysis(self) -> None:
         failed_services = self.service_analyzer.get_failed_services()
         slow_services = self.service_analyzer.get_slow_startup_services()
         errors_24h = self.log_analyzer.get_error_count_24h()
-        large_files = self.disk_analyzer.get_large_files(os.path.expanduser("~"), limit=5)
+        large_files = self.disk_analyzer.get_large_files(
+            os.path.expanduser("~"), limit=5
+        )
         metrics = self.health_engine.get_metrics()
-        
+
         recs = self.recommendation_engine.analyze_health(metrics)
-        recs += self.recommendation_engine.analyze_services(failed_services, slow_services)
+        recs += self.recommendation_engine.analyze_services(
+            failed_services, slow_services
+        )
         recs += self.recommendation_engine.analyze_logs(errors_24h)
-        
-        ai_insight = self.ai_engine.generate_insight(metrics, failed_services, errors_24h)
-        
-        GLib.idle_add(self._display_insights, recs, ai_insight, large_files)
-        
-    def _display_insights(self, recommendations, ai_insight, large_files):
-        buf = self.txt_insights.get_buffer()
-        text = "=== System Insights ===\n\n"
-        
-        if ai_insight:
-            text += f"AI Summary: {ai_insight}\n\n"
-            
-        text += "--- Recommendations ---\n"
-        if not recommendations:
-            text += "No active recommendations. System checks passed.\n"
-        else:
-            for r in recommendations:
-                text += f"[{r['type'].upper()}] {r['message']}\n"
-                
-        text += "\n--- Large Files (Top 5) ---\n"
-        if not large_files:
-            text += "No large files found or check skipped.\n"
-        else:
+
+        ai_insight = self.ai_engine.generate_insight(
+            metrics, failed_services, errors_24h
+        )
+
+        GLib.idle_add(
+            self._display_insights, recs, ai_insight, large_files,
+            failed_services, slow_services, errors_24h
+        )
+
+    def _display_insights(
+        self,
+        recs: list,
+        ai_insight: str,
+        large_files: list,
+        failed_services: list,
+        slow_services: list,
+        errors_24h: int,
+    ) -> None:
+        lines: List[str] = []
+
+        # Header
+        lines.append("═══  System Insights  ═══\n")
+
+        # Recommendations
+        if recs:
+            lines.append("▸ Recommendations")
+            for r in recs:
+                icon = "⚠" if r['type'] == 'warning' else "✖"
+                lines.append(f"  {icon}  {r['message']}")
+            lines.append("")
+
+        # Failed services
+        if failed_services:
+            lines.append(f"▸ Failed Services ({len(failed_services)})")
+            for svc in failed_services:
+                lines.append(f"  •  {svc}")
+            lines.append("")
+
+        # Slow boot services
+        if slow_services:
+            lines.append("▸ Slow Boot Services")
+            for s in slow_services:
+                lines.append(f"  •  {s['service']}  ({s['time']})")
+            lines.append("")
+
+        # Errors
+        lines.append(f"▸ Journal Errors (24h): {errors_24h}\n")
+
+        # Large files
+        if large_files:
+            lines.append("▸ Large Files (>100 MB)")
             for f in large_files:
-                text += f"- {f['path']} ({f['size']})\n"
-                
-        buf.set_text(text)
+                lines.append(f"  •  {f['size']}  {f['path']}")
+            lines.append("")
+
+        # AI
+        lines.append(f"▸ AI Insight\n  {ai_insight}")
+
+        buf = self.txt_insights.get_buffer()
+        buf.set_text("\n".join(lines))
+
+    # ── History ──────────────────────────────────────────────────────────────
+    def _load_history_into_view(self) -> None:
+        self.history_list_store.clear()
+        for entry in self.history_manager.get_all_entries():
+            self.history_list_store.append([
+                entry.get("date", ""),
+                entry.get("categories", ""),
+                entry.get("total_freed", ""),
+                entry.get("status", ""),
+            ])
+
+    # ── Cleaner helpers ──────────────────────────────────────────────────────
+    def _get_selected_items(self) -> List[Dict[str, Any]]:
+        selected: List[Dict[str, Any]] = []
+        for row in self.file_list_store:
+            if row[0]:  # toggle column
+                selected.append({
+                    'category': row[1],
+                    'path': row[5],
+                    'size_bytes': row[4],
+                    'system': row[6],
+                })
+        return selected
+
+    def _update_summary(self) -> None:
+        total = sum(row[4] for row in self.file_list_store if row[0])
+        self.summary_label.set_text(f"Total: {format_size(total)}")
+
+    def _set_info(self, message: str, level: str = "info") -> None:
+        """Update the info-bar label and message type."""
+        type_map = {
+            "info": Gtk.MessageType.INFO,
+            "warning": Gtk.MessageType.WARNING,
+            "error": Gtk.MessageType.ERROR,
+        }
+        self.info_bar.set_message_type(type_map.get(level, Gtk.MessageType.INFO))
+        self.info_label.set_text(message)
