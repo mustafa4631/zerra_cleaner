@@ -647,7 +647,7 @@ class MainWindow(Gtk.Window):
         failed_services = self.service_analyzer.get_failed_services()
         slow_services = self.service_analyzer.get_slow_startup_services()
         errors_24h = self.log_analyzer.get_error_count_24h()
-        large_files = self.disk_analyzer.get_large_files(limit=5)
+        large_files = self.disk_analyzer.get_large_files(os.path.expanduser("~"), limit=5)
         metrics = self.health_engine.get_metrics()
         
         recs = self.recommendation_engine.analyze_health(metrics)
