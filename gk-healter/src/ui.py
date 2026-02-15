@@ -200,7 +200,11 @@ class MainWindow:
         self.lbl_ai_api_key: Gtk.Label = g("lbl_ai_api_key")
         self.entry_ai_api_key: Gtk.Entry = g("entry_ai_api_key")
         self.lbl_ai_model: Gtk.Label = g("lbl_ai_model")
-        self.entry_ai_model: Gtk.Entry = g("entry_ai_model")
+        self.combo_ai_model: Gtk.ComboBoxText = g("combo_ai_model")
+        # Connect to internal entry for custom model names
+        entry = self.combo_ai_model.get_child()
+        if isinstance(entry, Gtk.Entry):
+            entry.connect("changed", self.on_ai_model_entry_changed)
 
         self.expander_advanced: Gtk.Expander = g("expander_advanced")
         self.lbl_disk_threshold_title: Gtk.Label = g("lbl_disk_threshold_title")
@@ -493,21 +497,25 @@ class MainWindow:
             return
             
         self.settings_manager.set("ai_provider", val)
+        self._populate_ai_models(val)
             
-        # Optional: Auto-switch model default if it looks like the other provider's model
+        # Auto-switch model default if needed
         current_model = self.settings_manager.get("ai_model") or ""
         new_model = current_model
 
         if val == "openai":
             if "gpt" not in current_model:
-                new_model = "gpt-3.5-turbo"
+                new_model = "gpt-4o"
         elif val == "gemini":
             if "gemini" not in current_model:
-                new_model = "gemini-1.5-flash"
+                new_model = "gemini-2.5-flash"
         
         if new_model != current_model:
             self.settings_manager.set("ai_model", new_model)
-            self.entry_ai_model.set_text(new_model)
+            # Update the entry inside the combo
+            entry = self.combo_ai_model.get_child()
+            if isinstance(entry, Gtk.Entry):
+                entry.set_text(new_model)
 
         self._update_ai_config()
 
@@ -516,10 +524,17 @@ class MainWindow:
         self.settings_manager.set("ai_api_key", val)
         self._update_ai_config()
 
-    def on_ai_model_changed(self, entry: Gtk.Entry) -> None:
+    def on_ai_model_entry_changed(self, entry: Gtk.Entry) -> None:
         val = entry.get_text()
         self.settings_manager.set("ai_model", val)
         self._update_ai_config()
+
+    def on_ai_model_combo_changed(self, combo: Gtk.ComboBoxText) -> None:
+        # For editable combo, get_active_text() returns typed or selected text
+        val = combo.get_active_text()
+        if val:
+            self.settings_manager.set("ai_model", val)
+            self._update_ai_config()
     
     def _update_ai_config(self) -> None:
         sm = self.settings_manager
@@ -527,6 +542,22 @@ class MainWindow:
             sm.get("ai_provider"), sm.get("ai_api_key"), sm.get("ai_model")
         )
 
+    def _populate_ai_models(self, provider: str) -> None:
+        """Populate the model combo with known models for the selected provider."""
+        self.combo_ai_model.remove_all()
+        
+        models = []
+        if provider == "gemini":
+            models = [
+                "gemini-2.5-flash", "gemini-3-pro", 
+                "gemini-1.5-pro", "gemini-1.5-flash"
+            ]
+        elif provider == "openai":
+            models = ["gpt-4o", "gpt-5.2", "gpt-3.5-turbo"]
+            
+        for m in models:
+            self.combo_ai_model.append_text(m)
+            
     # ══════════════════════════════════════════════════════════════════════════
     #  PRIVATE HELPERS
     # ══════════════════════════════════════════════════════════════════════════
@@ -555,10 +586,35 @@ class MainWindow:
         self.combo_ai_provider.set_active_id(ai_prov)
 
         self.entry_ai_api_key.set_text(sm.get("ai_api_key") or "")
-        self.entry_ai_model.set_text(sm.get("ai_model") or "gpt-3.5-turbo")
+        
+        # Populate models for current provider
+        self._populate_ai_models(ai_prov)
+        
+        # Smart default model if not set
+        current_model = sm.get("ai_model")
+        if not current_model:
+            if ai_prov == "gemini":
+                current_model = "gemini-2.5-flash"
+            else:
+                current_model = "gpt-4o"
+        
+        # Combo entry
+        child = self.combo_ai_model.get_child()
+        if isinstance(child, Gtk.Entry):
+            child.set_text(current_model)
+        elif hasattr(self.combo_ai_model, "set_active_id"):
+             # Fallback if text entry manipulation fails, try active id if it matches
+             # But here we want custom text too.
+             pass
+        
+        # Set text directly if possible via the entry child of the combo
+        # GtkComboBoxText with has-entry=True has an internal GtkEntry
+        entry = self.combo_ai_model.get_child()
+        if entry and isinstance(entry, Gtk.Entry):
+            entry.set_text(current_model)
 
         # Configure initial AI engine state
-        self.ai_engine.configure(ai_prov, sm.get("ai_api_key"), sm.get("ai_model"))
+        self.ai_engine.configure(ai_prov, sm.get("ai_api_key"), current_model)
 
         # Restore switch / spin values (block signals temporarily)
         self.switch_auto_maintenance.set_active(sm.get("auto_maintenance_enabled"))

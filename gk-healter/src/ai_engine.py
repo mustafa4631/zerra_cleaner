@@ -6,10 +6,10 @@ class AIEngine:
     def __init__(self):
         self.provider = "gemini"
         self.api_key = ""
-        self.model = "gpt-3.5-turbo"
+        self.model = "gemini-2.5-flash"
         self.enabled = False
 
-    def configure(self, provider, api_key, model="gpt-3.5-turbo"):
+    def configure(self, provider, api_key, model="gemini-2.5-flash"):
         self.provider = provider
         self.api_key = api_key
         self.model = model
@@ -56,7 +56,7 @@ class AIEngine:
             "Authorization": f"Bearer {self.api_key}"
         }
         data = {
-            "model": self.model or "gpt-3.5-turbo",
+            "model": self.model or "gpt-4o",
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 300
         }
@@ -72,8 +72,10 @@ class AIEngine:
             return f"OpenAI Request Error: {e}"
 
     def _call_gemini(self, prompt):
-        # Gemini 1.5 Flash endpoint
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
+        model_name = self.model or "gemini-2.5-flash"
+        
+        # API requires URL: .../models/MODEL_NAME:generateContent
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.api_key}"
         headers = {"Content-Type": "application/json"}
         # For Gemini, prompt is in parts > text
         data = {

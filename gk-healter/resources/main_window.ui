@@ -1779,10 +1779,11 @@
                                                   </packing>
                                                 </child>
                                                 <child>
-                                                  <object class="GtkEntry" id="entry_ai_model">
+                                                  <object class="GtkComboBoxText" id="combo_ai_model">
                                                     <property name="visible">True</property>
-                                                    <property name="width_chars">15</property>
-                                                    <signal name="changed" handler="on_ai_model_changed" swapped="no"/>
+                                                    <property name="has_entry">True</property>
+                                                    <property name="width_request">180</property>
+                                                    <signal name="changed" handler="on_ai_model_combo_changed" swapped="no"/>
                                                   </object>
                                                 </child>
                                               </object>
