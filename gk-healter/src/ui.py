@@ -350,13 +350,22 @@ class MainWindow:
             if icon_theme.has_icon("io.github.gkdevelopers.GKHealter"):
                 self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
             else:
-                icon_path = os.path.join(
+                # Try loading SVG first (scalable), then fallback to PNG
+                icon_path_svg = os.path.join(
                     os.path.dirname(__file__), "..", "icons",
-                    "hicolor", "128x128", "apps",
-                    "io.github.gkdevelopers.GKHealter.png",
+                    "hicolor", "scalable", "apps",
+                    "io.github.gkdevelopers.GKHealter.svg",
                 )
-                if os.path.exists(icon_path):
-                    self.window.set_icon_from_file(icon_path)
+                if os.path.exists(icon_path_svg):
+                    self.window.set_icon_from_file(icon_path_svg)
+                else:
+                    icon_path_png = os.path.join(
+                        os.path.dirname(__file__), "..", "icons",
+                        "hicolor", "128x128", "apps",
+                        "io.github.gkdevelopers.GKHealter.png",
+                    )
+                    if os.path.exists(icon_path_png):
+                        self.window.set_icon_from_file(icon_path_png)
         except Exception:
             pass
 
