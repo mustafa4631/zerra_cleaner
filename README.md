@@ -1,6 +1,6 @@
 # GK Healter
 
-[Icon](/gk-healter/icons/hicolor/scalable/apps/io.github.gkdevelopers.GKHealter.svg)
+![Icon](/screenshots/logo.png)
 
 GK Healter is a professional, lightweight system maintenance utility designed for Linux desktops. It emphasizes safety and efficiency, providing users with a reliable way to recover disk space by identifying and removing redundant files without compromising system stability.
 
