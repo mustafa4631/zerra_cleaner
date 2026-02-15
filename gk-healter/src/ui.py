@@ -74,6 +74,9 @@ class MainWindow:
         self._init_settings_ui()
         self._load_history_into_view()
 
+        # Apply i18n translations to all hardcoded XML labels
+        self._apply_translations()
+
         # Set the application icon
         self._set_app_icon()
 
@@ -100,15 +103,28 @@ class MainWindow:
         self.content_stack: Gtk.Stack = g("content_stack")
 
         # ── Dashboard ──
+        self.lbl_welcome: Gtk.Label = g("lbl_welcome")
+        self.lbl_welcome_sub: Gtk.Label = g("lbl_welcome_sub")
         self.lbl_score_value: Gtk.Label = g("lbl_score_value")
         self.lbl_score_status: Gtk.Label = g("lbl_score_status")
         self.lbl_score_detail: Gtk.Label = g("lbl_score_detail")
+        self.lbl_dash_cpu_title: Gtk.Label = g("lbl_dash_cpu_title")
+        self.lbl_dash_ram_title: Gtk.Label = g("lbl_dash_ram_title")
+        self.lbl_dash_disk_title: Gtk.Label = g("lbl_dash_disk_title")
         self.lbl_dash_cpu_val: Gtk.Label = g("lbl_dash_cpu_val")
         self.lbl_dash_ram_val: Gtk.Label = g("lbl_dash_ram_val")
         self.lbl_dash_disk_val: Gtk.Label = g("lbl_dash_disk_val")
         self.level_dash_cpu: Gtk.LevelBar = g("level_dash_cpu")
         self.level_dash_ram: Gtk.LevelBar = g("level_dash_ram")
         self.level_dash_disk: Gtk.LevelBar = g("level_dash_disk")
+        self.lbl_quick_actions_title: Gtk.Label = g("lbl_quick_actions_title")
+        self.lbl_dash_scan_title: Gtk.Label = g("lbl_dash_scan_title")
+        self.lbl_dash_scan_desc: Gtk.Label = g("lbl_dash_scan_desc")
+        self.lbl_dash_health_title: Gtk.Label = g("lbl_dash_health_title")
+        self.lbl_dash_health_desc: Gtk.Label = g("lbl_dash_health_desc")
+        self.lbl_dash_insights_title: Gtk.Label = g("lbl_dash_insights_title")
+        self.lbl_dash_insights_desc: Gtk.Label = g("lbl_dash_insights_desc")
+        self.lbl_sysstate_title: Gtk.Label = g("lbl_sysstate_title")
         self.lbl_systemd_state: Gtk.Label = g("lbl_systemd_state")
         self.lbl_failed_count: Gtk.Label = g("lbl_failed_count")
         self.lbl_errors_24h: Gtk.Label = g("lbl_errors_24h")
@@ -123,8 +139,12 @@ class MainWindow:
         self.btn_clean: Gtk.Button = g("btn_clean")
 
         # ── Health monitor ──
+        self.lbl_health_page_title: Gtk.Label = g("lbl_health_page_title")
         self.lbl_health_score_big: Gtk.Label = g("lbl_health_score_big")
         self.lbl_health_status_text: Gtk.Label = g("lbl_health_status_text")
+        self.lbl_health_cpu_label: Gtk.Label = g("lbl_health_cpu_label")
+        self.lbl_health_ram_label: Gtk.Label = g("lbl_health_ram_label")
+        self.lbl_health_disk_label: Gtk.Label = g("lbl_health_disk_label")
         self.lbl_health_cpu_val: Gtk.Label = g("lbl_health_cpu_val")
         self.lbl_health_ram_val: Gtk.Label = g("lbl_health_ram_val")
         self.lbl_health_disk_val: Gtk.Label = g("lbl_health_disk_val")
@@ -133,26 +153,140 @@ class MainWindow:
         self.level_health_disk: Gtk.LevelBar = g("level_health_disk")
 
         # ── Insights ──
+        self.lbl_insights_title: Gtk.Label = g("lbl_insights_title")
+        self.btn_refresh_insights: Gtk.Button = g("btn_refresh_insights")
         self.txt_insights: Gtk.TextView = g("txt_insights")
 
         # ── History ──
+        self.lbl_history_title: Gtk.Label = g("lbl_history_title")
         self.history_list_store: Gtk.ListStore = g("history_list_store")
 
+        # ── Treeview columns ──
+        self.col_toggle: Gtk.TreeViewColumn = g("col_toggle")
+        self.col_category: Gtk.TreeViewColumn = g("col_category")
+        self.col_description: Gtk.TreeViewColumn = g("col_description")
+        self.col_size: Gtk.TreeViewColumn = g("col_size")
+        self.hist_col_date: Gtk.TreeViewColumn = g("hist_col_date")
+        self.hist_col_category: Gtk.TreeViewColumn = g("hist_col_category")
+        self.hist_col_freed: Gtk.TreeViewColumn = g("hist_col_freed")
+        self.hist_col_status: Gtk.TreeViewColumn = g("hist_col_status")
+
         # ── Settings ──
+        self.lbl_settings_title: Gtk.Label = g("lbl_settings_title")
+        self.lbl_settings_language: Gtk.Label = g("lbl_settings_language")
+        self.lbl_language_select: Gtk.Label = g("lbl_language_select")
         self.combo_language: Gtk.ComboBoxText = g("combo_language")
+        self.lbl_auto_maintenance_title: Gtk.Label = g("lbl_auto_maintenance_title")
+        self.lbl_auto_maintenance_desc: Gtk.Label = g("lbl_auto_maintenance_desc")
         self.switch_auto_maintenance: Gtk.Switch = g("switch_auto_maintenance")
         self.box_auto_settings: Gtk.Box = g("box_auto_settings")
+        self.lbl_scheduling_title: Gtk.Label = g("lbl_scheduling_title")
+        self.lbl_frequency_title: Gtk.Label = g("lbl_frequency_title")
         self.combo_frequency: Gtk.ComboBoxText = g("combo_frequency")
+        self.lbl_conditions_title: Gtk.Label = g("lbl_conditions_title")
+        self.lbl_idle_title: Gtk.Label = g("lbl_idle_title")
         self.spin_idle: Gtk.SpinButton = g("spin_idle")
+        self.lbl_minutes_suffix: Gtk.Label = g("lbl_minutes_suffix")
+        self.lbl_ac_power_title: Gtk.Label = g("lbl_ac_power_title")
         self.switch_ac_power: Gtk.Switch = g("switch_ac_power")
+        self.lbl_notifications_title: Gtk.Label = g("lbl_notifications_title")
+        self.lbl_notify_done_title: Gtk.Label = g("lbl_notify_done_title")
         self.switch_notify: Gtk.Switch = g("switch_notify")
+        self.expander_advanced: Gtk.Expander = g("expander_advanced")
+        self.lbl_disk_threshold_title: Gtk.Label = g("lbl_disk_threshold_title")
         self.switch_disk_threshold: Gtk.Switch = g("switch_disk_threshold")
         self.spin_disk_percent: Gtk.SpinButton = g("spin_disk_percent")
+        self.lbl_last_maintenance_title: Gtk.Label = g("lbl_last_maintenance_title")
         self.lbl_last_maintenance: Gtk.Label = g("lbl_last_maintenance")
 
         # ── Dialogs ──
         self.about_dialog: Gtk.AboutDialog = g("about_dialog")
         self.clean_confirm_dialog: Gtk.MessageDialog = g("clean_confirm_dialog")
+
+    # ── Translation ──────────────────────────────────────────────────────────
+    def _apply_translations(self) -> None:
+        """Replace all hardcoded English labels with the active locale strings."""
+        # Header bar
+        self.builder.get_object("header_bar").set_subtitle(_("app_subtitle"))
+
+        # ── Dashboard page ──
+        self.lbl_welcome.set_text(_("lbl_welcome"))
+        self.lbl_welcome_sub.set_text(_("lbl_welcome_sub"))
+        self.lbl_score_status.set_text(_("lbl_calculating"))
+        self.lbl_score_detail.set_text(_("lbl_monitoring"))
+        self.lbl_dash_cpu_title.set_text(_("lbl_cpu"))
+        self.lbl_dash_ram_title.set_text(_("lbl_memory"))
+        self.lbl_dash_disk_title.set_text(_("lbl_disk"))
+        self.lbl_quick_actions_title.set_text(_("lbl_quick_actions"))
+        self.lbl_dash_scan_title.set_text(_("dash_scan_title"))
+        self.lbl_dash_scan_desc.set_text(_("dash_scan_desc"))
+        self.lbl_dash_health_title.set_text(_("dash_health_title"))
+        self.lbl_dash_health_desc.set_text(_("dash_health_desc"))
+        self.lbl_dash_insights_title.set_text(_("dash_insights_title"))
+        self.lbl_dash_insights_desc.set_text(_("dash_insights_desc"))
+        self.lbl_sysstate_title.set_text(_("lbl_system_state"))
+
+        # Stack page titles (sidebar labels)
+        self.content_stack.child_set_property(
+            self.content_stack.get_child_by_name("page_dashboard"), "title", _("page_dashboard"))
+        self.content_stack.child_set_property(
+            self.content_stack.get_child_by_name("page_cleaner"), "title", _("page_cleaner"))
+        self.content_stack.child_set_property(
+            self.content_stack.get_child_by_name("page_health"), "title", _("page_health"))
+        self.content_stack.child_set_property(
+            self.content_stack.get_child_by_name("page_insights"), "title", _("page_insights"))
+        self.content_stack.child_set_property(
+            self.content_stack.get_child_by_name("page_history"), "title", _("page_history"))
+        self.content_stack.child_set_property(
+            self.content_stack.get_child_by_name("page_settings"), "title", _("page_settings"))
+
+        # ── Cleaner page ──
+        self.info_label.set_text(_("msg_ready"))
+        self.btn_scan.set_label(_("btn_scan"))
+        self.btn_clean.set_label(_("btn_clean"))
+        self.col_toggle.set_title(_("col_select"))
+        self.col_category.set_title(_("col_category"))
+        self.col_description.set_title(_("col_description"))
+        self.col_size.set_title(_("col_size"))
+
+        # ── Health page ──
+        self.lbl_health_page_title.set_text(_("lbl_health_title"))
+        self.lbl_health_status_text.set_text(_("lbl_health_score"))
+        self.lbl_health_cpu_label.set_text(_("lbl_cpu_usage"))
+        self.lbl_health_ram_label.set_text(_("lbl_memory_usage"))
+        self.lbl_health_disk_label.set_text(_("lbl_disk_usage"))
+
+        # ── Insights page ──
+        self.lbl_insights_title.set_text(_("insights_title"))
+        self.btn_refresh_insights.set_label(_("btn_analyze"))
+
+        # ── History page ──
+        self.lbl_history_title.set_text(_("history_title"))
+        self.hist_col_date.set_title(_("col_date"))
+        self.hist_col_category.set_title(_("col_categories"))
+        self.hist_col_freed.set_title(_("col_freed"))
+        self.hist_col_status.set_title(_("col_status"))
+
+        # ── Settings page ──
+        self.lbl_settings_title.set_text(_("settings_title"))
+        self.lbl_settings_language.set_text(_("settings_language"))
+        self.lbl_language_select.set_text(_("language_selection"))
+        self.lbl_auto_maintenance_title.set_text(_("settings_auto_maintenance"))
+        self.lbl_auto_maintenance_desc.set_text(_("settings_auto_desc"))
+        self.lbl_scheduling_title.set_text(_("settings_scheduling"))
+        self.lbl_frequency_title.set_text(_("settings_frequency"))
+        self.lbl_conditions_title.set_text(_("settings_conditions"))
+        self.lbl_idle_title.set_text(_("settings_idle"))
+        self.lbl_minutes_suffix.set_text(_("minutes_suffix"))
+        self.lbl_ac_power_title.set_text(_("settings_ac_power"))
+        self.lbl_notifications_title.set_text(_("settings_notifications"))
+        self.lbl_notify_done_title.set_text(_("settings_notify_done"))
+        self.expander_advanced.set_label(_("settings_advanced"))
+        self.lbl_disk_threshold_title.set_text(_("settings_disk_threshold"))
+        self.lbl_last_maintenance_title.set_text(_("settings_last_maintenance"))
+
+        # ── Confirm dialog ──
+        self.clean_confirm_dialog.set_property("text", _("confirm_title"))
 
     # ── CSS ──────────────────────────────────────────────────────────────────
     @staticmethod
@@ -278,6 +412,8 @@ class MainWindow:
         if lang_id:
             self.settings_manager.set("language", lang_id)
             I18nManager().load_language(lang_id)
+            self._apply_translations()
+            self._update_frequency_labels()
 
     def on_auto_maintenance_toggled(self, switch: Gtk.Switch, _pspec) -> None:
         active = switch.get_active()
@@ -317,7 +453,7 @@ class MainWindow:
         """Populate combo-boxes and restore saved values into the Settings page."""
         sm = self.settings_manager
 
-        # Language combo
+        # Language combo (these stay untranslated – they are language names)
         self.combo_language.append("auto", "Auto")
         self.combo_language.append("en", "English")
         self.combo_language.append("tr", "Türkçe")
@@ -325,10 +461,7 @@ class MainWindow:
         self.combo_language.set_active_id(current_lang)
 
         # Frequency combo
-        self.combo_frequency.append("1", _("freq_daily"))
-        self.combo_frequency.append("7", _("freq_weekly"))
-        self.combo_frequency.append("14", _("freq_biweekly"))
-        self.combo_frequency.append("30", _("freq_monthly"))
+        self._populate_frequency_combo()
         freq = str(sm.get("maintenance_frequency_days"))
         self.combo_frequency.set_active_id(freq)
 
@@ -345,6 +478,21 @@ class MainWindow:
         # Last maintenance label
         last = sm.get("last_maintenance_date")
         self.lbl_last_maintenance.set_text(last if last else _("lbl_never"))
+
+    def _populate_frequency_combo(self) -> None:
+        """Fill the frequency combo with translated labels."""
+        self.combo_frequency.remove_all()
+        self.combo_frequency.append("1", _("freq_daily"))
+        self.combo_frequency.append("7", _("freq_weekly"))
+        self.combo_frequency.append("14", _("freq_biweekly"))
+        self.combo_frequency.append("30", _("freq_monthly"))
+
+    def _update_frequency_labels(self) -> None:
+        """Re-populate frequency combo after a language change."""
+        active = self.combo_frequency.get_active_id()
+        self._populate_frequency_combo()
+        if active:
+            self.combo_frequency.set_active_id(active)
 
     # ── Health timer (periodic UI refresh) ───────────────────────────────────
     def _start_health_timer(self) -> None:
@@ -375,7 +523,7 @@ class MainWindow:
 
         # Health page (mirrors dashboard but bigger)
         self.lbl_health_score_big.set_text(str(int(score)))
-        self.lbl_health_status_text.set_text(f"Health Score — {status}")
+        self.lbl_health_status_text.set_text(f"{_('health_score_label')} — {status}")
         self.lbl_health_cpu_val.set_text(f"{cpu:.0f}%")
         self.lbl_health_ram_val.set_text(f"{ram:.0f}%")
         self.lbl_health_disk_val.set_text(f"{disk:.0f}%")
@@ -387,21 +535,13 @@ class MainWindow:
 
     def _set_score_detail(self, score: float) -> None:
         if score >= 90:
-            self.lbl_score_detail.set_text(
-                "All systems running smoothly. No action needed."
-            )
+            self.lbl_score_detail.set_text(_("score_detail_excellent"))
         elif score >= 70:
-            self.lbl_score_detail.set_text(
-                "System is mostly healthy. Minor resource pressure detected."
-            )
+            self.lbl_score_detail.set_text(_("score_detail_good"))
         elif score >= 50:
-            self.lbl_score_detail.set_text(
-                "Moderate resource usage. Consider closing unused applications."
-            )
+            self.lbl_score_detail.set_text(_("score_detail_fair"))
         else:
-            self.lbl_score_detail.set_text(
-                "High resource usage detected. Immediate attention recommended."
-            )
+            self.lbl_score_detail.set_text(_("score_detail_critical"))
 
     # ── Dashboard refresh (system state section) ─────────────────────────────
     def _refresh_dashboard(self) -> None:
@@ -544,11 +684,11 @@ class MainWindow:
         lines: List[str] = []
 
         # Header
-        lines.append("═══  System Insights  ═══\n")
+        lines.append(f"{_('insights_header')}\n")
 
         # Recommendations
         if recs:
-            lines.append("▸ Recommendations")
+            lines.append(f"▸ {_('insights_recommendations')}")
             for r in recs:
                 icon = "⚠" if r['type'] == 'warning' else "✖"
                 lines.append(f"  {icon}  {r['message']}")
@@ -556,30 +696,30 @@ class MainWindow:
 
         # Failed services
         if failed_services:
-            lines.append(f"▸ Failed Services ({len(failed_services)})")
+            lines.append(f"▸ {_('insights_failed_services')} ({len(failed_services)})")
             for svc in failed_services:
                 lines.append(f"  •  {svc}")
             lines.append("")
 
         # Slow boot services
         if slow_services:
-            lines.append("▸ Slow Boot Services")
+            lines.append(f"▸ {_('insights_slow_boot')}")
             for s in slow_services:
                 lines.append(f"  •  {s['service']}  ({s['time']})")
             lines.append("")
 
         # Errors
-        lines.append(f"▸ Journal Errors (24h): {errors_24h}\n")
+        lines.append(f"▸ {_('insights_journal_errors')}: {errors_24h}\n")
 
         # Large files
         if large_files:
-            lines.append("▸ Large Files (>100 MB)")
+            lines.append(f"▸ {_('insights_large_files')}")
             for f in large_files:
                 lines.append(f"  •  {f['size']}  {f['path']}")
             lines.append("")
 
         # AI
-        lines.append(f"▸ AI Insight\n  {ai_insight}")
+        lines.append(f"▸ {_('insights_ai')}\n  {ai_insight}")
 
         buf = self.txt_insights.get_buffer()
         buf.set_text("\n".join(lines))
@@ -610,7 +750,9 @@ class MainWindow:
 
     def _update_summary(self) -> None:
         total = sum(row[4] for row in self.file_list_store if row[0])
-        self.summary_label.set_text(f"Total: {format_size(total)}")
+        self.summary_label.set_text(
+            _("summary_total").replace("{size}", format_size(total))
+        )
 
     def _set_info(self, message: str, level: str = "info") -> None:
         """Update the info-bar label and message type."""
