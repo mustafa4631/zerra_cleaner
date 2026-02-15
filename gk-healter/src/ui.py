@@ -11,6 +11,12 @@ from src.history_manager import HistoryManager
 from src.settings_manager import SettingsManager
 from src.auto_maintenance_manager import AutoMaintenanceManager
 from src.i18n_manager import _, I18nManager
+from src.health_engine import HealthEngine
+from src.service_analyzer import ServiceAnalyzer
+from src.log_analyzer import LogAnalyzer
+from src.disk_analyzer import DiskAnalyzer
+from src.recommendation_engine import RecommendationEngine
+from src.ai_engine import AIEngine
 import datetime
 
 class MainWindow(Gtk.Window):
@@ -29,6 +35,14 @@ class MainWindow(Gtk.Window):
         self.settings_manager: SettingsManager = SettingsManager()
         self.history_manager: HistoryManager = HistoryManager()
         self.auto_maintenance_manager: AutoMaintenanceManager = AutoMaintenanceManager(self.settings_manager, self.history_manager)
+
+        # Initialize New Engines
+        self.health_engine = HealthEngine()
+        self.service_analyzer = ServiceAnalyzer()
+        self.log_analyzer = LogAnalyzer()
+        self.disk_analyzer = DiskAnalyzer()
+        self.recommendation_engine = RecommendationEngine()
+        self.ai_engine = AIEngine()
         self.scan_data: List[Dict[str, Any]] = []
         self.current_cleaning_info: Dict[str, Any] = {}
         self.is_auto_maintenance_run: bool = False
@@ -132,6 +146,7 @@ class MainWindow(Gtk.Window):
         # Load Settings UI
         self._sync_settings_ui()
 
+        self._setup_extended_ui()
         self.window.show_all()
 
         # Check for auto maintenance after a short delay
@@ -539,3 +554,129 @@ class MainWindow(Gtk.Window):
         """
         self.about_dialog.run()
         self.about_dialog.hide()
+
+    def _setup_extended_ui(self):
+        # --- System Health Tab ---
+        self.health_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.health_box.set_border_width(20)
+        
+        # CPU
+        self.lbl_cpu = Gtk.Label(label="CPU Usage: 0%")
+        self.level_cpu = Gtk.LevelBar()
+        self.level_cpu.set_min_value(0)
+        self.level_cpu.set_max_value(100)
+        
+        # RAM
+        self.lbl_ram = Gtk.Label(label="RAM Usage: 0%")
+        self.level_ram = Gtk.LevelBar()
+        self.level_ram.set_min_value(0)
+        self.level_ram.set_max_value(100)
+        
+        # Disk
+        self.lbl_disk = Gtk.Label(label="Disk Usage: 0%")
+        self.level_disk = Gtk.LevelBar()
+        self.level_disk.set_min_value(0)
+        self.level_disk.set_max_value(100)
+
+        # Score
+        self.lbl_score = Gtk.Label(label="System Health Score: Calculating...")
+        # self.lbl_score.get_style_context().add_class("h2")
+
+        self.health_box.pack_start(self.lbl_score, False, False, 10)
+        self.health_box.pack_start(self.lbl_cpu, False, False, 0)
+        self.health_box.pack_start(self.level_cpu, False, False, 0)
+        self.health_box.pack_start(self.lbl_ram, False, False, 0)
+        self.health_box.pack_start(self.level_ram, False, False, 0)
+        self.health_box.pack_start(self.lbl_disk, False, False, 0)
+        self.health_box.pack_start(self.level_disk, False, False, 0)
+
+        self.notebook.append_page(self.health_box, Gtk.Label(label=_("tab_health", "System Health")))
+
+        # --- Insights Tab ---
+        self.insights_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.insights_box.set_border_width(20)
+        
+        self.btn_refresh_insights = Gtk.Button(label=_("btn_refresh", "Refresh Insights"))
+        self.btn_refresh_insights.connect("clicked", self._on_refresh_insights)
+        
+        self.txt_insights = Gtk.TextView()
+        self.txt_insights.set_editable(False)
+        self.txt_insights.set_wrap_mode(Gtk.WrapMode.WORD)
+        
+        scroll = Gtk.ScrolledWindow()
+        scroll.add(self.txt_insights)
+        
+        self.insights_box.pack_start(self.btn_refresh_insights, False, False, 0)
+        self.insights_box.pack_start(scroll, True, True, 0)
+        
+        self.notebook.append_page(self.insights_box, Gtk.Label(label=_("tab_insights", "Insights")))
+        
+        # Start Monitoring
+        self.health_engine.start_monitoring()
+        GLib.timeout_add(1000, self._update_health_ui)
+
+    def _update_health_ui(self):
+        metrics = self.health_engine.get_metrics()
+        cpu = metrics['cpu']
+        ram = metrics['ram']
+        disk = metrics['disk']
+        score = metrics['score']
+        
+        self.lbl_cpu.set_text(f"CPU Usage: {cpu:.1f}%")
+        self.level_cpu.set_value(cpu)
+        
+        self.lbl_ram.set_text(f"RAM Usage: {ram:.1f}%")
+        self.level_ram.set_value(ram)
+        
+        self.lbl_disk.set_text(f"Disk Usage: {disk:.1f}%")
+        self.level_disk.set_value(disk)
+        
+        status = self.health_engine.get_detailed_status()
+        self.lbl_score.set_text(f"System Health Score: {score}/100 ({status})")
+        
+        return True
+
+    def _on_refresh_insights(self, widget):
+        buf = self.txt_insights.get_buffer()
+        buf.set_text("Analyzing system... please wait...")
+        
+        # Run in thread
+        threading.Thread(target=self._run_analysis, daemon=True).start()
+        
+    def _run_analysis(self):
+        failed_services = self.service_analyzer.get_failed_services()
+        slow_services = self.service_analyzer.get_slow_startup_services()
+        errors_24h = self.log_analyzer.get_error_count_24h()
+        large_files = self.disk_analyzer.get_large_files(limit=5)
+        metrics = self.health_engine.get_metrics()
+        
+        recs = self.recommendation_engine.analyze_health(metrics)
+        recs += self.recommendation_engine.analyze_services(failed_services, slow_services)
+        recs += self.recommendation_engine.analyze_logs(errors_24h)
+        
+        ai_insight = self.ai_engine.generate_insight(metrics, failed_services, errors_24h)
+        
+        GLib.idle_add(self._display_insights, recs, ai_insight, large_files)
+        
+    def _display_insights(self, recommendations, ai_insight, large_files):
+        buf = self.txt_insights.get_buffer()
+        text = "=== System Insights ===\n\n"
+        
+        if ai_insight:
+            text += f"AI Summary: {ai_insight}\n\n"
+            
+        text += "--- Recommendations ---\n"
+        if not recommendations:
+            text += "No active recommendations. System checks passed.\n"
+        else:
+            for r in recommendations:
+                text += f"[{r['type'].upper()}] {r['message']}\n"
+                
+        text += "\n--- Large Files (Top 5) ---\n"
+        if not large_files:
+            text += "No large files found or check skipped.\n"
+        else:
+            for f in large_files:
+                text += f"- {f['path']} ({f['size']})\n"
+                
+        buf.set_text(text)
