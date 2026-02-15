@@ -111,6 +111,12 @@
     "settings_notify_done": "Bitince bildir",
     "settings_advanced": "Gelişmiş Seçenekler",
     "settings_disk_threshold": "Disk dolunca otomatik temizle",
+
+    "settings_ai_title": "Yapay Zekâ Analizi",
+    "settings_ai_provider": "Sağlayıcı",
+    "settings_ai_api_key": "API Anahtarı",
+    "settings_ai_model": "Model",
+
     "settings_last_maintenance": "Son Bakım:",
     "lbl_never": "Hiçbir zaman",
 

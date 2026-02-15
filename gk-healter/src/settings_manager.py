@@ -19,7 +19,10 @@ class SettingsManager:
             "disk_threshold_percent": 90,
             "check_ac_power": True,
             "notify_on_completion": False,
-            "language": "auto"
+            "language": "auto",
+            "ai_provider": "gemini",
+            "ai_api_key": "",
+            "ai_model": "gpt-3.5-turbo",
         }
         self.settings = self.defaults.copy()
         self._load_settings()

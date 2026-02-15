@@ -111,6 +111,12 @@
     "settings_notify_done": "Notify when finished",
     "settings_advanced": "Advanced Options",
     "settings_disk_threshold": "Auto clean when disk full",
+
+    "settings_ai_title": "AI Analysis",
+    "settings_ai_provider": "Provider",
+    "settings_ai_api_key": "API Key",
+    "settings_ai_model": "Model",
+
     "settings_last_maintenance": "Last Maintenance:",
     "lbl_never": "Never",
 

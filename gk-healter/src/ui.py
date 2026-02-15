@@ -11,7 +11,7 @@ from typing import List, Dict, Any, Optional
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gtk, GLib, Gdk, Pango
 
 from src.cleaner import SystemCleaner
 from src.history_manager import HistoryManager
@@ -155,7 +155,8 @@ class MainWindow:
         # ── Insights ──
         self.lbl_insights_title: Gtk.Label = g("lbl_insights_title")
         self.btn_refresh_insights: Gtk.Button = g("btn_refresh_insights")
-        self.txt_insights: Gtk.TextView = g("txt_insights")
+        self.box_insights_container: Gtk.Box = g("box_insights_container")
+        self.box_insights_placeholder: Gtk.Box = g("box_insights_placeholder")
 
         # ── History ──
         self.lbl_history_title: Gtk.Label = g("lbl_history_title")
@@ -192,6 +193,15 @@ class MainWindow:
         self.lbl_notifications_title: Gtk.Label = g("lbl_notifications_title")
         self.lbl_notify_done_title: Gtk.Label = g("lbl_notify_done_title")
         self.switch_notify: Gtk.Switch = g("switch_notify")
+        
+        self.lbl_ai_config_title: Gtk.Label = g("lbl_ai_config_title")
+        self.lbl_ai_provider: Gtk.Label = g("lbl_ai_provider")
+        self.combo_ai_provider: Gtk.ComboBoxText = g("combo_ai_provider")
+        self.lbl_ai_api_key: Gtk.Label = g("lbl_ai_api_key")
+        self.entry_ai_api_key: Gtk.Entry = g("entry_ai_api_key")
+        self.lbl_ai_model: Gtk.Label = g("lbl_ai_model")
+        self.entry_ai_model: Gtk.Entry = g("entry_ai_model")
+
         self.expander_advanced: Gtk.Expander = g("expander_advanced")
         self.lbl_disk_threshold_title: Gtk.Label = g("lbl_disk_threshold_title")
         self.switch_disk_threshold: Gtk.Switch = g("switch_disk_threshold")
@@ -287,6 +297,12 @@ class MainWindow:
 
         # ── Confirm dialog ──
         self.clean_confirm_dialog.set_property("text", _("confirm_title"))
+        
+        # ── AI Config ──
+        self.lbl_ai_config_title.set_text(_("settings_ai_title"))
+        self.lbl_ai_provider.set_text(_("settings_ai_provider"))
+        self.lbl_ai_api_key.set_text(_("settings_ai_api_key"))
+        self.lbl_ai_model.set_text(_("settings_ai_model"))
 
     # ── CSS ──────────────────────────────────────────────────────────────────
     @staticmethod
@@ -299,6 +315,20 @@ class MainWindow:
             }
             .card-button:hover {
                 background-color: alpha(@theme_fg_color, 0.08);
+            }
+            .card {
+                background-color: alpha(@theme_fg_color, 0.05);
+                border-radius: 8px;
+                padding: 8px;
+            }
+            .dim-label {
+                opacity: 0.6;
+            }
+            .error {
+                color: @error_color;
+            }
+            .warning {
+                color: @warning_color;
             }
         """
         provider = Gtk.CssProvider()
@@ -401,9 +431,22 @@ class MainWindow:
         self._update_summary()
 
     # ── Insights page ────────────────────────────────────────────────────────
-    def on_refresh_insights_clicked(self, _btn: Optional[Gtk.Button]) -> None:
-        buf = self.txt_insights.get_buffer()
-        buf.set_text(_("msg_analyzing"))
+    def on_refresh_insights_clicked(self, _btn: Optional[Gtk.Button] = None) -> None:
+        # Hide previous results
+        for child in self.box_insights_container.get_children():
+            # If the placeholder is one of the children, we can choose to hide or remove it.
+            # But we added it in XML. Ideally we shouldn't remove XML-defined widgets if we want to reuse them.
+            # However, simpler approach: Remove generated widgets, show placeholder if empty.
+            if child == self.box_insights_placeholder:
+                child.set_visible(False)
+            else:
+                self.box_insights_container.remove(child)
+
+        lbl = Gtk.Label(label=_("msg_analyzing"))
+        lbl.set_visible(True)
+        lbl.get_style_context().add_class("dim-label")
+        self.box_insights_container.add(lbl)
+
         threading.Thread(target=self._run_analysis, daemon=True).start()
 
     # ── Settings page ────────────────────────────────────────────────────────
@@ -444,6 +487,46 @@ class MainWindow:
             "disk_threshold_percent", int(spin.get_value())
         )
 
+    def on_ai_provider_changed(self, combo: Gtk.ComboBoxText) -> None:
+        val = combo.get_active_id()
+        if not val:
+            return
+            
+        self.settings_manager.set("ai_provider", val)
+            
+        # Optional: Auto-switch model default if it looks like the other provider's model
+        current_model = self.settings_manager.get("ai_model") or ""
+        new_model = current_model
+
+        if val == "openai":
+            if "gpt" not in current_model:
+                new_model = "gpt-3.5-turbo"
+        elif val == "gemini":
+            if "gemini" not in current_model:
+                new_model = "gemini-1.5-flash"
+        
+        if new_model != current_model:
+            self.settings_manager.set("ai_model", new_model)
+            self.entry_ai_model.set_text(new_model)
+
+        self._update_ai_config()
+
+    def on_ai_key_changed(self, entry: Gtk.Entry) -> None:
+        val = entry.get_text()
+        self.settings_manager.set("ai_api_key", val)
+        self._update_ai_config()
+
+    def on_ai_model_changed(self, entry: Gtk.Entry) -> None:
+        val = entry.get_text()
+        self.settings_manager.set("ai_model", val)
+        self._update_ai_config()
+    
+    def _update_ai_config(self) -> None:
+        sm = self.settings_manager
+        self.ai_engine.configure(
+            sm.get("ai_provider"), sm.get("ai_api_key"), sm.get("ai_model")
+        )
+
     # ══════════════════════════════════════════════════════════════════════════
     #  PRIVATE HELPERS
     # ══════════════════════════════════════════════════════════════════════════
@@ -464,6 +547,18 @@ class MainWindow:
         self._populate_frequency_combo()
         freq = str(sm.get("maintenance_frequency_days"))
         self.combo_frequency.set_active_id(freq)
+
+        # AI Settings
+        self.combo_ai_provider.append("gemini", "Gemini (Google)")
+        self.combo_ai_provider.append("openai", "ChatGPT (OpenAI)")
+        ai_prov = sm.get("ai_provider") or "gemini"
+        self.combo_ai_provider.set_active_id(ai_prov)
+
+        self.entry_ai_api_key.set_text(sm.get("ai_api_key") or "")
+        self.entry_ai_model.set_text(sm.get("ai_model") or "gpt-3.5-turbo")
+
+        # Configure initial AI engine state
+        self.ai_engine.configure(ai_prov, sm.get("ai_api_key"), sm.get("ai_model"))
 
         # Restore switch / spin values (block signals temporarily)
         self.switch_auto_maintenance.set_active(sm.get("auto_maintenance_enabled"))
@@ -681,48 +776,131 @@ class MainWindow:
         slow_services: list,
         errors_24h: int,
     ) -> None:
-        lines: List[str] = []
+        # Clear container
+        for child in self.box_insights_container.get_children():
+            if child == self.box_insights_placeholder:
+                child.set_visible(False)
+            else:
+                self.box_insights_container.remove(child)
 
-        # Header
-        lines.append(f"{_('insights_header')}\n")
+        has_content = False
 
         # Recommendations
         if recs:
-            lines.append(f"▸ {_('insights_recommendations')}")
+            has_content = True
+            self._add_section_header(_("insights_recommendations"))
             for r in recs:
-                icon = "⚠" if r['type'] == 'warning' else "✖"
-                lines.append(f"  {icon}  {r['message']}")
-            lines.append("")
+                level = r['type'] # warning or error
+                icon = "dialog-warning-symbolic" if level == 'warning' else "dialog-error-symbolic"
+                self._add_insight_card(r['message'], icon, level)
 
         # Failed services
         if failed_services:
-            lines.append(f"▸ {_('insights_failed_services')} ({len(failed_services)})")
+            has_content = True
+            self._add_section_header(f"{_('insights_failed_services')} ({len(failed_services)})")
             for svc in failed_services:
-                lines.append(f"  •  {svc}")
-            lines.append("")
+                self._add_insight_card(svc, "service-template-symbolic", "error")
 
         # Slow boot services
         if slow_services:
-            lines.append(f"▸ {_('insights_slow_boot')}")
+            has_content = True
+            self._add_section_header(_("insights_slow_boot"))
             for s in slow_services:
-                lines.append(f"  •  {s['service']}  ({s['time']})")
-            lines.append("")
+                 # TODO: Add specific icon or level if needed
+                self._add_insight_card(f"{s['service']} ({s['time']})", "speedometer-symbolic", "warning")
 
         # Errors
-        lines.append(f"▸ {_('insights_journal_errors')}: {errors_24h}\n")
+        if errors_24h > 0:
+            has_content = True
+            self._add_section_header(f"{_('insights_journal_errors')}: {errors_24h}")
+            self._add_insight_card(f"Journal has {errors_24h} errors in last 24h", "dialog-error-symbolic", "error")
 
         # Large files
         if large_files:
-            lines.append(f"▸ {_('insights_large_files')}")
+            has_content = True
+            self._add_section_header(_("insights_large_files"))
             for f in large_files:
-                lines.append(f"  •  {f['size']}  {f['path']}")
-            lines.append("")
+                self._add_insight_card(f"{f['size']} - {f['path']}", "folder-symbolic")
 
-        # AI
-        lines.append(f"▸ {_('insights_ai')}\n  {ai_insight}")
+        # AI Insight
+        if ai_insight and "disabled" not in ai_insight:
+            has_content = True
+            self._add_section_header(_("insights_ai"))
+            
+            # Use a card or a well-styled label for AI text
+            # Since AI text is long, use a TextView or Label with wrapping inside a card
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            card.set_visible(True)
+            card.get_style_context().add_class("card")
+            card.set_margin_bottom(12)
+            card.set_margin_top(4)
+            card.set_margin_start(4)
+            card.set_margin_end(4)
+            
+            lbl = Gtk.Label(label=ai_insight)
+            lbl.set_visible(True)
+            lbl.set_line_wrap(True)
+            lbl.set_xalign(0)
+            lbl.set_selectable(True)
+            card.add(lbl)
+            self.box_insights_container.add(card)
 
-        buf = self.txt_insights.get_buffer()
-        buf.set_text("\n".join(lines))
+        if not has_content:
+            # Show "All Good" message
+            lbl = Gtk.Label(label=_("msg_no_items"))
+            lbl.set_visible(True)
+            lbl.set_halign(Gtk.Align.CENTER)
+            lbl.get_style_context().add_class("dim-label")
+            self.box_insights_container.add(lbl)
+        
+        self.box_insights_container.show_all()
+
+    def _add_section_header(self, title: str) -> None:
+        lbl = Gtk.Label(label=title)
+        lbl.set_visible(True)
+        lbl.set_xalign(0)
+        lbl.get_style_context().add_class("dim-label")
+        lbl.set_margin_top(12)
+        lbl.set_margin_bottom(4)
+        attributes = Pango.AttrList()
+        attributes.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
+        lbl.set_attributes(attributes)
+        self.box_insights_container.add(lbl)
+
+    def _add_insight_card(self, message: str, icon_name: str, level: str = "info") -> None:
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        box.set_visible(True)
+        box.get_style_context().add_class("card") # Requires CSS for .card
+        box.set_margin_bottom(6)
+        box.set_margin_start(4)
+        box.set_margin_end(4)
+        box.set_border_width(8)
+        
+        # Icon
+        try:
+            img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.DND) # Larger icon
+        except:
+             img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
+
+        img.set_visible(True)
+        if level == "error":
+            img.get_style_context().add_class("error")
+        elif level == "warning":
+            img.get_style_context().add_class("warning")
+        
+        # Icon alignment
+        img.set_valign(Gtk.Align.START)
+        box.pack_start(img, False, False, 0)
+        
+        # Label
+        lbl = Gtk.Label(label=message)
+        lbl.set_visible(True)
+        lbl.set_xalign(0)
+        lbl.set_line_wrap(True)
+        box.pack_start(lbl, True, True, 0)
+        
+        self.box_insights_container.add(box)
+
 
     # ── History ──────────────────────────────────────────────────────────────
     def _load_history_into_view(self) -> None:
