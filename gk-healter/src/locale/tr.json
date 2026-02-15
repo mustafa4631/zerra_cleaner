@@ -48,6 +48,12 @@
     "col_status": "Durum",
 
     "btn_scan": "Sistemi Tara",
+    "btn_clean_disk": "Diski Temizle",
+    "btn_sys_mon": "Sistem Sağlığını Aç",
+    "btn_view_svcs": "Servisleri İncele",
+    "btn_view_logs": "Günlükleri Gör",
+    "btn_inspect": "İncele",
+    "btn_fix_now": "Şimdi Düzelt",
     "btn_clean": "Temizle",
     "btn_analyze": "Analiz Et",
     "summary_total": "Toplam: {size}",

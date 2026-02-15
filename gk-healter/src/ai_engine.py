@@ -34,18 +34,24 @@ class AIEngine:
         score = metrics.get('score', 0)
         cpu = metrics.get('cpu_percent', 0)
         mem = metrics.get('memory_percent', 0)
+        disk = metrics.get('disk_percent', 0)
         failed_svc_str = ", ".join(failed_services) if failed_services else "None"
         
         prompt = (
-            f"Start with a short summary of system health state.\n"
-            f"Analyze this Linux system state:\n"
-            f"- Health Score: {score}/100\n"
-            f"- CPU Usage: {cpu}%\n"
-            f"- Memory Usage: {mem}%\n"
-            f"- Failed Services: {failed_svc_str}\n"
-            f"- Journal Errors (24h): {error_count}\n"
-            f"\nProvide 3 key recommendations to improve system stability or performance."
-            f"\nKeep the response concise and formatted as a list."
+            f"Role: Expert Linux System Administrator.\n"
+            f"Task: Analyze the following periodic health report and provide a professional assessment.\n\n"
+            f"--- SYSTEM METRICS ---\n"
+            f"• Health Score: {score}/100\n"
+            f"• CPU Load: {cpu}%\n"
+            f"• RAM Usage: {mem}%\n"
+            f"• Disk Usage: {disk}%\n"
+            f"• Failed Units: {failed_svc_str}\n"
+            f"• Journal Anomalies (24h): {error_count}\n\n"
+            f"--- OUTPUT REQUIREMENTS ---\n"
+            f"1. Executive Summary: A one-sentence status overview.\n"
+            f"2. Critical Analysis: Identify the most pressing issue (if any).\n"
+            f"3. Action Plan: Provide 3 concrete, technical steps to optimize or fix the system.\n"
+            f"Format using simple headers (e.g., 'Summary:', 'Analysis:', 'Actions:'). Keep tone professional and concise."
         )
         return prompt
 

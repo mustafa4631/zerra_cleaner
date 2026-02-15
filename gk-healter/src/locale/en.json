@@ -48,6 +48,12 @@
     "col_status": "Status",
 
     "btn_scan": "Scan System",
+    "btn_clean_disk": "Clean Disk",
+    "btn_sys_mon": "Open System Health",
+    "btn_view_svcs": "Inspect Services",
+    "btn_view_logs": "View Logs",
+    "btn_inspect": "Inspect",
+    "btn_fix_now": "Fix Now",
     "btn_clean": "Clean",
     "btn_analyze": "Analyze",
     "summary_total": "Total: {size}",

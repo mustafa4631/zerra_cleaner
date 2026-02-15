@@ -325,6 +325,13 @@ class MainWindow:
                 border-radius: 8px;
                 padding: 8px;
             }
+            .suggested-action {
+                background-color: @theme_selected_bg_color;
+                color: @theme_selected_fg_color;
+                font-weight: bold;
+                padding: 4px 12px;
+                border-radius: 4px;
+            }
             .dim-label {
                 opacity: 0.6;
             }
@@ -857,57 +864,82 @@ class MainWindow:
             for r in recs:
                 level = r['type'] # warning or error
                 icon = "dialog-warning-symbolic" if level == 'warning' else "dialog-error-symbolic"
-                self._add_insight_card(r['message'], icon, level)
+                action = r.get('action')
+                # Determine smart label
+                label = _("btn_fix_now")
+                if action == "clean_disk": label = _("btn_clean_disk")
+                elif action == "open_system_monitor": label = _("btn_sys_mon")
+                elif action == "view_services": label = _("btn_view_svcs")
+                elif action == "optimize_ram": label = _("btn_fix_now")
+                
+                self._add_insight_card(r['message'], icon, level, action, label)
 
         # Failed services
         if failed_services:
             has_content = True
             self._add_section_header(f"{_('insights_failed_services')} ({len(failed_services)})")
             for svc in failed_services:
-                self._add_insight_card(svc, "service-template-symbolic", "error")
+                self._add_insight_card(
+                    svc, "service-template-symbolic", "error", "view_services", _("btn_view_svcs")
+                )
 
         # Slow boot services
         if slow_services:
             has_content = True
             self._add_section_header(_("insights_slow_boot"))
             for s in slow_services:
-                 # TODO: Add specific icon or level if needed
-                self._add_insight_card(f"{s['service']} ({s['time']})", "speedometer-symbolic", "warning")
+                self._add_insight_card(
+                    f"{s['service']} ({s['time']})", "speedometer-symbolic", "warning", "view_services", _("btn_inspect")
+                )
 
         # Errors
         if errors_24h > 0:
             has_content = True
             self._add_section_header(f"{_('insights_journal_errors')}: {errors_24h}")
-            self._add_insight_card(f"Journal has {errors_24h} errors in last 24h", "dialog-error-symbolic", "error")
+            self._add_insight_card(
+                f"Journal has {errors_24h} errors in last 24h", "dialog-error-symbolic", "error", "analyze_logs", _("btn_view_logs")
+            )
 
         # Large files
         if large_files:
             has_content = True
             self._add_section_header(_("insights_large_files"))
             for f in large_files:
-                self._add_insight_card(f"{f['size']} - {f['path']}", "folder-symbolic")
+                self._add_insight_card(
+                    f"{f['size']} - {f['path']}", "folder-symbolic", "info", "clean_disk", _("btn_clean_disk")
+                )
 
         # AI Insight
         if ai_insight and "disabled" not in ai_insight:
             has_content = True
             self._add_section_header(_("insights_ai"))
             
-            # Use a card or a well-styled label for AI text
-            # Since AI text is long, use a TextView or Label with wrapping inside a card
-            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+            # Formatted AI Card
+            card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
             card.set_visible(True)
             card.get_style_context().add_class("card")
             card.set_margin_bottom(12)
-            card.set_margin_top(4)
             card.set_margin_start(4)
             card.set_margin_end(4)
+            card.set_border_width(12)
             
-            lbl = Gtk.Label(label=ai_insight)
+            # Process Markdown-style headers to Pango Markup
+            # 1. Bold headers (Summary:, Analysis:, etc.)
+            formatted_text = GLib.markup_escape_text(ai_insight)
+            for header in ["Summary:", "Analysis:", "Actions:", "Executive Summary:", "Critical Analysis:", "Action Plan:"]:
+                formatted_text = formatted_text.replace(header, f"<b>{header}</b>")
+            
+            # 2. Bullet points to fancy bullets
+            formatted_text = formatted_text.replace("- ", "• ").replace("* ", "• ")
+
+            lbl = Gtk.Label()
+            lbl.set_markup(f"<span font_desc='Sans 10'>{formatted_text}</span>")
             lbl.set_visible(True)
             lbl.set_line_wrap(True)
             lbl.set_xalign(0)
             lbl.set_selectable(True)
             card.add(lbl)
+            self.box_insights_container.add(card)
             self.box_insights_container.add(card)
 
         if not has_content:
@@ -932,7 +964,7 @@ class MainWindow:
         lbl.set_attributes(attributes)
         self.box_insights_container.add(lbl)
 
-    def _add_insight_card(self, message: str, icon_name: str, level: str = "info") -> None:
+    def _add_insight_card(self, message: str, icon_name: str, level: str = "info", action_id: str = None, action_label: str = None) -> None:
         box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
         box.set_visible(True)
         box.get_style_context().add_class("card") # Requires CSS for .card
@@ -957,14 +989,63 @@ class MainWindow:
         img.set_valign(Gtk.Align.START)
         box.pack_start(img, False, False, 0)
         
+        # Label container (VBox)
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        vbox.set_visible(True)
+        box.pack_start(vbox, True, True, 0)
+
         # Label
         lbl = Gtk.Label(label=message)
         lbl.set_visible(True)
         lbl.set_xalign(0)
         lbl.set_line_wrap(True)
-        box.pack_start(lbl, True, True, 0)
+        vbox.pack_start(lbl, True, True, 0)
+
+        # Action Button (only if action_id provided)
+        if action_id:
+            btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            btn_box.set_visible(True)
+            # Use specific label if provided, else fallback
+            btn_text = action_label or "Fix Now"
+            btn = Gtk.Button(label=btn_text)
+            btn.set_visible(True)
+            btn.get_style_context().add_class("suggested-action") # CSS class for styling
+            btn.set_halign(Gtk.Align.END)
+            # Use a lambda that captures the current action_id text
+            btn.connect("clicked", lambda b, a=action_id: self._on_action_clicked(a))
+            btn_box.pack_end(btn, False, False, 0)
+            vbox.pack_start(btn_box, False, False, 0)
         
         self.box_insights_container.add(box)
+
+    def _on_action_clicked(self, action_id: str) -> None:
+        """Handle insight action buttons."""
+        if action_id == "clean_disk":
+            self.content_stack.set_visible_child_name("page_cleaner")
+        elif action_id == "open_system_monitor":
+            self.content_stack.set_visible_child_name("page_health")
+        elif action_id == "view_services":
+             # Simple dialog for now as we don't have a service manager view
+             self._show_simple_dialog("Service Manager", "Run 'systemctl --failed' in a terminal to inspect failed services.")
+        elif action_id == "optimize_ram":
+             self._set_info("Optimizing RAM caches... (Simulated)", "info")
+             # In real app: could run 'sync; echo 3 > /proc/sys/vm/drop_caches' with pkexec
+        elif action_id == "analyze_logs":
+             self._show_simple_dialog("System Logs", "Check journalctl -xe or /var/log/syslog for details.")
+        else:
+             print(f"Unknown action: {action_id}")
+
+    def _show_simple_dialog(self, title, message):
+        dialog = Gtk.MessageDialog(
+            transient_for=self.window,
+            flags=0,
+            message_type=Gtk.MessageType.INFO,
+            buttons=Gtk.ButtonsType.OK,
+            text=title,
+        )
+        dialog.format_secondary_text(message)
+        dialog.run()
+        dialog.destroy()
 
 
     # ── History ──────────────────────────────────────────────────────────────
