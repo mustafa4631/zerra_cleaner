@@ -63,11 +63,11 @@ class SettingsManager:
         """Checks if monthly maintenance is due."""
         if not self.get("auto_maintenance_enabled"):
             return False
-            
+
         last_date_str = self.get("last_maintenance_date")
         if not last_date_str:
             return True # Never run, so it's due
-            
+
         try:
             last_date = datetime.datetime.strptime(last_date_str, "%Y-%m-%d %H:%M:%S")
             now = datetime.datetime.now()

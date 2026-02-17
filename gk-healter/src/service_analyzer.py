@@ -14,12 +14,12 @@ class ServiceAnalyzer:
         failed_services = []
         if not shutil.which('systemctl'):
             return ["Error: systemctl not found"]
-            
+
         try:
             # list-units --state=failed
             cmd = ['systemctl', 'list-units', '--state=failed', '--plain', '--no-legend']
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-            
+
             if result.returncode == 0:
                 for line in result.stdout.strip().split('\n'):
                     if line.strip():
@@ -31,7 +31,7 @@ class ServiceAnalyzer:
         except Exception as e:
             logger.error("Error checking failed services: %s", e)
             return [f"Error: {str(e)}"]
-            
+
         return failed_services
 
     def get_slow_startup_services(self, limit=5):
@@ -39,7 +39,7 @@ class ServiceAnalyzer:
         slow_services = []
         if not shutil.which('systemd-analyze'):
             return []
-            
+
         try:
             cmd = ['systemd-analyze', 'blame']
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
@@ -47,7 +47,7 @@ class ServiceAnalyzer:
                 lines = result.stdout.strip().split('\n')
                 # Filter out lines that might be empty
                 valid_lines = [l for l in lines if l.strip()]
-                
+
                 for line in valid_lines[:limit]:
                     parts = line.strip().split()
                     if len(parts) >= 2:
@@ -57,14 +57,14 @@ class ServiceAnalyzer:
                         slow_services.append({'service': service_name, 'time': time_taken})
         except Exception as e:
             logger.error("Error checking startup services: %s", e)
-            
+
         return slow_services
 
     def get_system_state(self):
         """Returns the overall system state (running, degraded, maintenance)."""
         if not shutil.which('systemctl'):
             return "unknown"
-            
+
         try:
             # is-system-running returns exit code based on state, but also prints the state
             cmd = ['systemctl', 'is-system-running']

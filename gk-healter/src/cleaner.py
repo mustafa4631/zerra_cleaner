@@ -13,7 +13,7 @@ class SystemCleaner:
     def __init__(self):
         self.scan_results = []
         self.distro_manager = DistroManager()
-        
+
         # Base categories (universal)
         self.categories = [
             ("cat_sys_logs", "/var/log", True, "desc_sys_logs"),
@@ -22,7 +22,7 @@ class SystemCleaner:
             ("cat_firefox", os.path.expanduser("~/.cache/mozilla"), False, "desc_firefox"),
             ("cat_chrome", os.path.expanduser("~/.cache/google-chrome"), False, "desc_chrome")
         ]
-        
+
         # Add distro-specific categories (pkg cache)
         # Note: get_package_cache_paths returns list of (key, path, desc_key)
         pkg_paths = self.distro_manager.get_package_cache_paths()
@@ -62,15 +62,15 @@ class SystemCleaner:
         """
         # Forbidden paths (prefixes)
         forbidden = ["/bin", "/boot", "/dev", "/etc", "/lib", "/proc", "/sys", "/usr/bin", "/usr/lib", "/usr/sbin"]
-        
+
         # Explicitly allowed prefixes for System cleaning
         # Dynamically add pkg cache path
         allowed_system = ["/var/log", "/var/lib/systemd/coredump"]
-        
+
         # Add distro specific paths to allowed list
         for _, p, _ in self.distro_manager.get_package_cache_paths():
             allowed_system.append(p)
-            
+
         # Explicitly allowed prefixes for User cleaning
         allowed_user = [os.path.expanduser("~/.cache")]
 
@@ -80,21 +80,21 @@ class SystemCleaner:
         for f in forbidden:
             if path.startswith(f):
                 return False
-        
+
         # 2. Check if it matches an allowed category prefix
-        
+
         # Careful! self.distro_manager.get_package_cache_paths() might include pseudo-paths like /usr/bin/apt for markers
         # We should allow those markers if they are passed as 'path', but not as a prefix for actual file deletion.
-        # But wait, cleaner only calls _clean_system with the marker path directly. 
+        # But wait, cleaner only calls _clean_system with the marker path directly.
         # So we just need to ensure the marker itself is allowed.
-        
+
         is_allowed = False
         for a in allowed_system + allowed_user:
             # If path matches exactly (for markers) or starts with directory
             if path == a or path.startswith(a + os.sep) or path.startswith(a):
                  is_allowed = True
                  break
-        
+
         return is_allowed
 
     def clean(self, selected_items: List[Dict[str, Any]]) -> Tuple[int, int, List[str]]:
@@ -130,7 +130,7 @@ class SystemCleaner:
                 fail_count += 1
                 if error_msg:
                     errors.append(error_msg)
-                    
+
         return success_count, fail_count, errors
 
     def _clean_user(self, path: str) -> Tuple[bool, str]:
@@ -158,7 +158,7 @@ class SystemCleaner:
         Uses pkexec to clean system paths. Returns (Bool Success, String ErrorMsg).
         """
         cmd = []
-        
+
         # Check if this path is handled by distro manager
         # Some paths are distro-specific (pkg cache), others are generic (/var/log)
 
@@ -175,10 +175,10 @@ class SystemCleaner:
                 "journalctl --vacuum-time=1s"
             )
             cmd = ["pkexec", "sh", "-c", bash_cmd]
-            
+
         elif path == "/var/lib/systemd/coredump":
             cmd = ["pkexec", "sh", "-c", "rm -rf /var/lib/systemd/coredump/*"]
-            
+
         else:
             return False, _("err_unknown_sys_path").format(path)
 
@@ -196,6 +196,4 @@ class SystemCleaner:
             return False, _("err_sys_clean_code").format(e.returncode, path)
         except Exception as e:
             return False, _("err_unexpected").format(path, e)
-
-
 

@@ -198,7 +198,7 @@ class MainWindow:
         self.lbl_notifications_title: Gtk.Label = g("lbl_notifications_title")
         self.lbl_notify_done_title: Gtk.Label = g("lbl_notify_done_title")
         self.switch_notify: Gtk.Switch = g("switch_notify")
-        
+
         self.lbl_ai_config_title: Gtk.Label = g("lbl_ai_config_title")
         self.lbl_ai_provider: Gtk.Label = g("lbl_ai_provider")
         self.combo_ai_provider: Gtk.ComboBoxText = g("combo_ai_provider")
@@ -306,7 +306,7 @@ class MainWindow:
 
         # ── Confirm dialog ──
         self.clean_confirm_dialog.set_property("text", _("confirm_title"))
-        
+
         # ── AI Config ──
         self.lbl_ai_config_title.set_text(_("settings_ai_title"))
         self.lbl_ai_provider.set_text(_("settings_ai_provider"))
@@ -516,10 +516,10 @@ class MainWindow:
         val = combo.get_active_id()
         if not val:
             return
-            
+
         self.settings_manager.set("ai_provider", val)
         self._populate_ai_models(val)
-            
+
         # Auto-switch model default if needed
         current_model = self.settings_manager.get("ai_model") or ""
         new_model = current_model
@@ -530,7 +530,7 @@ class MainWindow:
         elif val == "gemini":
             if "gemini" not in current_model:
                 new_model = "gemini-2.5-flash"
-        
+
         if new_model != current_model:
             self.settings_manager.set("ai_model", new_model)
             # Update the entry inside the combo
@@ -556,7 +556,7 @@ class MainWindow:
         if val:
             self.settings_manager.set("ai_model", val)
             self._update_ai_config()
-    
+
     def _update_ai_config(self) -> None:
         sm = self.settings_manager
         self.ai_engine.configure(
@@ -566,19 +566,19 @@ class MainWindow:
     def _populate_ai_models(self, provider: str) -> None:
         """Populate the model combo with known models for the selected provider."""
         self.combo_ai_model.remove_all()
-        
+
         models = []
         if provider == "gemini":
             models = [
-                "gemini-2.5-flash", "gemini-3-pro", 
+                "gemini-2.5-flash", "gemini-3-pro",
                 "gemini-1.5-pro", "gemini-1.5-flash"
             ]
         elif provider == "openai":
             models = ["gpt-4o", "gpt-5.2", "gpt-3.5-turbo"]
-            
+
         for m in models:
             self.combo_ai_model.append_text(m)
-            
+
     # ══════════════════════════════════════════════════════════════════════════
     #  PRIVATE HELPERS
     # ══════════════════════════════════════════════════════════════════════════
@@ -607,10 +607,10 @@ class MainWindow:
         self.combo_ai_provider.set_active_id(ai_prov)
 
         self.entry_ai_api_key.set_text(sm.get("ai_api_key") or "")
-        
+
         # Populate models for current provider
         self._populate_ai_models(ai_prov)
-        
+
         # Smart default model if not set
         current_model = sm.get("ai_model")
         if not current_model:
@@ -618,7 +618,7 @@ class MainWindow:
                 current_model = "gemini-2.5-flash"
             else:
                 current_model = "gpt-4o"
-        
+
         # Combo entry
         child = self.combo_ai_model.get_child()
         if isinstance(child, Gtk.Entry):
@@ -627,7 +627,7 @@ class MainWindow:
              # Fallback if text entry manipulation fails, try active id if it matches
              # But here we want custom text too.
              pass
-        
+
         # Set text directly if possible via the entry child of the combo
         # GtkComboBoxText with has-entry=True has an internal GtkEntry
         entry = self.combo_ai_model.get_child()
@@ -945,7 +945,7 @@ class MainWindow:
                 elif action == "open_system_monitor": label = _("btn_sys_mon")
                 elif action == "view_services": label = _("btn_view_svcs")
                 elif action == "optimize_ram": label = _("btn_fix_now")
-                
+
                 self._add_insight_card(r['message'], icon, level, action, label)
 
         # Failed services
@@ -987,7 +987,7 @@ class MainWindow:
         if ai_insight and "disabled" not in ai_insight:
             has_content = True
             self._add_section_header(_("insights_ai"))
-            
+
             # Formatted AI Card
             card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
             card.set_visible(True)
@@ -996,13 +996,13 @@ class MainWindow:
             card.set_margin_start(4)
             card.set_margin_end(4)
             card.set_border_width(12)
-            
+
             # Process Markdown-style headers to Pango Markup
             # 1. Bold headers (Summary:, Analysis:, etc.)
             formatted_text = GLib.markup_escape_text(ai_insight)
             for header in ["Summary:", "Analysis:", "Actions:", "Executive Summary:", "Critical Analysis:", "Action Plan:"]:
                 formatted_text = formatted_text.replace(header, f"<b>{header}</b>")
-            
+
             # 2. Bullet points to fancy bullets
             formatted_text = formatted_text.replace("- ", "• ").replace("* ", "• ")
 
@@ -1022,7 +1022,7 @@ class MainWindow:
             lbl.set_halign(Gtk.Align.CENTER)
             lbl.get_style_context().add_class("dim-label")
             self.box_insights_container.add(lbl)
-        
+
         self.box_insights_container.show_all()
 
     def _add_section_header(self, title: str) -> None:
@@ -1045,7 +1045,7 @@ class MainWindow:
         box.set_margin_start(4)
         box.set_margin_end(4)
         box.set_border_width(8)
-        
+
         # Icon
         try:
             img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.DND) # Larger icon
@@ -1057,11 +1057,11 @@ class MainWindow:
             img.get_style_context().add_class("error")
         elif level == "warning":
             img.get_style_context().add_class("warning")
-        
+
         # Icon alignment
         img.set_valign(Gtk.Align.START)
         box.pack_start(img, False, False, 0)
-        
+
         # Label container (VBox)
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         vbox.set_visible(True)
@@ -1088,7 +1088,7 @@ class MainWindow:
             btn.connect("clicked", lambda b, a=action_id: self._on_action_clicked(a))
             btn_box.pack_end(btn, False, False, 0)
             vbox.pack_start(btn_box, False, False, 0)
-        
+
         self.box_insights_container.add(box)
 
     def _on_action_clicked(self, action_id: str) -> None:

@@ -52,7 +52,7 @@ class HistoryManager:
         """Retrieves all history entries."""
         if not os.path.exists(self.history_file):
             return []
-        
+
         try:
             with open(self.history_file, 'r', encoding='utf-8') as f:
                 return json.load(f)

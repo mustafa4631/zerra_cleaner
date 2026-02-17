@@ -35,7 +35,7 @@ class AutoMaintenanceManager:
         power_supply_path = "/sys/class/power_supply"
         if not os.path.exists(power_supply_path):
             return True # Probably a desktop
-            
+
         try:
             for supply in os.listdir(power_supply_path):
                 # Look for AC adapters
@@ -110,13 +110,13 @@ class AutoMaintenanceManager:
         # For now, let's focus on user-safe items + Apt Cache (if possible via pkexec without popup, but usually not)
         # So we'll stick to non-system items for "silent" auto-maintenance.
         to_clean = [item for item in scan_results if not item['system']]
-        
+
         if not to_clean:
             return None
 
         # 3. Perform cleaning
         success_count, fail_count, errors = self.cleaner.clean(to_clean)
-        
+
         if success_count == 0:
             return None
 
@@ -133,10 +133,10 @@ class AutoMaintenanceManager:
             freed_str,
             _("status_success")
         )
-        
+
         # Update last maintenance date
         self.settings.set("last_maintenance_date", date_str)
-        
+
         return {
             "date": date_str,
             "freed": freed_str,

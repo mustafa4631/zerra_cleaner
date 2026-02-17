@@ -15,14 +15,14 @@ class HealthEngine:
         self._running = False
         self._thread = None
         self._lock = threading.Lock()
-        
+
     def start_monitoring(self):
         if self._running:
             return
         self._running = True
         self._thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self._thread.start()
-        
+
     def stop_monitoring(self):
         self._running = False
         if self._thread:
@@ -37,42 +37,42 @@ class HealthEngine:
                 cpu = psutil.cpu_percent(interval=1)
                 ram = psutil.virtual_memory().percent
                 disk = psutil.disk_usage('/').percent
-                
+
                 with self._lock:
                     self._cpu_usage = cpu
                     self._ram_usage = ram
                     self._disk_usage = disk
                     self._calculate_score()
-                    
+
             except Exception as e:
                 logger.error("Error in health monitoring: %s", e)
                 time.sleep(1)
 
     def _calculate_score(self):
-        # Simple weighted score: 
+        # Simple weighted score:
         # High resource usage reduces the score.
         # Base 100
-        
+
         penalty = 0
-        
+
         # CPU Penalties
         if self._cpu_usage > 90:
             penalty += 20
         elif self._cpu_usage > 70:
             penalty += 10
-            
+
         # RAM Penalties
         if self._ram_usage > 90:
             penalty += 20
         elif self._ram_usage > 80:
             penalty += 10
-            
+
         # Disk Penalties
         if self._disk_usage > 90:
             penalty += 20
         elif self._disk_usage > 80:
             penalty += 10
-            
+
         self._health_score = max(0, 100 - penalty)
 
     def get_metrics(self):

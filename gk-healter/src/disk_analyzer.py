@@ -14,32 +14,32 @@ class DiskAnalyzer:
         """Finds files larger than size_mb in the given path."""
         large_files = []
         if not shutil.which('find'):
-            return [] 
-        
+            return []
+
         # Default to user home if path not valid
         if not path or not os.path.exists(path):
             path = os.path.expanduser("~")
-            
+
         try:
             # find /path -type f -size +100M -printf "%s %p\n" | sort -rn | head -n 10
             # stderr=DEVNULL to ignore permission denied errors
-            
+
             cmd_find = [
-                'find', path, 
-                '-type', 'f', 
+                'find', path,
+                '-type', 'f',
                 '-size', f'+{size_mb}M',
                 '-printf', '%s %p\n'
             ]
-            
+
             p1 = subprocess.Popen(cmd_find, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             p2 = subprocess.Popen(['sort', '-rn'], stdin=p1.stdout, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
             p3 = subprocess.Popen(['head', '-n', str(limit)], stdin=p2.stdout, stdout=subprocess.PIPE, text=True, stderr=subprocess.DEVNULL)
-            
+
             p1.stdout.close()
             p2.stdout.close()
-            
+
             output, _ = p3.communicate()
-            
+
             for line in output.split('\n'):
                 if line.strip():
                     parts = line.strip().split(' ', 1)
@@ -54,10 +54,10 @@ class DiskAnalyzer:
                             })
                         except ValueError:
                             continue
-                        
+
         except Exception as e:
             logger.error("Error finding large files: %s", e)
-            
+
         return large_files
 
     @staticmethod

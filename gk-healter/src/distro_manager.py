@@ -11,7 +11,7 @@ class DistroManager:
     Abstracts distribution-specific logic for cleaning and system management.
     Supports: Debian/Ubuntu (apt), RHEL/Fedora (dnf), Arch (pacman), OpenSUSE (zypper).
     """
-    
+
     def __init__(self):
         self.pkg_manager = self._detect_pkg_manager()
 
@@ -32,7 +32,7 @@ class DistroManager:
         if self.pkg_manager == "apt":
             return [
                 ("cat_pkg_cache", "/var/cache/apt/archives", "desc_pkg_cache"),
-                ("cat_autoremove", "/usr/bin/apt", "desc_autoremove") 
+                ("cat_autoremove", "/usr/bin/apt", "desc_autoremove")
             ]
         elif self.pkg_manager == "pacman":
             return [
@@ -66,7 +66,7 @@ class DistroManager:
         elif self.pkg_manager == "pacman":
             if path == "/var/cache/pacman/pkg":
                 # 'pacman -Sc' cleans cached packages (requires interaction usually, so use --noconfirm for automation carefully)
-                # But -Sc only removes uninstalled packages. -Scc removes all. 
+                # But -Sc only removes uninstalled packages. -Scc removes all.
                 # Ideally, we should be careful. Standard cleanup usually implies removing all cached.
                 return ["pkexec", "pacman", "-Scc", "--noconfirm"]
             if path == "/usr/bin/pacman": # Marker for orphans
@@ -89,5 +89,5 @@ class DistroManager:
             if path == "/usr/bin/zypper": # Very rare to automate on suse
                  # Zypper doesn't have a direct 'autoremove' equivalent in one command easily, usually 'packages --unneeded'
                  return []
-        
+
         return []

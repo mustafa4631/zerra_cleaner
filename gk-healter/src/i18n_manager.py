@@ -22,12 +22,12 @@ class I18nManager:
     def __init__(self, language='auto'):
         if hasattr(self, '_initialized') and self._initialized:
             return
-            
+
         self.locale_dir = os.path.join(os.path.dirname(__file__), "locale")
         self.current_language = language
         self.translations = {}
         self.default_language = 'en'
-        
+
         self.load_language(language)
         self._initialized = True
 
@@ -46,7 +46,7 @@ class I18nManager:
             target_lang = language
 
         file_path = os.path.join(self.locale_dir, f"{target_lang}.json")
-        
+
         # Fallback to English if file doesn't exist
         if not os.path.exists(file_path):
             file_path = os.path.join(self.locale_dir, f"{self.default_language}.json")

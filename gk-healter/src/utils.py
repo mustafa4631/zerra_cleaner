@@ -23,4 +23,3 @@ def format_size(size):
         size /= power
         n += 1
     return f"{size:.2f} {power_labels[n]}B"
-

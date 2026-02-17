@@ -40,7 +40,7 @@ class AIEngine:
         mem = metrics.get('memory_percent', 0)
         disk = metrics.get('disk_percent', 0)
         failed_svc_str = ", ".join(failed_services) if failed_services else "None"
-        
+
         prompt = (
             f"Role: Expert Linux System Administrator.\n"
             f"Task: Analyze the following periodic health report and provide a professional assessment.\n\n"
@@ -70,7 +70,7 @@ class AIEngine:
             "messages": [{"role": "user", "content": prompt}],
             "max_tokens": 300
         }
-        
+
         req = urllib.request.Request(url, json.dumps(data).encode('utf-8'), headers)
         try:
             with urllib.request.urlopen(req) as response:
@@ -83,7 +83,7 @@ class AIEngine:
 
     def _call_gemini(self, prompt):
         model_name = self.model or "gemini-2.5-flash"
-        
+
         # API requires URL: .../models/MODEL_NAME:generateContent
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.api_key}"
         headers = {"Content-Type": "application/json"}
@@ -93,7 +93,7 @@ class AIEngine:
                 "parts": [{"text": prompt}]
             }]
         }
-        
+
         req = urllib.request.Request(url, json.dumps(data).encode('utf-8'), headers)
         try:
             with urllib.request.urlopen(req) as response:
@@ -106,4 +106,3 @@ class AIEngine:
             return f"Gemini API Error: {e.code} {e.reason}"
         except Exception as e:
             return f"Gemini Request Error: {e}"
-

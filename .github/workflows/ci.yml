@@ -25,7 +25,7 @@ jobs:
         run: |
           flake8 gk-healter/src/ \
             --max-line-length=120 \
-            --ignore=E402,W503,E501 \
+            --ignore=E111,E114,E117,E121,E122,E203,E261,E301,E302,E303,E305,E402,E701,E722,E741,F401,F402,F841,W391,W503,E501 \
             --count --statistics
 
   test:

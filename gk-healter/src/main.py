@@ -16,7 +16,7 @@ def main():
     # Initialize settings and i18n
     settings = SettingsManager()
     I18nManager(settings.get("language"))
-    
+
     app = MainWindow()
     Gtk.main()
 
