@@ -86,7 +86,9 @@ jobs:
       - name: Meson setup & compile
         working-directory: gk-healter
         run: |
-          meson setup _build
+          pwd
+          ls -la
+          meson setup . _build
           meson compile -C _build
 
       - name: Meson install (dry-run)
