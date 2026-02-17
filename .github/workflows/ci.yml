@@ -59,6 +59,8 @@ jobs:
           pip install pytest psutil PyGObject
 
       - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/tests:${{ github.workspace }}/gk-healter
         run: pytest tests/ -v --tb=short
 
   build:
