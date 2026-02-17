@@ -84,15 +84,14 @@ jobs:
             libcairo2-dev
 
       - name: Meson setup & compile
+        working-directory: gk-healter
         run: |
-          cd gk-healter
           meson setup _build
           meson compile -C _build
 
       - name: Meson install (dry-run)
-        run: |
-          cd gk-healter
-          DESTDIR=/tmp/install meson install -C _build
+        working-directory: gk-healter
+        run: DESTDIR=/tmp/install meson install -C _build
 
   deb-package:
     name: Debian Package
