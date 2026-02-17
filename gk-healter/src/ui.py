@@ -7,7 +7,10 @@ This module handles signal connections, business logic, and dynamic content only
 import os
 import threading
 import datetime
+import logging
 from typing import List, Dict, Any, Optional
+
+logger = logging.getLogger("gk-healter.ui")
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -24,6 +27,7 @@ from src.log_analyzer import LogAnalyzer
 from src.disk_analyzer import DiskAnalyzer
 from src.recommendation_engine import RecommendationEngine
 from src.ai_engine import AIEngine
+from src.pardus_analyzer import PardusAnalyzer
 from src.utils import format_size
 
 
@@ -48,6 +52,7 @@ class MainWindow:
         self.disk_analyzer = DiskAnalyzer()
         self.recommendation_engine = RecommendationEngine()
         self.ai_engine = AIEngine()
+        self.pardus_analyzer = PardusAnalyzer()
 
         # State
         self.scan_data: List[Dict[str, Any]] = []
@@ -830,13 +835,16 @@ class MainWindow:
         )
         recs += self.recommendation_engine.analyze_logs(errors_24h)
 
+        # Pardus / Debian diagnostics
+        pardus_results = self.pardus_analyzer.run_full_diagnostics()
+
         ai_insight = self.ai_engine.generate_insight(
             metrics, failed_services, errors_24h
         )
 
         GLib.idle_add(
             self._display_insights, recs, ai_insight, large_files,
-            failed_services, slow_services, errors_24h
+            failed_services, slow_services, errors_24h, pardus_results
         )
 
     def _display_insights(
@@ -847,6 +855,7 @@ class MainWindow:
         failed_services: list,
         slow_services: list,
         errors_24h: int,
+        pardus_results: dict = None,
     ) -> None:
         # Clear container
         for child in self.box_insights_container.get_children():
@@ -856,6 +865,71 @@ class MainWindow:
                 self.box_insights_container.remove(child)
 
         has_content = False
+
+        # ── Pardus / Debian Diagnostics ──
+        if pardus_results:
+            # Broken packages
+            broken = pardus_results.get("broken_packages", [])
+            if broken:
+                has_content = True
+                self._add_section_header(
+                    f"{_('pardus_broken_packages')} ({len(broken)})"
+                )
+                for pkg in broken:
+                    self._add_insight_card(
+                        pkg, "dialog-error-symbolic", "error",
+                        "fix_broken", _("btn_fix_now"),
+                    )
+
+            # Repository health
+            repo = pardus_results.get("repo_health", {})
+            repo_issues = repo.get("issues", [])
+            if repo_issues:
+                has_content = True
+                self._add_section_header(_("pardus_repo_health"))
+                for issue in repo_issues:
+                    self._add_insight_card(
+                        issue, "software-update-available-symbolic",
+                        "warning", None, None,
+                    )
+
+            # Available updates
+            updates = pardus_results.get("available_updates", [])
+            if updates:
+                has_content = True
+                count = len(updates)
+                header = f"{_('pardus_updates_available')}: {count}"
+                self._add_section_header(header)
+                for upd in updates[:10]:  # Show at most 10
+                    self._add_insight_card(
+                        upd, "software-update-available-symbolic",
+                        "info", None, None,
+                    )
+
+            # Held packages
+            held = pardus_results.get("held_packages", [])
+            if held:
+                has_content = True
+                self._add_section_header(
+                    f"{_('pardus_held_packages')} ({len(held)})"
+                )
+                for pkg in held:
+                    self._add_insight_card(
+                        pkg, "changes-prevent-symbolic", "warning",
+                        None, None,
+                    )
+
+            # Pardus-specific services
+            svc_info = pardus_results.get("pardus_services", {})
+            svc_issues = svc_info.get("failed", [])
+            if svc_issues:
+                has_content = True
+                self._add_section_header(_("pardus_service_issues"))
+                for svc in svc_issues:
+                    self._add_insight_card(
+                        svc, "dialog-warning-symbolic", "error",
+                        "view_services", _("btn_view_svcs"),
+                    )
 
         # Recommendations
         if recs:
@@ -939,7 +1013,6 @@ class MainWindow:
             lbl.set_xalign(0)
             lbl.set_selectable(True)
             card.add(lbl)
-            self.box_insights_container.add(card)
             self.box_insights_container.add(card)
 
         if not has_content:
@@ -1033,7 +1106,7 @@ class MainWindow:
         elif action_id == "analyze_logs":
              self._show_simple_dialog("System Logs", "Check journalctl -xe or /var/log/syslog for details.")
         else:
-             print(f"Unknown action: {action_id}")
+             logger.warning("Unknown action: %s", action_id)
 
     def _show_simple_dialog(self, title, message):
         dialog = Gtk.MessageDialog(

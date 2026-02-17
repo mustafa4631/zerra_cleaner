@@ -162,5 +162,14 @@
 
     "auto_maintenance_title": "Otomatik Bakım Tamamlandı",
     "auto_maintenance_finished_msg": "{0} alan temizlendi.",
-    "msg_reboot_required": "Değişiklikler uygulamayı yeniden başlattığınızda geçerli olacaktır."
+    "msg_reboot_required": "Değişiklikler uygulamayı yeniden başlattığınızda geçerli olacaktır.",
+
+    "pardus_broken_packages": "Bozuk Paketler",
+    "pardus_repo_health": "Depo Sağlık Sorunları",
+    "pardus_updates_available": "Mevcut Güncellemeler",
+    "pardus_held_packages": "Tutulan Paketler",
+    "pardus_service_issues": "Pardus Servis Sorunları",
+    "pardus_diagnostics": "Pardus Tanılama",
+    "pardus_version": "Pardus Sürümü",
+    "pardus_not_detected": "Pardus dağıtımı algılanamadı"
 }

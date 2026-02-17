@@ -1,6 +1,10 @@
 import psutil
 import threading
 import time
+import logging
+
+logger = logging.getLogger("gk-healter.health")
+
 
 class HealthEngine:
     def __init__(self):
@@ -41,7 +45,7 @@ class HealthEngine:
                     self._calculate_score()
                     
             except Exception as e:
-                print(f"Error in health monitoring: {e}")
+                logger.error("Error in health monitoring: %s", e)
                 time.sleep(1)
 
     def _calculate_score(self):

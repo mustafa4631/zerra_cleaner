@@ -177,5 +177,14 @@
 
     "auto_maintenance_title": "Auto Maintenance Complete",
     "auto_maintenance_finished_msg": "{0} areas have been cleaned.",
-    "msg_reboot_required": "Changes will take effect when you restart the application."
+    "msg_reboot_required": "Changes will take effect when you restart the application.",
+
+    "pardus_broken_packages": "Broken Packages",
+    "pardus_repo_health": "Repository Health Issues",
+    "pardus_updates_available": "Available Updates",
+    "pardus_held_packages": "Held Packages",
+    "pardus_service_issues": "Pardus Service Issues",
+    "pardus_diagnostics": "Pardus Diagnostics",
+    "pardus_version": "Pardus Version",
+    "pardus_not_detected": "Pardus distribution not detected"
 }

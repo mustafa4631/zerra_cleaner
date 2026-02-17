@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
+<!--
+  GK Healter – Polkit Policy Definitions
+  Defines specific actions that require elevated privileges.
+  Each action maps to a concrete system maintenance operation.
+-->
+<policyconfig>
+
+  <vendor>GK Developers</vendor>
+  <vendor_url>https://github.com/GK-Developers/GK-Healter</vendor_url>
+
+  <!-- ── Clean APT package cache ─────────────────────────────────────────── -->
+  <action id="io.github.gkdevelopers.GKHealter.clean-apt-cache">
+    <description>Clean APT package cache</description>
+    <description xml:lang="tr">APT paket önbelleğini temizle</description>
+    <message>Authentication is required to clean the package cache.</message>
+    <message xml:lang="tr">Paket önbelleğini temizlemek için kimlik doğrulaması gereklidir.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/apt-get</annotate>
+  </action>
+
+  <!-- ── Remove unused dependencies ──────────────────────────────────────── -->
+  <action id="io.github.gkdevelopers.GKHealter.autoremove">
+    <description>Remove unused package dependencies</description>
+    <description xml:lang="tr">Kullanılmayan bağımlılıkları kaldır</description>
+    <message>Authentication is required to remove unused packages.</message>
+    <message xml:lang="tr">Kullanılmayan paketleri kaldırmak için kimlik doğrulaması gereklidir.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/apt-get</annotate>
+  </action>
+
+  <!-- ── Clean system logs ───────────────────────────────────────────────── -->
+  <action id="io.github.gkdevelopers.GKHealter.clean-logs">
+    <description>Clean old system log files and vacuum journal</description>
+    <description xml:lang="tr">Eski sistem günlüklerini temizle ve journal'ı sıkıştır</description>
+    <message>Authentication is required to clean system logs.</message>
+    <message xml:lang="tr">Sistem günlüklerini temizlemek için kimlik doğrulaması gereklidir.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ── Remove core dumps ───────────────────────────────────────────────── -->
+  <action id="io.github.gkdevelopers.GKHealter.clean-coredumps">
+    <description>Remove application core dump files</description>
+    <description xml:lang="tr">Uygulama çökme dosyalarını kaldır</description>
+    <message>Authentication is required to remove core dump files.</message>
+    <message xml:lang="tr">Çökme dosyalarını kaldırmak için kimlik doğrulaması gereklidir.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+  </action>
+
+  <!-- ── Fix broken packages ─────────────────────────────────────────────── -->
+  <action id="io.github.gkdevelopers.GKHealter.fix-broken">
+    <description>Fix broken package dependencies</description>
+    <description xml:lang="tr">Bozuk paket bağımlılıklarını onar</description>
+    <message>Authentication is required to fix broken packages.</message>
+    <message xml:lang="tr">Bozuk paketleri onarmak için kimlik doğrulaması gereklidir.</message>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/apt-get</annotate>
+  </action>
+
+</policyconfig>

@@ -1,5 +1,9 @@
 import subprocess
 import shutil
+import logging
+
+logger = logging.getLogger("gk-healter.service")
+
 
 class ServiceAnalyzer:
     def __init__(self):
@@ -14,7 +18,7 @@ class ServiceAnalyzer:
         try:
             # list-units --state=failed
             cmd = ['systemctl', 'list-units', '--state=failed', '--plain', '--no-legend']
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
                 for line in result.stdout.strip().split('\n'):
@@ -25,7 +29,7 @@ class ServiceAnalyzer:
                         if len(parts) > 0:
                             failed_services.append(parts[0])
         except Exception as e:
-            print(f"Error checking failed services: {e}")
+            logger.error("Error checking failed services: %s", e)
             return [f"Error: {str(e)}"]
             
         return failed_services
@@ -38,7 +42,7 @@ class ServiceAnalyzer:
             
         try:
             cmd = ['systemd-analyze', 'blame']
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             if result.returncode == 0:
                 lines = result.stdout.strip().split('\n')
                 # Filter out lines that might be empty
@@ -52,7 +56,7 @@ class ServiceAnalyzer:
                         service_name = " ".join(parts[1:])
                         slow_services.append({'service': service_name, 'time': time_taken})
         except Exception as e:
-            print(f"Error checking startup services: {e}")
+            logger.error("Error checking startup services: %s", e)
             
         return slow_services
 
@@ -64,7 +68,7 @@ class ServiceAnalyzer:
         try:
             # is-system-running returns exit code based on state, but also prints the state
             cmd = ['systemctl', 'is-system-running']
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
             # systemctl is-system-running returns non-zero if degraded, so we just want the output string
             return result.stdout.strip()
         except Exception:

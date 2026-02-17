@@ -1,10 +1,13 @@
 import os
 import shutil
 import subprocess
+import logging
 from src.utils import get_size, format_size
 from src.distro_manager import DistroManager
 from typing import List, Dict, Any, Tuple
 from src.i18n_manager import _
+
+logger = logging.getLogger("gk-healter.cleaner")
 
 class SystemCleaner:
     def __init__(self):
@@ -109,8 +112,7 @@ class SystemCleaner:
 
             if not self.is_safe_to_delete(path):
                 msg = _("msg_safety_warning").format(path)
-                print(msg)
-                errors.append(msg)
+                logger.warning(msg)
                 fail_count += 1
                 continue
 
@@ -148,7 +150,7 @@ class SystemCleaner:
             return True, None
         except Exception as e:
             msg = _("err_user_clean_fail").format(path, e)
-            print(msg)
+            logger.error(msg)
             return False, msg
 
     def _clean_system(self, path: str) -> Tuple[bool, str]:
@@ -181,9 +183,12 @@ class SystemCleaner:
             return False, _("err_unknown_sys_path").format(path)
 
         try:
-            print(f"Executing system clean: {cmd}")
-            subprocess.run(cmd, check=True)
+            logger.info("Executing system clean: %s", cmd)
+            subprocess.run(cmd, check=True, timeout=120)
             return True, None
+        except subprocess.TimeoutExpired:
+            logger.error("System clean timed out for: %s", path)
+            return False, _("err_unexpected").format(path, "Operation timed out")
         except subprocess.CalledProcessError as e:
             # e.returncode 126 or 127 or 1 usually means auth failed or cancelled
             if e.returncode in [126, 127]:

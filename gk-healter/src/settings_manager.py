@@ -1,6 +1,10 @@
 import os
 import json
 import datetime
+import logging
+
+logger = logging.getLogger("gk-healter.settings")
+
 
 class SettingsManager:
     """
@@ -38,7 +42,7 @@ class SettingsManager:
                     loaded = json.load(f)
                     self.settings.update(loaded)
             except Exception as e:
-                print(f"Failed to load settings: {e}")
+                logger.error("Failed to load settings: %s", e)
 
     def save_settings(self):
         self._ensure_dir_exists()
@@ -46,7 +50,7 @@ class SettingsManager:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(self.settings, f, ensure_ascii=False, indent=4)
         except Exception as e:
-            print(f"Failed to save settings: {e}")
+            logger.error("Failed to save settings: %s", e)
 
     def get(self, key):
         return self.settings.get(key, self.defaults.get(key))
@@ -70,5 +74,5 @@ class SettingsManager:
             diff = now - last_date
             return diff.days >= self.get("maintenance_frequency_days")
         except Exception as e:
-            print(f"Error parsing date: {e}")
+            logger.error("Error parsing date: %s", e)
             return True

@@ -1,10 +1,14 @@
 import os
 import shutil
 import datetime
+import logging
 from typing import Optional, List
 from .settings_manager import SettingsManager
 from .history_manager import HistoryManager
 from .cleaner import SystemCleaner
+
+logger = logging.getLogger("gk-healter.automaint")
+
 
 class AutoMaintenanceManager:
     """

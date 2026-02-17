@@ -1,6 +1,10 @@
 import json
 import urllib.request
 import urllib.error
+import logging
+
+logger = logging.getLogger("gk-healter.ai")
+
 
 class AIEngine:
     def __init__(self):

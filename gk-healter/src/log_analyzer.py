@@ -1,5 +1,9 @@
 import subprocess
 import shutil
+import logging
+
+logger = logging.getLogger("gk-healter.logs")
+
 
 class LogAnalyzer:
     def __init__(self):
@@ -25,14 +29,14 @@ class LogAnalyzer:
             
             # Allow p1 to receive a SIGPIPE if p2 exits.
             p1.stdout.close()  
-            output, _ = p2.communicate()
+            output, _ = p2.communicate(timeout=15)
             
             if p2.returncode == 0:
                 return int(output.strip())
             return 0
             
         except Exception as e:
-            print(f"Error checking logs: {e}")
+            logger.error("Error checking logs: %s", e)
             return 0
 
     def get_recent_critical_logs(self, limit=10):
@@ -44,14 +48,14 @@ class LogAnalyzer:
         try:
             # -p 2 (crit, alert, emerg) -n limit --reverse (newest first)
             cmd = ['journalctl', '-p', '2', '-n', str(limit), '--no-pager', '--reverse']
-            result = subprocess.run(cmd, capture_output=True, text=True)
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
                 for line in result.stdout.strip().split('\n'):
                     if line.strip():
                         logs.append(line.strip())
         except Exception as e:
-            print(f"Error fetching critical logs: {e}")
+            logger.error("Error fetching critical logs: %s", e)
             logs.append(f"Error: {str(e)}")
             
         return logs

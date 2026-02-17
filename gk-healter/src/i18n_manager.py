@@ -2,6 +2,10 @@ import os
 import json
 import locale
 import sys
+import logging
+
+logger = logging.getLogger("gk-healter.i18n")
+
 
 class I18nManager:
     """
@@ -53,7 +57,7 @@ class I18nManager:
                 self.translations = json.load(f)
                 self.current_language = target_lang
         except Exception as e:
-            print(f"Failed to load translations for {target_lang}: {e}")
+            logger.error("Failed to load translations for %s: %s", target_lang, e)
             self.translations = {}
 
     def get_text(self, key, default=None):

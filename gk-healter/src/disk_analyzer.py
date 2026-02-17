@@ -1,6 +1,10 @@
 import subprocess
 import shutil
 import os
+import logging
+
+logger = logging.getLogger("gk-healter.disk")
+
 
 class DiskAnalyzer:
     def __init__(self):
@@ -52,11 +56,17 @@ class DiskAnalyzer:
                             continue
                         
         except Exception as e:
-            print(f"Error finding large files: {e}")
+            logger.error("Error finding large files: %s", e)
             
         return large_files
 
-    def _format_size(self, size_bytes):
+    @staticmethod
+    def _format_size(size_bytes):
+        """Format bytes to human-readable string. Delegates to utils."""
+        from src.utils import format_size
+        return format_size(size_bytes)
+
+    def _format_size_legacy(self, size_bytes):
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
             if size_bytes < 1024:
                 return f"{size_bytes:.1f} {unit}"

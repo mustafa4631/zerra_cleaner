@@ -2,10 +2,10 @@
 <component type="desktop-application">
   <id>io.github.gkdevelopers.GKHealter</id>
   <name>GK Healter</name>
-  <summary>Recover disk space by cleaning unnecessary system and application files</summary>
+  <summary>System health monitor and cleaner designed for Pardus and Debian-based Linux</summary>
   
   <metadata_license>CC0-1.0</metadata_license>
-  <project_license>GPL-3.0-or-later</project_license>
+  <project_license>MIT</project_license>
   
   <developer id="io.github.gkdevelopers">
     <name>GK Developers (Egehan KAHRAMAN, Mustafa GÖKPINAR)</name>
@@ -15,16 +15,17 @@
   
   <description>
     <p>
-      GK Healter is a professional, lightweight system cleaning utility for Linux desktops. 
-      It provides a safe and efficient way to recover disk space by identifying and removing redundant files 
-      without compromising system stability.
+      GK Healter is a system health monitor and cleaner primarily designed for Pardus and 
+      Debian-based Linux distributions. It provides safe and efficient tools for system 
+      maintenance, health scoring, and Pardus-specific diagnostics.
     </p>
     <p>Key Features:</p>
     <ul>
-      <li>APT Environment: Clean package archives and cache</li>
-      <li>System Maintenance: Remove redundant logs and vacuum journald</li>
-      <li>Application Hygiene: Clear browser caches (Firefox, Chrome) and thumbnails</li>
+      <li>Pardus Integration: Repository health checks, version analysis, and Pardus-specific diagnostics</li>
+      <li>APT Environment: Clean package archives, detect broken dependencies, autoremove</li>
+      <li>System Health: Real-time CPU, RAM, Disk monitoring with health scoring</li>
       <li>Intelligent Automation: Schedule maintenance based on idle time or disk usage</li>
+      <li>AI-Powered Insights: Optional AI analysis of system state via Gemini/OpenAI</li>
       <li>Detailed History: Track every cleaning operation and space recovered</li>
     </ul>
   </description>
@@ -72,6 +73,8 @@
     <keyword>maintenance</keyword>
     <keyword>cache</keyword>
     <keyword>optimization</keyword>
+    <keyword>pardus</keyword>
+    <keyword>health</keyword>
   </keywords>
   
   <provides>

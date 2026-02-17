@@ -1,6 +1,10 @@
 import shutil
 import os
+import logging
 from typing import List, Tuple
+
+logger = logging.getLogger("gk-healter.distro")
+
 
 class DistroManager:
     """
