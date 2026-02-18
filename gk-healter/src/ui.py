@@ -97,6 +97,11 @@ class MainWindow:
         self._start_health_timer()
         self._refresh_dashboard()
 
+        # Detect Pardus and show badge if applicable
+        self._is_pardus: bool = False
+        self._pardus_version: str = ""
+        threading.Thread(target=self._detect_pardus_async, daemon=True).start()
+
     # ── Widget binding (from builder) ────────────────────────────────────────
     def _bind_widgets(self) -> None:
         """Retrieve widget references from the builder by their XML IDs."""
@@ -318,29 +323,106 @@ class MainWindow:
     # ── CSS ──────────────────────────────────────────────────────────────────
     @staticmethod
     def _apply_css() -> None:
-        """Inject minimal runtime CSS (theme-respecting, no hardcoded colours)."""
-        css = b"""
+        """Inject runtime CSS for a polished, professional appearance."""
+        css = """
+            /* -- Global polish ------------------------------------------------- */
+            .view, .sidebar {
+                /* ensure clean background */
+            }
+
+            /* -- Card containers ----------------------------------------------- */
+            .card {
+                background-color: alpha(@theme_fg_color, 0.04);
+                border: 1px solid alpha(@theme_fg_color, 0.08);
+                border-radius: 12px;
+                padding: 10px;
+            }
+
+            .card-elevated {
+                background-color: alpha(@theme_fg_color, 0.05);
+                border: 1px solid alpha(@theme_fg_color, 0.10);
+                border-radius: 14px;
+                padding: 16px;
+            }
+
             .card-button {
-                border-radius: 8px;
+                border-radius: 12px;
                 padding: 8px;
+                border: 1px solid alpha(@theme_fg_color, 0.06);
+                background-color: alpha(@theme_fg_color, 0.02);
+                transition: background-color 200ms ease;
             }
             .card-button:hover {
-                background-color: alpha(@theme_fg_color, 0.08);
+                background-color: alpha(@theme_fg_color, 0.10);
+                border-color: alpha(@theme_fg_color, 0.15);
             }
-            .card {
-                background-color: alpha(@theme_fg_color, 0.05);
-                border-radius: 8px;
-                padding: 8px;
-            }
+
+            /* -- Action buttons ------------------------------------------------ */
             .suggested-action {
-                background-color: @theme_selected_bg_color;
+                background: linear-gradient(
+                    to bottom,
+                    shade(@theme_selected_bg_color, 1.08),
+                    @theme_selected_bg_color
+                );
                 color: @theme_selected_fg_color;
                 font-weight: bold;
-                padding: 4px 12px;
-                border-radius: 4px;
+                padding: 6px 16px;
+                border-radius: 8px;
+                border: none;
             }
+            .suggested-action:hover {
+                background: shade(@theme_selected_bg_color, 1.15);
+            }
+
+            /* -- Section headers ---------------------------------------------- */
+            .section-header {
+                font-weight: bold;
+                opacity: 0.7;
+                padding: 4px 0px;
+            }
+
+            /* -- Score badge colours ------------------------------------------- */
+            .score-excellent { color: #2e7d32; }
+            .score-good      { color: #558b2f; }
+            .score-fair       { color: #f57f17; }
+            .score-critical   { color: #c62828; }
+
+            /* -- Resource meter severity --------------------------------------- */
+            .meter-normal  levelbar trough block.filled { background-color: #4caf50; }
+            .meter-warning levelbar trough block.filled { background-color: #ff9800; }
+            .meter-danger  levelbar trough block.filled { background-color: #f44336; }
+
+            .resource-label-normal   { color: #4caf50; font-weight: bold; }
+            .resource-label-warning  { color: #ff9800; font-weight: bold; }
+            .resource-label-danger   { color: #f44336; font-weight: bold; }
+
+            /* -- Pardus badge -------------------------------------------------- */
+            .pardus-badge {
+                background: linear-gradient(135deg, #1a5276, #2e86c1);
+                color: white;
+                border-radius: 10px;
+                padding: 14px 20px;
+                font-weight: bold;
+            }
+            .pardus-badge-label {
+                color: white;
+                font-weight: bold;
+            }
+            .pardus-badge-sub {
+                color: alpha(white, 0.85);
+            }
+
+            /* -- Resource card ------------------------------------------------- */
+            .resource-card {
+                background-color: alpha(@theme_fg_color, 0.03);
+                border: 1px solid alpha(@theme_fg_color, 0.08);
+                border-radius: 12px;
+                padding: 16px;
+            }
+
+            /* -- Misc ---------------------------------------------------------- */
             .dim-label {
-                opacity: 0.6;
+                opacity: 0.55;
             }
             .error {
                 color: @error_color;
@@ -348,9 +430,16 @@ class MainWindow:
             .warning {
                 color: @warning_color;
             }
+            .mono-label {
+                font-family: monospace;
+            }
+            .score-big {
+                font-size: 48px;
+                font-weight: 800;
+            }
         """
         provider = Gtk.CssProvider()
-        provider.load_from_data(css)
+        provider.load_from_data(css.encode('utf-8'))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             provider,
@@ -673,6 +762,42 @@ class MainWindow:
         """Tick every 2 seconds to update dashboard / health page metrics."""
         self._health_timer_id = GLib.timeout_add_seconds(2, self._on_health_tick)
 
+    @staticmethod
+    def _format_bytes(b: int) -> str:
+        """Human-readable byte size (e.g. '4.2 GB')."""
+        if b <= 0:
+            return "0 B"
+        for unit in ("B", "KB", "MB", "GB", "TB"):
+            if abs(b) < 1024:
+                return f"{b:.1f} {unit}"
+            b /= 1024.0
+        return f"{b:.1f} PB"
+
+    @staticmethod
+    def _severity_for(value: float) -> str:
+        """Return severity tier: normal / warning / danger."""
+        if value >= 90:
+            return "danger"
+        elif value >= 70:
+            return "warning"
+        return "normal"
+
+    def _apply_meter_severity(
+        self, container: Gtk.Widget, level_bar: Gtk.LevelBar,
+        val_label: Gtk.Label, value: float,
+    ) -> None:
+        """Color-code a level-bar + label based on severity."""
+        sev = self._severity_for(value)
+        ctx = container.get_style_context()
+        for cls in ("meter-normal", "meter-warning", "meter-danger"):
+            ctx.remove_class(cls)
+        ctx.add_class(f"meter-{sev}")
+
+        val_ctx = val_label.get_style_context()
+        for cls in ("resource-label-normal", "resource-label-warning", "resource-label-danger"):
+            val_ctx.remove_class(cls)
+        val_ctx.add_class(f"resource-label-{sev}")
+
     def _on_health_tick(self) -> bool:
         metrics = self.health_engine.get_metrics()
         status = self.health_engine.get_detailed_status()
@@ -681,31 +806,102 @@ class MainWindow:
         ram = metrics['ram']
         disk = metrics['disk']
         score = metrics['score']
+        ram_used = metrics.get('ram_used', 0)
+        ram_total = metrics.get('ram_total', 0)
+        disk_used = metrics.get('disk_used', 0)
+        disk_total = metrics.get('disk_total', 0)
+        cpu_count = metrics.get('cpu_count', 1)
+        cpu_freq = metrics.get('cpu_freq_max', 0)
 
-        # Dashboard meters
+        # ── Dashboard meters (compact view) ──
         self.lbl_dash_cpu_val.set_text(f"{cpu:.0f}%")
-        self.lbl_dash_ram_val.set_text(f"{ram:.0f}%")
-        self.lbl_dash_disk_val.set_text(f"{disk:.0f}%")
+        self.lbl_dash_ram_val.set_text(
+            f"{self._format_bytes(ram_used)} / {self._format_bytes(ram_total)}"
+        )
+        self.lbl_dash_disk_val.set_text(
+            f"{self._format_bytes(disk_used)} / {self._format_bytes(disk_total)}"
+        )
         self.level_dash_cpu.set_value(cpu)
         self.level_dash_ram.set_value(ram)
         self.level_dash_disk.set_value(disk)
 
-        # Dashboard score card
+        # Apply severity colours on dashboard meters
+        self._apply_meter_severity(
+            self.level_dash_cpu.get_parent(), self.level_dash_cpu,
+            self.lbl_dash_cpu_val, cpu,
+        )
+        self._apply_meter_severity(
+            self.level_dash_ram.get_parent(), self.level_dash_ram,
+            self.lbl_dash_ram_val, ram,
+        )
+        self._apply_meter_severity(
+            self.level_dash_disk.get_parent(), self.level_dash_disk,
+            self.lbl_dash_disk_val, disk,
+        )
+
+        # ── Dashboard score card ──
         self.lbl_score_value.set_text(str(int(score)))
         self.lbl_score_status.set_text(status)
         self._set_score_detail(score)
+        self._apply_score_colour(score)
 
-        # Health page (mirrors dashboard but bigger)
+        # ── Health page (detailed view) ──
         self.lbl_health_score_big.set_text(str(int(score)))
         self.lbl_health_status_text.set_text(f"{_('health_score_label')} — {status}")
-        self.lbl_health_cpu_val.set_text(f"{cpu:.0f}%")
-        self.lbl_health_ram_val.set_text(f"{ram:.0f}%")
-        self.lbl_health_disk_val.set_text(f"{disk:.0f}%")
+
+        # CPU detail
+        freq_str = f" @ {cpu_freq/1000:.1f} GHz" if cpu_freq > 0 else ""
+        self.lbl_health_cpu_val.set_text(
+            f"{cpu:.1f}%  ({cpu_count} {_('health_cores')}{freq_str})"
+        )
         self.level_health_cpu.set_value(cpu)
+        # RAM detail
+        self.lbl_health_ram_val.set_text(
+            f"{ram:.1f}%  ({self._format_bytes(ram_used)} / {self._format_bytes(ram_total)})"
+        )
         self.level_health_ram.set_value(ram)
+        # Disk detail
+        disk_free = disk_total - disk_used if disk_total > disk_used else 0
+        self.lbl_health_disk_val.set_text(
+            f"{disk:.1f}%  ({self._format_bytes(disk_used)} / {self._format_bytes(disk_total)}, "
+            f"{self._format_bytes(disk_free)} {_('health_free')})"
+        )
         self.level_health_disk.set_value(disk)
 
+        # Apply severity colours on health meters
+        self._apply_meter_severity(
+            self.level_health_cpu.get_parent(), self.level_health_cpu,
+            self.lbl_health_cpu_val, cpu,
+        )
+        self._apply_meter_severity(
+            self.level_health_ram.get_parent(), self.level_health_ram,
+            self.lbl_health_ram_val, ram,
+        )
+        self._apply_meter_severity(
+            self.level_health_disk.get_parent(), self.level_health_disk,
+            self.lbl_health_disk_val, disk,
+        )
+
         return True  # keep the timer alive
+
+    def _apply_score_colour(self, score: float) -> None:
+        """Color-code the score label based on value."""
+        ctx = self.lbl_score_value.get_style_context()
+        for cls in ("score-excellent", "score-good", "score-fair", "score-critical"):
+            ctx.remove_class(cls)
+        if score >= 90:
+            ctx.add_class("score-excellent")
+        elif score >= 70:
+            ctx.add_class("score-good")
+        elif score >= 50:
+            ctx.add_class("score-fair")
+        else:
+            ctx.add_class("score-critical")
+        # Also apply on health page big score
+        ctx2 = self.lbl_health_score_big.get_style_context()
+        for cls in ("score-excellent", "score-good", "score-fair", "score-critical"):
+            ctx2.remove_class(cls)
+        ctx2.add_class(ctx.list_classes()[-1] if ctx.list_classes() else "score-good")
 
     def _set_score_detail(self, score: float) -> None:
         if score >= 90:
