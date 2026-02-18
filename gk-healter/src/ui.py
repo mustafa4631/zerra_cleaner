@@ -1173,6 +1173,49 @@ class MainWindow:
 
         has_content = False
 
+        # ── Pardus / distro detection banner in Insights ──
+        if pardus_results:
+            is_pardus = pardus_results.get("is_pardus", False)
+            if is_pardus:
+                has_content = True
+                pardus_banner = Gtk.Box(
+                    orientation=Gtk.Orientation.HORIZONTAL, spacing=12,
+                )
+                pardus_banner.set_visible(True)
+                pardus_banner.get_style_context().add_class("pardus-badge")
+                pardus_banner.set_border_width(10)
+
+                icon = Gtk.Image.new_from_icon_name(
+                    "security-high-symbolic", Gtk.IconSize.DND,
+                )
+                icon.set_visible(True)
+                pardus_banner.pack_start(icon, False, False, 0)
+
+                distro_info = pardus_results.get("distribution", {})
+                ver_text = distro_info.get("name", "Pardus")
+
+                vbox = Gtk.Box(
+                    orientation=Gtk.Orientation.VERTICAL, spacing=2,
+                )
+                vbox.set_visible(True)
+                lbl_title = Gtk.Label()
+                lbl_title.set_markup(
+                    f"<b>{_('pardus_diagnostics')}</b> — {ver_text}"
+                )
+                lbl_title.set_visible(True)
+                lbl_title.set_xalign(0)
+                lbl_title.get_style_context().add_class("pardus-badge-label")
+                vbox.pack_start(lbl_title, False, False, 0)
+
+                lbl_sub = Gtk.Label(label=_("pardus_insights_subtitle"))
+                lbl_sub.set_visible(True)
+                lbl_sub.set_xalign(0)
+                lbl_sub.get_style_context().add_class("pardus-badge-sub")
+                vbox.pack_start(lbl_sub, False, False, 0)
+
+                pardus_banner.pack_start(vbox, True, True, 0)
+                self.box_insights_container.add(pardus_banner)
+
         # ── Pardus / Debian Diagnostics ──
         if pardus_results:
             # Broken packages

@@ -192,6 +192,7 @@
                           <object class="GtkFrame" id="frame_score">
                             <property name="visible">True</property>
                             <property name="shadow_type">none</property>
+                            <style><class name="card-elevated"/></style>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
@@ -287,135 +288,207 @@
                           <object class="GtkGrid" id="grid_meters">
                             <property name="visible">True</property>
                             <property name="column_homogeneous">True</property>
-                            <property name="column_spacing">16</property>
-                            <property name="row_spacing">8</property>
+                            <property name="column_spacing">12</property>
+                            <property name="row_spacing">6</property>
 
-                            <!-- CPU -->
+                            <!-- CPU Card -->
                             <child>
-                              <object class="GtkLabel" id="lbl_dash_cpu_title">
+                              <object class="GtkFrame">
                                 <property name="visible">True</property>
-                                <property name="label">CPU</property>
-                                <property name="xalign">0</property>
-                                <attributes>
-                                  <attribute name="weight" value="bold"/>
-                                </attributes>
+                                <property name="shadow_type">none</property>
+                                <style><class name="resource-card"/></style>
+                                <child>
+                                  <object class="GtkBox">
+                                    <property name="visible">True</property>
+                                    <property name="orientation">vertical</property>
+                                    <property name="spacing">6</property>
+                                    <property name="margin">12</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="visible">True</property>
+                                        <property name="spacing">8</property>
+                                        <child>
+                                          <object class="GtkImage">
+                                            <property name="visible">True</property>
+                                            <property name="icon_name">computer-symbolic</property>
+                                            <property name="pixel_size">16</property>
+                                            <style><class name="dim-label"/></style>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_dash_cpu_title">
+                                            <property name="visible">True</property>
+                                            <property name="label">CPU</property>
+                                            <property name="xalign">0</property>
+                                            <attributes>
+                                              <attribute name="weight" value="bold"/>
+                                            </attributes>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_dash_cpu_val">
+                                            <property name="visible">True</property>
+                                            <property name="label">--%</property>
+                                            <property name="xalign">1</property>
+                                            <attributes>
+                                              <attribute name="weight" value="bold"/>
+                                            </attributes>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLevelBar" id="level_dash_cpu">
+                                        <property name="visible">True</property>
+                                        <property name="min_value">0</property>
+                                        <property name="max_value">100</property>
+                                        <property name="value">0</property>
+                                        <property name="height_request">8</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                               <packing>
                                 <property name="left_attach">0</property>
                                 <property name="top_attach">0</property>
                               </packing>
                             </child>
+
+                            <!-- RAM Card -->
                             <child>
-                              <object class="GtkLabel" id="lbl_dash_cpu_val">
+                              <object class="GtkFrame">
                                 <property name="visible">True</property>
-                                <property name="label">--%</property>
-                                <property name="xalign">1</property>
-                                <style>
-                                  <class name="dim-label"/>
-                                </style>
+                                <property name="shadow_type">none</property>
+                                <style><class name="resource-card"/></style>
+                                <child>
+                                  <object class="GtkBox">
+                                    <property name="visible">True</property>
+                                    <property name="orientation">vertical</property>
+                                    <property name="spacing">6</property>
+                                    <property name="margin">12</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="visible">True</property>
+                                        <property name="spacing">8</property>
+                                        <child>
+                                          <object class="GtkImage">
+                                            <property name="visible">True</property>
+                                            <property name="icon_name">emblem-system-symbolic</property>
+                                            <property name="pixel_size">16</property>
+                                            <style><class name="dim-label"/></style>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_dash_ram_title">
+                                            <property name="visible">True</property>
+                                            <property name="label">Memory</property>
+                                            <property name="xalign">0</property>
+                                            <attributes>
+                                              <attribute name="weight" value="bold"/>
+                                            </attributes>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_dash_ram_val">
+                                            <property name="visible">True</property>
+                                            <property name="label">--%</property>
+                                            <property name="xalign">1</property>
+                                            <attributes>
+                                              <attribute name="weight" value="bold"/>
+                                            </attributes>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLevelBar" id="level_dash_ram">
+                                        <property name="visible">True</property>
+                                        <property name="min_value">0</property>
+                                        <property name="max_value">100</property>
+                                        <property name="value">0</property>
+                                        <property name="height_request">8</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                               <packing>
                                 <property name="left_attach">1</property>
                                 <property name="top_attach">0</property>
                               </packing>
                             </child>
-                            <child>
-                              <object class="GtkLevelBar" id="level_dash_cpu">
-                                <property name="visible">True</property>
-                                <property name="min_value">0</property>
-                                <property name="max_value">100</property>
-                                <property name="value">0</property>
-                              </object>
-                              <packing>
-                                <property name="left_attach">0</property>
-                                <property name="top_attach">1</property>
-                                <property name="width">2</property>
-                              </packing>
-                            </child>
 
-                            <!-- RAM -->
+                            <!-- Disk Card -->
                             <child>
-                              <object class="GtkLabel" id="lbl_dash_ram_title">
+                              <object class="GtkFrame">
                                 <property name="visible">True</property>
-                                <property name="label">Memory</property>
-                                <property name="xalign">0</property>
-                                <attributes>
-                                  <attribute name="weight" value="bold"/>
-                                </attributes>
+                                <property name="shadow_type">none</property>
+                                <style><class name="resource-card"/></style>
+                                <child>
+                                  <object class="GtkBox">
+                                    <property name="visible">True</property>
+                                    <property name="orientation">vertical</property>
+                                    <property name="spacing">6</property>
+                                    <property name="margin">12</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="visible">True</property>
+                                        <property name="spacing">8</property>
+                                        <child>
+                                          <object class="GtkImage">
+                                            <property name="visible">True</property>
+                                            <property name="icon_name">drive-harddisk-symbolic</property>
+                                            <property name="pixel_size">16</property>
+                                            <style><class name="dim-label"/></style>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_dash_disk_title">
+                                            <property name="visible">True</property>
+                                            <property name="label">Disk</property>
+                                            <property name="xalign">0</property>
+                                            <attributes>
+                                              <attribute name="weight" value="bold"/>
+                                            </attributes>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_dash_disk_val">
+                                            <property name="visible">True</property>
+                                            <property name="label">--%</property>
+                                            <property name="xalign">1</property>
+                                            <attributes>
+                                              <attribute name="weight" value="bold"/>
+                                            </attributes>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLevelBar" id="level_dash_disk">
+                                        <property name="visible">True</property>
+                                        <property name="min_value">0</property>
+                                        <property name="max_value">100</property>
+                                        <property name="value">0</property>
+                                        <property name="height_request">8</property>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
                               </object>
                               <packing>
                                 <property name="left_attach">2</property>
                                 <property name="top_attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="lbl_dash_ram_val">
-                                <property name="visible">True</property>
-                                <property name="label">--%</property>
-                                <property name="xalign">1</property>
-                                <style>
-                                  <class name="dim-label"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="left_attach">3</property>
-                                <property name="top_attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLevelBar" id="level_dash_ram">
-                                <property name="visible">True</property>
-                                <property name="min_value">0</property>
-                                <property name="max_value">100</property>
-                                <property name="value">0</property>
-                              </object>
-                              <packing>
-                                <property name="left_attach">2</property>
-                                <property name="top_attach">1</property>
-                                <property name="width">2</property>
-                              </packing>
-                            </child>
-
-                            <!-- Disk -->
-                            <child>
-                              <object class="GtkLabel" id="lbl_dash_disk_title">
-                                <property name="visible">True</property>
-                                <property name="label">Disk</property>
-                                <property name="xalign">0</property>
-                                <attributes>
-                                  <attribute name="weight" value="bold"/>
-                                </attributes>
-                              </object>
-                              <packing>
-                                <property name="left_attach">4</property>
-                                <property name="top_attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="lbl_dash_disk_val">
-                                <property name="visible">True</property>
-                                <property name="label">--%</property>
-                                <property name="xalign">1</property>
-                                <style>
-                                  <class name="dim-label"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="left_attach">5</property>
-                                <property name="top_attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLevelBar" id="level_dash_disk">
-                                <property name="visible">True</property>
-                                <property name="min_value">0</property>
-                                <property name="max_value">100</property>
-                                <property name="value">0</property>
-                              </object>
-                              <packing>
-                                <property name="left_attach">4</property>
-                                <property name="top_attach">1</property>
-                                <property name="width">2</property>
                               </packing>
                             </child>
                           </object>
@@ -449,6 +522,7 @@
                                 <property name="can_focus">True</property>
                                 <property name="relief">none</property>
                                 <signal name="clicked" handler="on_dash_scan_clicked" swapped="no"/>
+                                <style><class name="card-button"/></style>
                                 <child>
                                   <object class="GtkBox">
                                     <property name="visible">True</property>
@@ -498,6 +572,7 @@
                                 <property name="can_focus">True</property>
                                 <property name="relief">none</property>
                                 <signal name="clicked" handler="on_dash_health_clicked" swapped="no"/>
+                                <style><class name="card-button"/></style>
                                 <child>
                                   <object class="GtkBox">
                                     <property name="visible">True</property>
@@ -547,6 +622,7 @@
                                 <property name="can_focus">True</property>
                                 <property name="relief">none</property>
                                 <signal name="clicked" handler="on_dash_insights_clicked" swapped="no"/>
+                                <style><class name="card-button"/></style>
                                 <child>
                                   <object class="GtkBox">
                                     <property name="visible">True</property>
@@ -596,6 +672,7 @@
                           <object class="GtkFrame" id="frame_system_state">
                             <property name="visible">True</property>
                             <property name="shadow_type">none</property>
+                            <style><class name="card-elevated"/></style>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
@@ -980,41 +1057,63 @@
 
                         <!-- CPU Detail -->
                         <child>
-                          <object class="GtkBox">
+                          <object class="GtkFrame">
                             <property name="visible">True</property>
-                            <property name="orientation">vertical</property>
-                            <property name="spacing">6</property>
+                            <property name="shadow_type">none</property>
+                            <style><class name="resource-card"/></style>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">8</property>
+                                <property name="margin">16</property>
                                 <child>
-                                  <object class="GtkLabel" id="lbl_health_cpu_label">
+                                  <object class="GtkBox">
                                     <property name="visible">True</property>
-                                    <property name="label">CPU Usage</property>
-                                    <property name="xalign">0</property>
-                                    <attributes>
-                                      <attribute name="weight" value="bold"/>
-                                    </attributes>
+                                    <property name="spacing">10</property>
+                                    <child>
+                                      <object class="GtkImage">
+                                        <property name="visible">True</property>
+                                        <property name="icon_name">computer-symbolic</property>
+                                        <property name="pixel_size">20</property>
+                                        <style><class name="dim-label"/></style>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="lbl_health_cpu_label">
+                                        <property name="visible">True</property>
+                                        <property name="label">CPU Usage</property>
+                                        <property name="xalign">0</property>
+                                        <attributes>
+                                          <attribute name="weight" value="bold"/>
+                                          <attribute name="scale" value="1.1"/>
+                                        </attributes>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="lbl_health_cpu_val">
+                                        <property name="visible">True</property>
+                                        <property name="label">0%</property>
+                                        <property name="xalign">1</property>
+                                        <attributes>
+                                          <attribute name="weight" value="bold"/>
+                                        </attributes>
+                                      </object>
+                                    </child>
                                   </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                  </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="lbl_health_cpu_val">
+                                  <object class="GtkLevelBar" id="level_health_cpu">
                                     <property name="visible">True</property>
-                                    <property name="label">0%</property>
-                                    <property name="xalign">1</property>
+                                    <property name="min_value">0</property>
+                                    <property name="max_value">100</property>
+                                    <property name="value">0</property>
+                                    <property name="height_request">10</property>
                                   </object>
                                 </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkLevelBar" id="level_health_cpu">
-                                <property name="visible">True</property>
-                                <property name="min_value">0</property>
-                                <property name="max_value">100</property>
-                                <property name="value">0</property>
                               </object>
                             </child>
                           </object>
@@ -1022,41 +1121,63 @@
 
                         <!-- RAM Detail -->
                         <child>
-                          <object class="GtkBox">
+                          <object class="GtkFrame">
                             <property name="visible">True</property>
-                            <property name="orientation">vertical</property>
-                            <property name="spacing">6</property>
+                            <property name="shadow_type">none</property>
+                            <style><class name="resource-card"/></style>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">8</property>
+                                <property name="margin">16</property>
                                 <child>
-                                  <object class="GtkLabel" id="lbl_health_ram_label">
+                                  <object class="GtkBox">
                                     <property name="visible">True</property>
-                                    <property name="label">Memory Usage</property>
-                                    <property name="xalign">0</property>
-                                    <attributes>
-                                      <attribute name="weight" value="bold"/>
-                                    </attributes>
+                                    <property name="spacing">10</property>
+                                    <child>
+                                      <object class="GtkImage">
+                                        <property name="visible">True</property>
+                                        <property name="icon_name">emblem-system-symbolic</property>
+                                        <property name="pixel_size">20</property>
+                                        <style><class name="dim-label"/></style>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="lbl_health_ram_label">
+                                        <property name="visible">True</property>
+                                        <property name="label">Memory Usage</property>
+                                        <property name="xalign">0</property>
+                                        <attributes>
+                                          <attribute name="weight" value="bold"/>
+                                          <attribute name="scale" value="1.1"/>
+                                        </attributes>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="lbl_health_ram_val">
+                                        <property name="visible">True</property>
+                                        <property name="label">0%</property>
+                                        <property name="xalign">1</property>
+                                        <attributes>
+                                          <attribute name="weight" value="bold"/>
+                                        </attributes>
+                                      </object>
+                                    </child>
                                   </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                  </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="lbl_health_ram_val">
+                                  <object class="GtkLevelBar" id="level_health_ram">
                                     <property name="visible">True</property>
-                                    <property name="label">0%</property>
-                                    <property name="xalign">1</property>
+                                    <property name="min_value">0</property>
+                                    <property name="max_value">100</property>
+                                    <property name="value">0</property>
+                                    <property name="height_request">10</property>
                                   </object>
                                 </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkLevelBar" id="level_health_ram">
-                                <property name="visible">True</property>
-                                <property name="min_value">0</property>
-                                <property name="max_value">100</property>
-                                <property name="value">0</property>
                               </object>
                             </child>
                           </object>
@@ -1064,41 +1185,63 @@
 
                         <!-- Disk Detail -->
                         <child>
-                          <object class="GtkBox">
+                          <object class="GtkFrame">
                             <property name="visible">True</property>
-                            <property name="orientation">vertical</property>
-                            <property name="spacing">6</property>
+                            <property name="shadow_type">none</property>
+                            <style><class name="resource-card"/></style>
                             <child>
                               <object class="GtkBox">
                                 <property name="visible">True</property>
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">8</property>
+                                <property name="margin">16</property>
                                 <child>
-                                  <object class="GtkLabel" id="lbl_health_disk_label">
+                                  <object class="GtkBox">
                                     <property name="visible">True</property>
-                                    <property name="label">Disk Usage</property>
-                                    <property name="xalign">0</property>
-                                    <attributes>
-                                      <attribute name="weight" value="bold"/>
-                                    </attributes>
+                                    <property name="spacing">10</property>
+                                    <child>
+                                      <object class="GtkImage">
+                                        <property name="visible">True</property>
+                                        <property name="icon_name">drive-harddisk-symbolic</property>
+                                        <property name="pixel_size">20</property>
+                                        <style><class name="dim-label"/></style>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="lbl_health_disk_label">
+                                        <property name="visible">True</property>
+                                        <property name="label">Disk Usage</property>
+                                        <property name="xalign">0</property>
+                                        <attributes>
+                                          <attribute name="weight" value="bold"/>
+                                          <attribute name="scale" value="1.1"/>
+                                        </attributes>
+                                      </object>
+                                      <packing>
+                                        <property name="expand">True</property>
+                                      </packing>
+                                    </child>
+                                    <child>
+                                      <object class="GtkLabel" id="lbl_health_disk_val">
+                                        <property name="visible">True</property>
+                                        <property name="label">0%</property>
+                                        <property name="xalign">1</property>
+                                        <attributes>
+                                          <attribute name="weight" value="bold"/>
+                                        </attributes>
+                                      </object>
+                                    </child>
                                   </object>
-                                  <packing>
-                                    <property name="expand">True</property>
-                                  </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel" id="lbl_health_disk_val">
+                                  <object class="GtkLevelBar" id="level_health_disk">
                                     <property name="visible">True</property>
-                                    <property name="label">0%</property>
-                                    <property name="xalign">1</property>
+                                    <property name="min_value">0</property>
+                                    <property name="max_value">100</property>
+                                    <property name="value">0</property>
+                                    <property name="height_request">10</property>
                                   </object>
                                 </child>
-                              </object>
-                            </child>
-                            <child>
-                              <object class="GtkLevelBar" id="level_health_disk">
-                                <property name="visible">True</property>
-                                <property name="min_value">0</property>
-                                <property name="max_value">100</property>
-                                <property name="value">0</property>
                               </object>
                             </child>
                           </object>
