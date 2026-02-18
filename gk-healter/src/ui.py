@@ -869,7 +869,8 @@ class MainWindow:
         # ── Pardus / Debian Diagnostics ──
         if pardus_results:
             # Broken packages
-            broken = pardus_results.get("broken_packages", [])
+            broken_data = pardus_results.get("broken_packages", {})
+            broken = broken_data.get("packages", []) if isinstance(broken_data, dict) else broken_data
             if broken:
                 has_content = True
                 self._add_section_header(
@@ -877,7 +878,7 @@ class MainWindow:
                 )
                 for pkg in broken:
                     self._add_insight_card(
-                        pkg, "dialog-error-symbolic", "error",
+                        str(pkg), "dialog-error-symbolic", "error",
                         "fix_broken", _("btn_fix_now"),
                     )
 
@@ -894,7 +895,8 @@ class MainWindow:
                     )
 
             # Available updates
-            updates = pardus_results.get("available_updates", [])
+            updates_data = pardus_results.get("available_updates", {})
+            updates = updates_data.get("packages", []) if isinstance(updates_data, dict) else updates_data
             if updates:
                 has_content = True
                 count = len(updates)
@@ -902,7 +904,7 @@ class MainWindow:
                 self._add_section_header(header)
                 for upd in updates[:10]:  # Show at most 10
                     self._add_insight_card(
-                        upd, "software-update-available-symbolic",
+                        str(upd), "software-update-available-symbolic",
                         "info", None, None,
                     )
 
@@ -971,7 +973,8 @@ class MainWindow:
             has_content = True
             self._add_section_header(f"{_('insights_journal_errors')}: {errors_24h}")
             self._add_insight_card(
-                f"Journal has {errors_24h} errors in last 24h", "dialog-error-symbolic", "error", "analyze_logs", _("btn_view_logs")
+                _('insights_journal_errors_detail').replace('{count}', str(errors_24h)),
+                "dialog-error-symbolic", "error", "analyze_logs", _("btn_view_logs")
             )
 
         # Large files

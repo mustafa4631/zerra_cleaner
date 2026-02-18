@@ -26,7 +26,7 @@ class SettingsManager:
             "language": "auto",
             "ai_provider": "gemini",
             "ai_api_key": "",
-            "ai_model": "gpt-3.5-turbo",
+            "ai_model": "gemini-2.5-flash",
         }
         self.settings = self.defaults.copy()
         self._load_settings()

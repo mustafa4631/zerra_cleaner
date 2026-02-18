@@ -90,10 +90,10 @@ class SystemCleaner:
 
         is_allowed = False
         for a in allowed_system + allowed_user:
-            # If path matches exactly (for markers) or starts with directory
-            if path == a or path.startswith(a + os.sep) or path.startswith(a):
-                 is_allowed = True
-                 break
+            # Match exactly or as a proper directory prefix (with separator)
+            if path == a or path.startswith(a + os.sep):
+                is_allowed = True
+                break
 
         return is_allowed
 
