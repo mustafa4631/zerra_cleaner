@@ -28,6 +28,7 @@ from src.disk_analyzer import DiskAnalyzer
 from src.recommendation_engine import RecommendationEngine
 from src.ai_engine import AIEngine
 from src.pardus_analyzer import PardusAnalyzer
+from src.security_scanner import SecurityScanner
 from src.utils import format_size
 
 
@@ -53,6 +54,7 @@ class MainWindow:
         self.recommendation_engine = RecommendationEngine()
         self.ai_engine = AIEngine()
         self.pardus_analyzer = PardusAnalyzer()
+        self.security_scanner = SecurityScanner()
 
         # State
         self.scan_data: List[Dict[str, Any]] = []
@@ -838,13 +840,17 @@ class MainWindow:
         # Pardus / Debian diagnostics
         pardus_results = self.pardus_analyzer.run_full_diagnostics()
 
+        # Security audit
+        security_results = self.security_scanner.run_full_scan()
+
         ai_insight = self.ai_engine.generate_insight(
             metrics, failed_services, errors_24h
         )
 
         GLib.idle_add(
             self._display_insights, recs, ai_insight, large_files,
-            failed_services, slow_services, errors_24h, pardus_results
+            failed_services, slow_services, errors_24h, pardus_results,
+            security_results
         )
 
     def _display_insights(
@@ -856,6 +862,7 @@ class MainWindow:
         slow_services: list,
         errors_24h: int,
         pardus_results: dict = None,
+        security_results: dict = None,
     ) -> None:
         # Clear container
         for child in self.box_insights_container.get_children():
@@ -931,6 +938,106 @@ class MainWindow:
                     self._add_insight_card(
                         svc, "dialog-warning-symbolic", "error",
                         "view_services", _("btn_view_svcs"),
+                    )
+
+        # ── Security Audit ──
+        if security_results:
+            summary = security_results.get("summary", {})
+            total_issues = summary.get("total_issues", 0)
+
+            if total_issues > 0:
+                has_content = True
+                self._add_section_header(
+                    f"{_('security_title')} — "
+                    + _("security_scan_summary")
+                    .replace("{total}", str(total_issues))
+                    .replace("{critical}", str(summary.get("critical", 0)))
+                    .replace("{high}", str(summary.get("high", 0)))
+                    .replace("{warning}", str(summary.get("warning", 0)))
+                )
+
+                for item in security_results.get("world_writable", [])[:10]:
+                    self._add_insight_card(
+                        f"{_('security_world_writable')}: {item['path']}",
+                        "dialog-warning-symbolic", "warning", None, None,
+                    )
+                for item in security_results.get("suid_binaries", [])[:10]:
+                    self._add_insight_card(
+                        f"{_('security_suid_binaries')}: {item['path']}",
+                        "dialog-error-symbolic", "error", None, None,
+                    )
+                for item in security_results.get("sudoers_audit", []):
+                    self._add_insight_card(
+                        f"{_('security_sudoers_risk')}: {item.get('content', '')}",
+                        "dialog-error-symbolic", "error", None, None,
+                    )
+                for item in security_results.get("ssh_config", []):
+                    self._add_insight_card(
+                        f"{_('security_ssh_issues')}: {item['recommendation']}",
+                        "dialog-warning-symbolic", item.get("severity", "warning"),
+                        None, None,
+                    )
+
+                ua = security_results.get("unattended_upgrades", {})
+                if not ua.get("enabled", False) and ua.get("installed", False):
+                    self._add_insight_card(
+                        _("security_unattended_disabled"),
+                        "software-update-urgent-symbolic", "warning",
+                        None, None,
+                    )
+
+                logins = security_results.get("failed_logins", {})
+                login_count = logins.get("count", 0)
+                if login_count > 10:
+                    sev = "error" if login_count > 50 else "warning"
+                    self._add_insight_card(
+                        _("security_failed_logins_detail").replace(
+                            "{count}", str(login_count)
+                        ),
+                        "dialog-password-symbolic", sev, "analyze_logs",
+                        _("btn_view_logs"),
+                    )
+
+            # Repo trust score (from pardus_results)
+            if pardus_results:
+                trust = pardus_results.get("repo_trust_score", {})
+                trust_score = trust.get("score", 100)
+                if trust_score < 80:
+                    has_content = True
+                    self._add_section_header(_("security_repo_trust"))
+                    self._add_insight_card(
+                        _("security_repo_trust_detail").replace(
+                            "{score}", str(trust_score)
+                        ),
+                        "security-medium-symbolic",
+                        "warning" if trust_score >= 50 else "error",
+                        None, None,
+                    )
+                    for detail in trust.get("details", []):
+                        self._add_insight_card(
+                            detail.get("message", ""),
+                            "dialog-warning-symbolic",
+                            detail.get("severity", "info"),
+                            None, None,
+                        )
+
+                # Repair simulation
+                repair = pardus_results.get("repair_simulation", {})
+                needs_repair = (
+                    repair.get("fix_broken", {}).get("changes_needed", False)
+                    or repair.get("autoremove", {}).get("changes_needed", False)
+                )
+                if needs_repair:
+                    has_content = True
+                    removable = repair.get("autoremove", {}).get(
+                        "removable_count", 0
+                    )
+                    self._add_insight_card(
+                        _("security_repair_desc").replace(
+                            "{count}", str(removable)
+                        ),
+                        "emblem-system-symbolic", "info",
+                        "fix_broken", _("btn_fix_now"),
                     )
 
         # Recommendations

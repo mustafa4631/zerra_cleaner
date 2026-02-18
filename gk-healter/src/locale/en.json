@@ -186,5 +186,22 @@
     "pardus_service_issues": "Pardus Service Issues",
     "pardus_diagnostics": "Pardus Diagnostics",
     "pardus_version": "Pardus Version",
-    "pardus_not_detected": "Pardus distribution not detected"
+    "pardus_not_detected": "Pardus distribution not detected",
+
+    "insights_journal_errors_detail": "{count} error-level journal entries detected in the last 24 hours. Review with journalctl.",
+
+    "security_title": "Security Audit",
+    "security_world_writable": "World-Writable Files",
+    "security_suid_binaries": "Unexpected SUID/SGID Binaries",
+    "security_sudoers_risk": "Sudoers NOPASSWD Risk",
+    "security_ssh_issues": "SSH Configuration Issues",
+    "security_unattended_disabled": "Unattended Upgrades Not Active",
+    "security_failed_logins": "Failed Login Attempts (24h)",
+    "security_failed_logins_detail": "{count} failed authentication attempts in the last 24 hours.",
+    "security_all_clear": "No security issues detected.",
+    "security_scan_summary": "{total} issue(s): {critical} critical, {high} high, {warning} warning",
+    "security_repo_trust": "Repository Trust Score",
+    "security_repo_trust_detail": "Trust score: {score}/100",
+    "security_repair_available": "Automatic Repair Available",
+    "security_repair_desc": "Broken packages can be fixed and {count} orphan package(s) can be removed."
 }

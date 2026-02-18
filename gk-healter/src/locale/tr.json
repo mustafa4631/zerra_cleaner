@@ -171,5 +171,22 @@
     "pardus_service_issues": "Pardus Servis Sorunları",
     "pardus_diagnostics": "Pardus Tanılama",
     "pardus_version": "Pardus Sürümü",
-    "pardus_not_detected": "Pardus dağıtımı algılanamadı"
+    "pardus_not_detected": "Pardus dağıtımı algılanamadı",
+
+    "insights_journal_errors_detail": "Son 24 saatte {count} hata düzeyinde günlük kaydı tespit edildi. journalctl ile inceleyin.",
+
+    "security_title": "Güvenlik Denetimi",
+    "security_world_writable": "Herkese Yazılabilir Dosyalar",
+    "security_suid_binaries": "Beklenmeyen SUID/SGID Dosyaları",
+    "security_sudoers_risk": "Sudoers NOPASSWD Riski",
+    "security_ssh_issues": "SSH Yapılandırma Sorunları",
+    "security_unattended_disabled": "Otomatik Güncelleme Etkin Değil",
+    "security_failed_logins": "Başarısız Oturum Denemeleri (24 saat)",
+    "security_failed_logins_detail": "Son 24 saatte {count} başarısız kimlik doğrulama denemesi.",
+    "security_all_clear": "Güvenlik sorunu tespit edilmedi.",
+    "security_scan_summary": "{total} sorun: {critical} kritik, {high} yüksek, {warning} uyarı",
+    "security_repo_trust": "Depo Güven Puanı",
+    "security_repo_trust_detail": "Güven puanı: {score}/100",
+    "security_repair_available": "Otomatik Onarım Mevcut",
+    "security_repair_desc": "Bozuk paketler düzeltilebilir ve {count} yetim paket kaldırılabilir."
 }
