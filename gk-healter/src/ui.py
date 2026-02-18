@@ -928,15 +928,32 @@ class MainWindow:
                         None, None,
                     )
 
-            # Pardus-specific services
-            svc_info = pardus_results.get("pardus_services", {})
-            svc_issues = svc_info.get("failed", [])
-            if svc_issues:
+            # Pardus-specific services (list of dicts with name/installed/status)
+            pardus_svcs = pardus_results.get("pardus_services", [])
+            if isinstance(pardus_svcs, list):
+                missing_svcs = [
+                    s["name"] for s in pardus_svcs
+                    if isinstance(s, dict) and s.get("status") != "installed"
+                ]
+            else:
+                missing_svcs = []
+
+            # Systemd failed units from service dependency graph
+            svc_deps = pardus_results.get("service_dependencies", {})
+            failed_units = svc_deps.get("failed", []) if isinstance(svc_deps, dict) else []
+
+            if missing_svcs or failed_units:
                 has_content = True
                 self._add_section_header(_("pardus_service_issues"))
-                for svc in svc_issues:
+                for name in missing_svcs:
                     self._add_insight_card(
-                        svc, "dialog-warning-symbolic", "error",
+                        f"{name} — {_('pardus_svc_not_installed')}",
+                        "dialog-warning-symbolic", "warning",
+                        None, None,
+                    )
+                for unit in failed_units:
+                    self._add_insight_card(
+                        unit, "dialog-error-symbolic", "error",
                         "view_services", _("btn_view_svcs"),
                     )
 
