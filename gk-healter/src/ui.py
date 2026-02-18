@@ -761,8 +761,8 @@ class MainWindow:
     def _detect_pardus_async(self) -> None:
         """Run Pardus detection in background, then inject badge on main thread."""
         try:
-            info = self.pardus_analyzer.get_distribution_info()
-            is_pardus = info.get("is_pardus", False)
+            is_pardus = self.pardus_analyzer.is_pardus()
+            info = self.pardus_analyzer.get_pardus_version()
             distro_name = info.get("name", "")
             distro_ver = info.get("version", "")
             GLib.idle_add(self._apply_pardus_badge, is_pardus, distro_name, distro_ver)
