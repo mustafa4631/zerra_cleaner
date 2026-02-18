@@ -1,7 +1,6 @@
 import os
 import json
 import locale
-import sys
 import logging
 
 logger = logging.getLogger("gk-healter.i18n")
@@ -35,7 +34,7 @@ class I18nManager:
         """Loads the specified language or detects system language if 'auto'."""
         if language == 'auto':
             try:
-                sys_lang = locale.getdefaultlocale()[0]
+                sys_lang = locale.getlocale()[0]
                 if sys_lang and sys_lang.startswith('tr'):
                     target_lang = 'tr'
                 else:

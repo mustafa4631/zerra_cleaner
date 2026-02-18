@@ -1,8 +1,19 @@
+"""GK Healter — Recommendation Engine.
+
+Analyzes system metrics, service status, and log data to generate
+actionable recommendations for the user.
+"""
+
+from typing import Dict, List, Any
+
+
 class RecommendationEngine:
-    def __init__(self):
+    """Rule-based recommendation generator for system insights."""
+
+    def __init__(self) -> None:
         pass
 
-    def analyze_health(self, metrics):
+    def analyze_health(self, metrics: Dict[str, Any]) -> List[Dict[str, str]]:
         """Generates recommendations based on system metrics."""
         recommendations = []
 
@@ -39,7 +50,11 @@ class RecommendationEngine:
 
         return recommendations
 
-    def analyze_services(self, failed_services, slow_services):
+    def analyze_services(
+        self,
+        failed_services: List[str],
+        slow_services: List[Dict[str, str]],
+    ) -> List[Dict[str, str]]:
         """Generates recommendations based on service analysis."""
         recommendations = []
         if failed_services:
@@ -50,16 +65,33 @@ class RecommendationEngine:
                 'action': 'view_services'
             })
 
-        # Check for very slow boot (e.g. if top slow service takes > 10s)
+        # Flag excessively slow boot services (>10s)
         if slow_services:
-            # slow_services is list of dicts {service, time}
-            # time is string like "2.0s" or "1min 2s"
-            # Parsing time strings is complex, but we can just hint
-            pass
+            for svc in slow_services:
+                time_str = svc.get('time', '0s')
+                # Parse simple "Xs" or "Xmin Ys" format
+                try:
+                    if 'min' in time_str:
+                        seconds = 60.0  # at least 1 minute
+                    else:
+                        seconds = float(time_str.rstrip('s'))
+                except (ValueError, AttributeError):
+                    seconds = 0.0
+                if seconds > 10.0:
+                    recommendations.append({
+                        'type': 'warning',
+                        'message': (
+                            f"Service '{svc.get('service', '?')}' takes "
+                            f"{time_str} to start. Consider disabling or "
+                            "optimizing it."
+                        ),
+                        'action': 'view_services'
+                    })
+                    break  # only warn once for the slowest
 
         return recommendations
 
-    def analyze_logs(self, error_count):
+    def analyze_logs(self, error_count: int) -> List[Dict[str, str]]:
         """Generates recommendations based on log analysis."""
         recommendations = []
         if error_count > 100:

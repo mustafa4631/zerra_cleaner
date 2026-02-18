@@ -33,17 +33,17 @@ class TestI18nManager:
         assert mgr.get_text("btn_clean") == "Temizle"
 
     def test_auto_detects_language(self):
-        with patch("locale.getdefaultlocale", return_value=("tr_TR", "UTF-8")):
+        with patch("locale.getlocale", return_value=("tr_TR", "UTF-8")):
             mgr = I18nManager("auto")
             assert mgr.current_language == "tr"
 
     def test_auto_defaults_english_for_non_turkish(self):
-        with patch("locale.getdefaultlocale", return_value=("de_DE", "UTF-8")):
+        with patch("locale.getlocale", return_value=("de_DE", "UTF-8")):
             mgr = I18nManager("auto")
             assert mgr.current_language == "en"
 
     def test_auto_defaults_english_on_exception(self):
-        with patch("locale.getdefaultlocale", side_effect=Exception("fail")):
+        with patch("locale.getlocale", side_effect=Exception("fail")):
             mgr = I18nManager("auto")
             assert mgr.current_language == "en"
 

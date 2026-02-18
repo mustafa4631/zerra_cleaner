@@ -1,4 +1,3 @@
-import sys
 import gi
 
 gi.require_version('Gtk', '3.0')
@@ -9,7 +8,9 @@ from src.settings_manager import SettingsManager
 from src.i18n_manager import I18nManager
 from src.ui import MainWindow
 
+
 def main():
+    """Application entry point."""
     # Initialize logging first
     setup_logging()
 
@@ -17,7 +18,7 @@ def main():
     settings = SettingsManager()
     I18nManager(settings.get("language"))
 
-    app = MainWindow()
+    _app = MainWindow()
     Gtk.main()
 
 if __name__ == "__main__":
