@@ -22,6 +22,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
 
       - name: Install lint tools
         run: pip install flake8 pycodestyle
@@ -30,7 +31,7 @@ jobs:
         run: |
           flake8 gk-healter/src/ \
             --max-line-length=120 \
-            --ignore=E111,E114,E117,E121,E122,E203,E261,E301,E302,E303,E305,E402,E701,E722,E741,F401,F402,F841,W391,W503,E501 \
+            --ignore=E111,E114,E117,E203,E261,E402,E501,W503 \
             --count --statistics
 
   test:
@@ -47,6 +48,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
       - name: Install system dependencies
         run: |
@@ -65,12 +67,26 @@ jobs:
       - name: Install Python dependencies
         run: |
           pip install --upgrade pip
-          pip install pytest psutil PyGObject
+          pip install pytest pytest-cov psutil PyGObject
 
-      - name: Run tests
+      - name: Run tests with coverage
         env:
           PYTHONPATH: ${{ github.workspace }}/tests:${{ github.workspace }}/gk-healter
-        run: pytest tests/ -v --tb=short
+        run: |
+          pytest tests/ -v --tb=short \
+            --cov=src \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --cov-fail-under=70
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.11'
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   deb-package:
     name: Debian Package
