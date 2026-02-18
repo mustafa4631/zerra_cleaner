@@ -8,13 +8,26 @@ logger = logging.getLogger("gk-healter.health")
 
 class HealthEngine:
     def __init__(self):
-        self._cpu_usage = 0
-        self._ram_usage = 0
-        self._disk_usage = 0
+        self._cpu_usage = 0.0
+        self._ram_usage = 0.0
+        self._disk_usage = 0.0
         self._health_score = 100
         self._running = False
         self._thread = None
         self._lock = threading.Lock()
+        # Detailed resource info
+        self._ram_total: int = 0
+        self._ram_used: int = 0
+        self._disk_total: int = 0
+        self._disk_used: int = 0
+        self._cpu_count: int = psutil.cpu_count(logical=True) or 1
+        self._cpu_freq_max: float = 0.0
+        try:
+            freq = psutil.cpu_freq()
+            if freq:
+                self._cpu_freq_max = freq.max or freq.current or 0.0
+        except Exception:
+            pass
 
     def start_monitoring(self):
         if self._running:
@@ -35,13 +48,17 @@ class HealthEngine:
                 # But to make ui responsive and not block stop_monitoring check for 1s, we can use smaller interval or just accept it.
                 # using 0.5s interval
                 cpu = psutil.cpu_percent(interval=1)
-                ram = psutil.virtual_memory().percent
-                disk = psutil.disk_usage('/').percent
+                mem = psutil.virtual_memory()
+                dsk = psutil.disk_usage('/')
 
                 with self._lock:
                     self._cpu_usage = cpu
-                    self._ram_usage = ram
-                    self._disk_usage = disk
+                    self._ram_usage = mem.percent
+                    self._ram_total = mem.total
+                    self._ram_used = mem.used
+                    self._disk_usage = dsk.percent
+                    self._disk_total = dsk.total
+                    self._disk_used = dsk.used
                     self._calculate_score()
 
             except Exception as e:
@@ -81,7 +98,13 @@ class HealthEngine:
                 'cpu': self._cpu_usage,
                 'ram': self._ram_usage,
                 'disk': self._disk_usage,
-                'score': self._health_score
+                'score': self._health_score,
+                'ram_total': self._ram_total,
+                'ram_used': self._ram_used,
+                'disk_total': self._disk_total,
+                'disk_used': self._disk_used,
+                'cpu_count': self._cpu_count,
+                'cpu_freq_max': self._cpu_freq_max,
             }
 
     def get_detailed_status(self):
