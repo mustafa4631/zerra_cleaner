@@ -757,6 +757,110 @@ class MainWindow:
         if active:
             self.combo_frequency.set_active_id(active)
 
+    # ── Pardus detection ───────────────────────────────────────────────────
+    def _detect_pardus_async(self) -> None:
+        """Run Pardus detection in background, then inject badge on main thread."""
+        try:
+            info = self.pardus_analyzer.get_distribution_info()
+            is_pardus = info.get("is_pardus", False)
+            distro_name = info.get("name", "")
+            distro_ver = info.get("version", "")
+            GLib.idle_add(self._apply_pardus_badge, is_pardus, distro_name, distro_ver)
+        except Exception as e:
+            logger.warning("Pardus detection failed: %s", e)
+
+    def _apply_pardus_badge(
+        self, is_pardus: bool, distro_name: str, distro_ver: str,
+    ) -> None:
+        """Insert a prominent Pardus/distro badge at the top of the Dashboard."""
+        self._is_pardus = is_pardus
+        self._pardus_version = f"{distro_name} {distro_ver}".strip()
+
+        dashboard = self.builder.get_object("dashboard_page")
+        if dashboard is None:
+            return
+
+        badge = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=14)
+        badge.set_visible(True)
+        badge.set_border_width(12)
+
+        if is_pardus:
+            badge.get_style_context().add_class("pardus-badge")
+            # Pardus logo icon
+            icon = Gtk.Image.new_from_icon_name(
+                "distributor-logo-pardus", Gtk.IconSize.DIALOG,
+            )
+            if not Gtk.IconTheme.get_default().has_icon("distributor-logo-pardus"):
+                icon = Gtk.Image.new_from_icon_name(
+                    "emblem-favorite-symbolic", Gtk.IconSize.DIALOG,
+                )
+            icon.set_visible(True)
+            badge.pack_start(icon, False, False, 0)
+
+            vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+            vbox.set_visible(True)
+            vbox.set_valign(Gtk.Align.CENTER)
+
+            title_lbl = Gtk.Label()
+            title_lbl.set_markup(
+                f"<span font_weight='bold' font_size='large'>"
+                f"{_('pardus_detected')}</span>"
+            )
+            title_lbl.set_visible(True)
+            title_lbl.set_xalign(0)
+            title_lbl.get_style_context().add_class("pardus-badge-label")
+            vbox.pack_start(title_lbl, False, False, 0)
+
+            ver_lbl = Gtk.Label(
+                label=f"{self._pardus_version} — {_('pardus_features_active')}"
+            )
+            ver_lbl.set_visible(True)
+            ver_lbl.set_xalign(0)
+            ver_lbl.get_style_context().add_class("pardus-badge-sub")
+            vbox.pack_start(ver_lbl, False, False, 0)
+
+            badge.pack_start(vbox, True, True, 0)
+
+            # Feature chips
+            chip_box = Gtk.Box(spacing=6)
+            chip_box.set_visible(True)
+            chip_box.set_valign(Gtk.Align.CENTER)
+            for chip_text in [
+                _("pardus_chip_services"),
+                _("pardus_chip_security"),
+                _("pardus_chip_packages"),
+            ]:
+                chip = Gtk.Label(label=chip_text)
+                chip.set_visible(True)
+                chip.get_style_context().add_class("pardus-badge-sub")
+                chip.set_margin_start(4)
+                chip.set_margin_end(4)
+                chip_box.pack_start(chip, False, False, 0)
+            badge.pack_end(chip_box, False, False, 0)
+
+        else:
+            # Generic Linux badge (more subtle)
+            badge.get_style_context().add_class("card-elevated")
+            icon = Gtk.Image.new_from_icon_name(
+                "computer-symbolic", Gtk.IconSize.LARGE_TOOLBAR,
+            )
+            icon.set_visible(True)
+            badge.pack_start(icon, False, False, 0)
+
+            lbl = Gtk.Label()
+            distro_text = self._pardus_version or "Linux"
+            lbl.set_markup(
+                f"<b>{distro_text}</b> — {_('pardus_not_detected')}"
+            )
+            lbl.set_visible(True)
+            lbl.set_xalign(0)
+            badge.pack_start(lbl, True, True, 0)
+
+        # Insert badge at position 1 (after welcome header, before score card)
+        dashboard.pack_start(badge, False, False, 0)
+        dashboard.reorder_child(badge, 1)
+        badge.show_all()
+
     # ── Health timer (periodic UI refresh) ───────────────────────────────────
     def _start_health_timer(self) -> None:
         """Tick every 2 seconds to update dashboard / health page metrics."""
