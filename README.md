@@ -25,10 +25,18 @@ Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**
 
 ### Monitoring & Intelligence
 - **Real-Time Health Score:** CPU, RAM, and disk usage monitoring with a composite health score (0–100).
-- **AI-Powered Insights:** Optional Gemini API integration for contextual system recommendations.
+- **Hybrid AI Analysis:** Offline rule-based `LocalAnalysisEngine` always available; optional cloud enrichment via Gemini/OpenAI APIs.
 - **Smart Recommendations:** Rule-based engine generates actionable suggestions based on system metrics.
 - **Service Analyzer:** Detects failed systemd services and slow-starting units.
 - **Log Analyzer:** Identifies critical/error-level journal entries with severity classification.
+
+### Security Audit
+- **World-Writable File Detection:** Scans system directories for insecure permissions.
+- **SUID/SGID Binary Audit:** Identifies unexpected set-uid binaries against a known whitelist.
+- **Sudoers Risk Analysis:** Flags dangerous `NOPASSWD: ALL` entries.
+- **SSH Hardening Check:** Validates `sshd_config` against security best practices.
+- **Unattended-Upgrades Monitoring:** Verifies automatic security updates are enabled.
+- **Failed Login Tracking:** Summarizes authentication failures from journal.
 
 ### Automation
 - **Intelligent Auto-Maintenance:** Scheduled cleaning based on idle time, disk thresholds, and power status.
@@ -47,7 +55,7 @@ Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**
 - **Language:** [Python 3](https://www.python.org/)
 - **GUI Toolkit:** [GTK 3 (PyGObject)](https://pygobject.readthedocs.io/)
 - **Build System:** [Meson](https://mesonbuild.com/) / Make
-- **Testing:** [pytest](https://docs.pytest.org/) with CI via GitHub Actions
+- **Testing:** [pytest](https://docs.pytest.org/) (182 tests, %85+ coverage) with CI via GitHub Actions
 - **Packaging:** [Flatpak](https://flatpak.org/), Debian (.deb), Arch (PKGBUILD), RPM (.spec)
 - **Privilege Escalation:** Polkit (pkexec) with custom policy file
 
@@ -60,12 +68,13 @@ src/
 ├── cleaner.py               # Safety-first cleaning engine
 ├── health_engine.py         # Real-time system health monitoring
 ├── pardus_analyzer.py       # Pardus/Debian-specific diagnostics
+├── security_scanner.py      # System security audit engine
 ├── distro_manager.py        # Multi-distro package manager abstraction
 ├── disk_analyzer.py         # Large file discovery
 ├── log_analyzer.py          # Journal error analysis
 ├── service_analyzer.py      # Systemd service health
 ├── recommendation_engine.py # Rule-based system recommendations
-├── ai_engine.py             # Gemini AI integration
+├── ai_engine.py             # Hybrid AI: local analysis + cloud enrichment
 ├── auto_maintenance_manager.py # Scheduled maintenance logic
 ├── settings_manager.py      # Persistent configuration
 ├── history_manager.py       # Cleaning history tracking
@@ -139,9 +148,11 @@ sudo meson install -C _build
 ## Running Tests
 
 ```bash
-pip install pytest
-pytest -v
+pip install pytest pytest-cov
+pytest -v --cov=src --cov-report=term-missing
 ```
+
+**182 tests** covering 15 modules across 14 test files.
 
 ## Packaging
 
