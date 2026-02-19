@@ -839,7 +839,7 @@ class MainWindow:
         self.lbl_health_status_text.set_text(f"{_('health_score_label')} — {status}")
 
         # CPU detail
-        freq_str = f" @ {cpu_freq/1000:.1f} GHz" if cpu_freq > 0 else ""
+        freq_str = f" @ {cpu_freq / 1000:.1f} GHz" if cpu_freq > 0 else ""
         self.lbl_health_cpu_val.set_text(
             f"{cpu:.1f}%  ({cpu_count} {_('health_cores')}{freq_str})"
         )
