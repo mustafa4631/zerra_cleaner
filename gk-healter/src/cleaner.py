@@ -55,26 +55,51 @@ class SystemCleaner:
         self.scan_results = results
         return results
 
+    def _get_marker_paths(self) -> set:
+        """Return the set of pseudo-paths used as action markers by distro_manager.
+
+        Marker paths (e.g. /usr/bin/apt) are not real deletion targets;
+        they trigger distro-specific commands (apt autoremove, etc.).
+        These must be allowed through the safety check.
+        """
+        markers: set = set()
+        for _, p, _ in self.distro_manager.get_package_cache_paths():
+            # A marker is a path that resolves to a binary, not a cache dir
+            if self.distro_manager.get_clean_command(p):
+                if not os.path.isdir(p) or p.startswith("/usr/"):
+                    markers.add(os.path.abspath(p))
+        return markers
+
     def is_safe_to_delete(self, path: str) -> bool:
         """
         Safety check: ensure we are not deleting critical system paths.
         This acts as a whitelist mechanism.
+
+        Marker paths (e.g. /usr/bin/apt used to trigger 'apt autoremove')
+        are explicitly allowed because they invoke distro commands, not
+        actual file deletion.
         """
+        path = os.path.abspath(path)
+
+        # 0. Allow distro-manager marker paths unconditionally.
+        #    These trigger commands (apt clean, autoremove) — no files are deleted.
+        if path in self._get_marker_paths():
+            return True
+
         # Forbidden paths (prefixes)
         forbidden = ["/bin", "/boot", "/dev", "/etc", "/lib", "/proc", "/sys", "/usr/bin", "/usr/lib", "/usr/sbin"]
 
         # Explicitly allowed prefixes for System cleaning
-        # Dynamically add pkg cache path
         allowed_system = ["/var/log", "/var/lib/systemd/coredump"]
 
-        # Add distro specific paths to allowed list
+        # Add distro specific real cache paths to allowed list
+        marker_set = self._get_marker_paths()
         for _, p, _ in self.distro_manager.get_package_cache_paths():
-            allowed_system.append(p)
+            if os.path.abspath(p) not in marker_set:
+                allowed_system.append(p)
 
         # Explicitly allowed prefixes for User cleaning
         allowed_user = [os.path.expanduser("~/.cache")]
-
-        path = os.path.abspath(path)
 
         # 1. Check strict forbidden list
         for f in forbidden:
@@ -82,15 +107,8 @@ class SystemCleaner:
                 return False
 
         # 2. Check if it matches an allowed category prefix
-
-        # Careful! self.distro_manager.get_package_cache_paths() might include pseudo-paths like /usr/bin/apt for markers
-        # We should allow those markers if they are passed as 'path', but not as a prefix for actual file deletion.
-        # But wait, cleaner only calls _clean_system with the marker path directly.
-        # So we just need to ensure the marker itself is allowed.
-
         is_allowed = False
         for a in allowed_system + allowed_user:
-            # Match exactly or as a proper directory prefix (with separator)
             if path == a or path.startswith(a + os.sep):
                 is_allowed = True
                 break

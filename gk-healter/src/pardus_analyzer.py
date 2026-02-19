@@ -607,6 +607,271 @@ class PardusAnalyzer:
 
         return result
 
+    # ── Pardus Mirror Health ────────────────────────────────────────────────
+
+    def check_pardus_mirror_health(self) -> Dict[str, Any]:
+        """Test reachability and response time of Pardus APT mirrors.
+
+        Performs HTTP HEAD requests against the official Pardus repository
+        and known mirrors.  Returns timing information so the UI can warn
+        the user about slow or unreachable mirrors.
+
+        Returns:
+            dict with keys:
+                - reachable: bool — at least one mirror responded
+                - dns_resolved: bool — hostname resolved successfully
+                - response_time_ms: int — fastest mirror response (ms)
+                - mirrors: list[dict] — per-mirror detail
+                - recommended_mirror: str — URL of the fastest mirror
+        """
+        import urllib.request
+        import urllib.error
+        import socket
+        import time as _time
+
+        MIRRORS = [
+            "http://depo.pardus.org.tr/pardus",
+            "http://depo2.pardus.org.tr/pardus",
+            "http://mirror.yirmibir.org/pardus",
+        ]
+
+        result: Dict[str, Any] = {
+            "reachable": False,
+            "dns_resolved": False,
+            "response_time_ms": 0,
+            "mirrors": [],
+            "recommended_mirror": "",
+        }
+
+        fastest_ms = float("inf")
+
+        for url in MIRRORS:
+            info: Dict[str, Any] = {
+                "url": url,
+                "reachable": False,
+                "response_time_ms": 0,
+                "error": None,
+            }
+            try:
+                # DNS resolution check (first mirror only for flag)
+                if not result["dns_resolved"]:
+                    host = url.split("//")[1].split("/")[0]
+                    socket.getaddrinfo(host, 80, socket.AF_INET)
+                    result["dns_resolved"] = True
+
+                req = urllib.request.Request(url, method="HEAD")
+                start = _time.monotonic()
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    elapsed = (_time.monotonic() - start) * 1000
+                    if resp.status < 400:
+                        info["reachable"] = True
+                        info["response_time_ms"] = int(elapsed)
+                        result["reachable"] = True
+                        if elapsed < fastest_ms:
+                            fastest_ms = elapsed
+                            result["response_time_ms"] = int(elapsed)
+                            result["recommended_mirror"] = url
+            except (urllib.error.URLError, socket.timeout, OSError) as e:
+                info["error"] = str(e)
+            except Exception as e:
+                info["error"] = str(e)
+
+            result["mirrors"].append(info)
+
+        return result
+
+    # ── Pardus Release Compatibility ─────────────────────────────────────────
+
+    def check_pardus_release_compatibility(self) -> Dict[str, Any]:
+        """Verify that APT sources match the running Pardus release.
+
+        Compares ``VERSION_CODENAME`` from ``/etc/os-release`` against the
+        suite / codename strings found in ``/etc/apt/sources.list`` and
+        ``/etc/apt/sources.list.d/*.list``.  Mismatches indicate that a
+        repository was configured for a different Pardus release which can
+        cause dependency breakage.
+
+        Returns:
+            dict with keys:
+                - compatible: bool
+                - os_codename: str
+                - repo_codenames: list[str]
+                - mismatched_repos: list[str] — lines with wrong codename
+        """
+        result: Dict[str, Any] = {
+            "compatible": True,
+            "os_codename": "",
+            "repo_codenames": [],
+            "mismatched_repos": [],
+        }
+
+        # 1. Read OS codename
+        version_info = self.get_pardus_version()
+        os_codename = version_info.get("codename", "").strip().lower()
+        result["os_codename"] = os_codename
+
+        if not os_codename or os_codename == "unknown":
+            return result  # Cannot compare without a codename
+
+        # 2. Scan APT sources for codenames
+        sources_files: List[str] = []
+        if os.path.exists("/etc/apt/sources.list"):
+            sources_files.append("/etc/apt/sources.list")
+        sources_dir = "/etc/apt/sources.list.d"
+        if os.path.isdir(sources_dir):
+            try:
+                for fname in os.listdir(sources_dir):
+                    if fname.endswith(".list"):
+                        sources_files.append(os.path.join(sources_dir, fname))
+            except OSError:
+                pass
+
+        seen_codenames: set = set()
+
+        for fpath in sources_files:
+            try:
+                with open(fpath, "r") as f:
+                    for line in f:
+                        stripped = line.strip()
+                        if not stripped or stripped.startswith("#"):
+                            continue
+                        if not (stripped.startswith("deb ") or stripped.startswith("deb-src ")):
+                            continue
+                        # Only check Pardus repos
+                        if "pardus" not in stripped.lower():
+                            continue
+                        # Extract codename: deb URL suite component...
+                        parts = stripped.split()
+                        if len(parts) >= 3:
+                            suite = parts[2].strip().lower()
+                            # Handle suite variants like "yirmiuc-deb"
+                            base_suite = suite.split("-")[0]
+                            seen_codenames.add(base_suite)
+                            if base_suite != os_codename:
+                                result["compatible"] = False
+                                result["mismatched_repos"].append(stripped)
+            except (PermissionError, OSError):
+                continue
+
+        result["repo_codenames"] = sorted(seen_codenames)
+        return result
+
+    # ── Pardus APT/dpkg Log Analysis ─────────────────────────────────────────
+
+    def analyze_pardus_logs(self, days: int = 7) -> Dict[str, Any]:
+        """Analyze dpkg and APT logs for recent package activity.
+
+        Parses ``/var/log/dpkg.log`` and ``/var/log/apt/history.log`` to
+        summarize install / remove / upgrade counts over the last *days*
+        days.  Failed operations (dpkg errors) are also captured.
+
+        Args:
+            days: Number of days to look back (default 7).
+
+        Returns:
+            dict with keys:
+                - total_operations: int
+                - installs: int
+                - removes: int
+                - upgrades: int
+                - failed_operations: list[str]
+                - last_update: str — ISO date of most recent dpkg action
+                - days_since_update: int
+        """
+        import datetime as _dt
+
+        result: Dict[str, Any] = {
+            "total_operations": 0,
+            "installs": 0,
+            "removes": 0,
+            "upgrades": 0,
+            "failed_operations": [],
+            "last_update": "",
+            "days_since_update": -1,
+        }
+
+        cutoff = _dt.datetime.now() - _dt.timedelta(days=days)
+        latest_date: Optional[_dt.datetime] = None
+
+        dpkg_log = "/var/log/dpkg.log"
+        if os.path.isfile(dpkg_log):
+            try:
+                with open(dpkg_log, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        # Format: "2026-02-18 10:23:15 status installed pkg ..."
+                        parts = line.split(None, 3)
+                        if len(parts) < 4:
+                            continue
+                        try:
+                            ts = _dt.datetime.strptime(
+                                f"{parts[0]} {parts[1]}", "%Y-%m-%d %H:%M:%S"
+                            )
+                        except ValueError:
+                            continue
+                        if ts < cutoff:
+                            continue
+
+                        action = parts[2].lower()
+                        result["total_operations"] += 1
+
+                        if latest_date is None or ts > latest_date:
+                            latest_date = ts
+
+                        if action == "install":
+                            result["installs"] += 1
+                        elif action == "remove" or action == "purge":
+                            result["removes"] += 1
+                        elif action == "upgrade":
+                            result["upgrades"] += 1
+
+                        # Detect errors
+                        if "error" in line.lower() or "half-installed" in line.lower():
+                            result["failed_operations"].append(line[:200])
+
+            except (PermissionError, OSError) as e:
+                logger.warning("Cannot read dpkg log: %s", e)
+
+        # Also scan apt history
+        apt_log = "/var/log/apt/history.log"
+        if os.path.isfile(apt_log):
+            try:
+                with open(apt_log, "r") as f:
+                    current_date: Optional[_dt.datetime] = None
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("Start-Date:"):
+                            try:
+                                date_str = line.split(":", 1)[1].strip()
+                                current_date = _dt.datetime.strptime(
+                                    date_str, "%Y-%m-%d  %H:%M:%S"
+                                )
+                            except ValueError:
+                                current_date = None
+                        if current_date and current_date >= cutoff:
+                            if line.startswith("Install:"):
+                                count = line.count("(")
+                                result["installs"] += max(count, 1)
+                                result["total_operations"] += max(count, 1)
+                            elif line.startswith("Remove:"):
+                                count = line.count("(")
+                                result["removes"] += max(count, 1)
+                                result["total_operations"] += max(count, 1)
+                            elif line.startswith("Upgrade:"):
+                                count = line.count("(")
+                                result["upgrades"] += max(count, 1)
+                                result["total_operations"] += max(count, 1)
+            except (PermissionError, OSError) as e:
+                logger.warning("Cannot read apt history: %s", e)
+
+        if latest_date:
+            result["last_update"] = latest_date.strftime("%Y-%m-%d %H:%M:%S")
+            result["days_since_update"] = (_dt.datetime.now() - latest_date).days
+
+        return result
+
     # ── Aggregate Diagnostics ────────────────────────────────────────────────
 
     def run_full_diagnostics(self) -> Dict[str, Any]:
@@ -632,10 +897,16 @@ class PardusAnalyzer:
             report["service_dependencies"] = self.get_service_dependency_graph()
             report["repo_trust_score"] = self.calculate_repo_trust_score()
             report["repair_simulation"] = self.simulate_repair()
+            report["mirror_health"] = self.check_pardus_mirror_health()
+            report["release_compatibility"] = self.check_pardus_release_compatibility()
+            report["package_log_analysis"] = self.analyze_pardus_logs()
         else:
             report["pardus_services"] = []
             report["service_dependencies"] = {}
             report["repo_trust_score"] = {"score": 0, "details": []}
             report["repair_simulation"] = {}
+            report["mirror_health"] = {"reachable": False, "mirrors": []}
+            report["release_compatibility"] = {"compatible": True}
+            report["package_log_analysis"] = {"total_operations": 0}
 
         return report

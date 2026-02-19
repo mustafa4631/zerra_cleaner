@@ -33,7 +33,13 @@ class SettingsManager:
 
     def _ensure_dir_exists(self):
         if not os.path.exists(self.config_dir):
-            os.makedirs(self.config_dir, exist_ok=True)
+            os.makedirs(self.config_dir, mode=0o700, exist_ok=True)
+        else:
+            # Harden existing directory permissions
+            try:
+                os.chmod(self.config_dir, 0o700)
+            except OSError:
+                pass
 
     def _load_settings(self):
         if os.path.exists(self.config_file):
@@ -41,6 +47,11 @@ class SettingsManager:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     loaded = json.load(f)
                     self.settings.update(loaded)
+                # Ensure file permissions are restrictive
+                try:
+                    os.chmod(self.config_file, 0o600)
+                except OSError:
+                    pass
             except Exception as e:
                 logger.error("Failed to load settings: %s", e)
 
@@ -49,8 +60,17 @@ class SettingsManager:
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(self.settings, f, ensure_ascii=False, indent=4)
+            # Restrict file to owner-only read/write (API key protection)
+            os.chmod(self.config_file, 0o600)
         except Exception as e:
             logger.error("Failed to save settings: %s", e)
+
+    @staticmethod
+    def mask_api_key(key: str) -> str:
+        """Return a masked version of an API key for safe logging."""
+        if not key or len(key) <= 4:
+            return "***"
+        return "***" + key[-4:]
 
     def get(self, key):
         return self.settings.get(key, self.defaults.get(key))
