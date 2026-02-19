@@ -148,21 +148,6 @@
     "freq_biweekly": "Every 2 Weeks",
     "freq_monthly": "Monthly",
 
-    "cat_apt_cache": "APT Cache",
-    "desc_apt_cache": "Downloaded package files",
-    "cat_sys_logs": "System Logs",
-    "desc_sys_logs": "Archived logs and journal entries",
-    "cat_autoremove": "Unused Dependencies",
-    "desc_autoremove": "Unused system packages (autoremove)",
-    "cat_coredumps": "Core Dumps",
-    "desc_coredumps": "Application crash records",
-    "cat_thumbnails": "Thumbnail Cache",
-    "desc_thumbnails": "File manager thumbnails",
-    "cat_firefox": "Firefox Cache",
-    "desc_firefox": "Firefox browser cache",
-    "cat_chrome": "Chrome Cache",
-    "desc_chrome": "Chrome browser cache",
-
     "msg_safety_warning": "SAFETY WARNING: {0} cannot be deleted (not in allowed list).",
     "err_file_delete": "Could not delete file {0}: {1}",
     "err_user_clean_fail": "User cleanup failed ({0}): {1}",
@@ -187,6 +172,16 @@
     "pardus_diagnostics": "Pardus Diagnostics",
     "pardus_version": "Pardus Version",
     "pardus_not_detected": "Pardus distribution not detected",
+    "pardus_detected": "Pardus Detected",
+    "pardus_features_active": "Pardus-specific diagnostics active",
+    "pardus_insights_subtitle": "Full Pardus-aware package, service, and security analysis enabled.",
+    "pardus_chip_services": "Services",
+    "pardus_chip_security": "Security",
+    "pardus_chip_packages": "Packages",
+    "pardus_svc_not_installed": "not installed",
+
+    "health_cores": "cores",
+    "health_free": "free",
 
     "insights_journal_errors_detail": "{count} error-level journal entries detected in the last 24 hours. Review with journalctl.",
 
