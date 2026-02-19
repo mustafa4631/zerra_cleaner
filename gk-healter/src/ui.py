@@ -439,7 +439,7 @@ class MainWindow:
             }
         """
         provider = Gtk.CssProvider()
-        provider.load_from_data(css.encode('utf-8'))
+        #provider.load_from_data(css.encode('utf-8'))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             provider,
