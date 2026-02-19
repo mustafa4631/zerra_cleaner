@@ -3,6 +3,7 @@ GK Healter – Test Suite: pardus_analyzer.py
 """
 
 import os
+import subprocess
 import pytest
 from unittest.mock import patch, MagicMock
 from gk_healter_tests.helpers import src_import
@@ -256,3 +257,74 @@ class TestPardusLogs:
              patch("builtins.open", side_effect=PermissionError("denied")):
             result = pa.analyze_pardus_logs()
         assert result["total_operations"] == 0
+
+
+class TestPardusServices:
+    """Tests for Pardus service checking."""
+
+    def test_no_dpkg_query_returns_empty(self):
+        pa = PardusAnalyzer()
+        with patch("shutil.which", return_value=None):
+            result = pa.check_pardus_services()
+        assert result == []
+
+    def test_services_checked(self):
+        pa = PardusAnalyzer()
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stdout = "install ok installed"
+        with patch("shutil.which", return_value="/usr/bin/dpkg-query"), \
+             patch("subprocess.run", return_value=mock_result):
+            result = pa.check_pardus_services()
+        assert len(result) > 0
+        assert result[0]["installed"] == "yes"
+
+    def test_services_not_installed(self):
+        pa = PardusAnalyzer()
+        mock_result = MagicMock()
+        mock_result.returncode = 1
+        mock_result.stdout = ""
+        with patch("shutil.which", return_value="/usr/bin/dpkg-query"), \
+             patch("subprocess.run", return_value=mock_result):
+            result = pa.check_pardus_services()
+        assert len(result) > 0
+        assert result[0]["installed"] == "no"
+
+    def test_service_timeout(self):
+        pa = PardusAnalyzer()
+        with patch("shutil.which", return_value="/usr/bin/dpkg-query"), \
+             patch("subprocess.run", side_effect=subprocess.TimeoutExpired("cmd", 5)):
+            result = pa.check_pardus_services()
+        assert len(result) > 0
+        assert result[0]["status"] == "timeout"
+
+
+class TestGetFixCommand:
+    """Test for fix broken command."""
+
+    def test_returns_pkexec_command(self):
+        pa = PardusAnalyzer()
+        cmd = pa.get_fix_broken_command()
+        assert cmd[0] == "pkexec"
+        assert "install" in cmd
+        assert "-f" in cmd
+
+
+class TestDebianBased:
+    """Test for debian-based detection."""
+
+    def test_is_debian_based_with_apt(self):
+        pa = PardusAnalyzer()
+        with patch("shutil.which", return_value="/usr/bin/apt-get"):
+            assert pa.is_debian_based() is True
+
+    def test_not_debian_based(self):
+        pa = PardusAnalyzer()
+        with patch("shutil.which", return_value=None):
+            assert pa.is_debian_based() is False
+
+    def test_repo_health_non_debian(self):
+        pa = PardusAnalyzer()
+        with patch.object(pa, "is_debian_based", return_value=False):
+            result = pa.check_repo_health()
+        assert "Not a Debian-based system" in result["errors"]
