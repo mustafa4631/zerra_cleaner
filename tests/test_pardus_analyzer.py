@@ -126,3 +126,140 @@ class TestHeldPackages:
             result = pa.check_held_packages()
         assert "linux-image-amd64" in result
         assert "libc6" in result
+
+
+class TestMirrorHealth:
+    """Tests for Pardus mirror health check."""
+
+    def test_mirror_reachable(self):
+        pa = PardusAnalyzer()
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+        with patch("urllib.request.urlopen", return_value=mock_resp), \
+             patch("socket.getaddrinfo", return_value=[(None,)]):
+            result = pa.check_pardus_mirror_health()
+        assert result["reachable"] is True
+        assert result["dns_resolved"] is True
+        assert result["recommended_mirror"] != ""
+
+    def test_mirror_unreachable(self):
+        pa = PardusAnalyzer()
+        import urllib.error
+        with patch("urllib.request.urlopen", side_effect=urllib.error.URLError("timeout")), \
+             patch("socket.getaddrinfo", side_effect=OSError("DNS failed")):
+            result = pa.check_pardus_mirror_health()
+        assert result["reachable"] is False
+        assert len(result["mirrors"]) > 0
+
+    def test_mirror_partial_failure(self):
+        """Some mirrors fail, at least one succeeds."""
+        pa = PardusAnalyzer()
+        import urllib.error
+        call_count = [0]
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        def side_effect(req, timeout=5):
+            call_count[0] += 1
+            if call_count[0] == 1:
+                raise urllib.error.URLError("first mirror down")
+            return mock_resp
+
+        with patch("urllib.request.urlopen", side_effect=side_effect), \
+             patch("socket.getaddrinfo", return_value=[(None,)]):
+            result = pa.check_pardus_mirror_health()
+        assert result["reachable"] is True
+
+
+class TestReleaseCompatibility:
+    """Tests for Pardus release compatibility check."""
+
+    def test_compatible_repos(self, tmp_path):
+        os_release = tmp_path / "os-release"
+        os_release.write_text(
+            'PRETTY_NAME="Pardus 23.2"\n'
+            'VERSION_ID="23.2"\n'
+            'VERSION_CODENAME=yirmiuc\n'
+            'ID=pardus\n'
+            'ID_LIKE=debian\n'
+        )
+        sources = tmp_path / "sources.list"
+        sources.write_text(
+            "deb http://depo.pardus.org.tr/pardus yirmiuc main\n"
+        )
+
+        pa = PardusAnalyzer()
+        with patch("os.path.exists", side_effect=lambda p: True if p in ("/etc/os-release", "/etc/apt/sources.list") else False), \
+             patch("os.path.isdir", return_value=False), \
+             patch("builtins.open", side_effect=lambda p, *a, **kw: open(str(os_release)) if "os-release" in p else open(str(sources))):
+            result = pa.check_pardus_release_compatibility()
+        assert result["compatible"] is True
+        assert result["os_codename"] == "yirmiuc"
+
+    def test_mismatched_repos(self, tmp_path):
+        os_release = tmp_path / "os-release"
+        os_release.write_text(
+            'PRETTY_NAME="Pardus 23.2"\n'
+            'VERSION_ID="23.2"\n'
+            'VERSION_CODENAME=yirmiuc\n'
+            'ID=pardus\n'
+            'ID_LIKE=debian\n'
+        )
+        sources = tmp_path / "sources.list"
+        sources.write_text(
+            "deb http://depo.pardus.org.tr/pardus yirmibir main\n"
+        )
+
+        pa = PardusAnalyzer()
+        with patch("os.path.exists", side_effect=lambda p: True if p in ("/etc/os-release", "/etc/apt/sources.list") else False), \
+             patch("os.path.isdir", return_value=False), \
+             patch("builtins.open", side_effect=lambda p, *a, **kw: open(str(os_release)) if "os-release" in p else open(str(sources))):
+            result = pa.check_pardus_release_compatibility()
+        assert result["compatible"] is False
+        assert len(result["mismatched_repos"]) > 0
+
+    def test_no_codename_returns_early(self):
+        pa = PardusAnalyzer()
+        with patch.object(pa, "get_pardus_version", return_value={"codename": "Unknown"}):
+            result = pa.check_pardus_release_compatibility()
+        assert result["compatible"] is True  # Cannot determine, assume OK
+
+
+class TestPardusLogs:
+    """Tests for Pardus APT/dpkg log analysis."""
+
+    def test_dpkg_log_parse(self, tmp_path):
+        import datetime
+        today = datetime.datetime.now().strftime("%Y-%m-%d")
+        dpkg_log = tmp_path / "dpkg.log"
+        dpkg_log.write_text(
+            f"{today} 10:00:00 install libfoo:amd64 1.0\n"
+            f"{today} 10:01:00 upgrade libbar:amd64 1.0 2.0\n"
+            f"{today} 10:02:00 remove libbaz:amd64 1.0\n"
+        )
+        pa = PardusAnalyzer()
+        with patch("os.path.isfile", side_effect=lambda p: p == "/var/log/dpkg.log"), \
+             patch("builtins.open", return_value=open(str(dpkg_log))):
+            result = pa.analyze_pardus_logs(days=7)
+        assert result["installs"] >= 1
+        assert result["upgrades"] >= 1
+        assert result["removes"] >= 1
+        assert result["total_operations"] >= 3
+
+    def test_no_log_files(self):
+        pa = PardusAnalyzer()
+        with patch("os.path.isfile", return_value=False):
+            result = pa.analyze_pardus_logs()
+        assert result["total_operations"] == 0
+        assert result["days_since_update"] == -1
+
+    def test_permission_error_handled(self):
+        pa = PardusAnalyzer()
+        with patch("os.path.isfile", return_value=True), \
+             patch("builtins.open", side_effect=PermissionError("denied")):
+            result = pa.analyze_pardus_logs()
+        assert result["total_operations"] == 0

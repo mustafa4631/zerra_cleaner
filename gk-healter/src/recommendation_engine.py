@@ -5,6 +5,7 @@ actionable recommendations for the user.
 """
 
 from typing import Dict, List, Any
+from src.i18n_manager import _
 
 
 class RecommendationEngine:
@@ -24,27 +25,27 @@ class RecommendationEngine:
         if cpu > 80:
             recommendations.append({
                 'type': 'warning',
-                'message': 'High CPU usage detected. System responsiveness may be low.',
+                'message': _('rec_high_cpu'),
                 'action': 'open_system_monitor'
             })
 
         if ram > 85:
             recommendations.append({
                 'type': 'warning',
-                'message': 'Available Memory is low. Consider closing heavy applications.',
+                'message': _('rec_high_ram'),
                 'action': 'optimize_ram'
             })
 
         if disk > 90:
             recommendations.append({
                 'type': 'critical',
-                'message': 'Disk space is critically low. Immediate cleanup recommended.',
+                'message': _('rec_disk_critical'),
                 'action': 'clean_disk'
             })
         elif disk > 80:
             recommendations.append({
                 'type': 'warning',
-                'message': 'Disk space is getting full.',
+                'message': _('rec_disk_warning'),
                 'action': 'clean_disk'
             })
 
@@ -61,7 +62,7 @@ class RecommendationEngine:
             count = len(failed_services)
             recommendations.append({
                 'type': 'critical',
-                'message': f'{count} system services have failed.',
+                'message': _('rec_failed_services').format(count=count),
                 'action': 'view_services'
             })
 
@@ -80,10 +81,9 @@ class RecommendationEngine:
                 if seconds > 10.0:
                     recommendations.append({
                         'type': 'warning',
-                        'message': (
-                            f"Service '{svc.get('service', '?')}' takes "
-                            f"{time_str} to start. Consider disabling or "
-                            "optimizing it."
+                        'message': _('rec_slow_service').format(
+                            service=svc.get('service', '?'),
+                            time=time_str,
                         ),
                         'action': 'view_services'
                     })
@@ -97,7 +97,7 @@ class RecommendationEngine:
         if error_count > 100:
              recommendations.append({
                 'type': 'warning',
-                'message': f'Unusually high number of system errors ({error_count}) in last 24h.',
+                'message': _('rec_high_errors').format(count=error_count),
                 'action': 'view_logs'
             })
         elif error_count > 0:

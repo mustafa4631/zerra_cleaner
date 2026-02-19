@@ -2,6 +2,7 @@ import psutil
 import threading
 import time
 import logging
+from src.i18n_manager import _
 
 logger = logging.getLogger("gk-healter.health")
 
@@ -111,10 +112,10 @@ class HealthEngine:
         with self._lock:
             # Return a status string based on the score
             if self._health_score >= 90:
-                return "Excellent"
+                return _("health_status_excellent")
             elif self._health_score >= 70:
-                return "Good"
+                return _("health_status_good")
             elif self._health_score >= 50:
-                return "Fair"
+                return _("health_status_fair")
             else:
-                return "Critical"
+                return _("health_status_critical")
