@@ -226,4 +226,4 @@
     "pardus_log_summary": "Son {days} günde {total} işlem: {installs} kurulum, {removes} kaldırma, {upgrades} güncelleme.",
     "pardus_log_no_updates": "Son {days} günde paket güncellemesi yapılmamış. Sistem güncel olmayabilir.",
     "pardus_log_failed": "{count} başarısız paket işlemi tespit edildi."
-}}
+}

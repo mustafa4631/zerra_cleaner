@@ -225,4 +225,4 @@
     "pardus_log_summary": "{total} operations in last {days} days: {installs} installs, {removes} removals, {upgrades} upgrades.",
     "pardus_log_no_updates": "No package updates in the last {days} days. System may be outdated.",
     "pardus_log_failed": "{count} failed package operation(s) detected."
-}}
+}
