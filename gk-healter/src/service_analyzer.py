@@ -46,7 +46,7 @@ class ServiceAnalyzer:
             if result.returncode == 0:
                 lines = result.stdout.strip().split('\n')
                 # Filter out lines that might be empty
-                valid_lines = [l for l in lines if l.strip()]
+                valid_lines = [line for line in lines if line.strip()]
 
                 for line in valid_lines[:limit]:
                     parts = line.strip().split()

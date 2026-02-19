@@ -2,7 +2,7 @@ import os
 import shutil
 import datetime
 import logging
-from typing import Optional, List
+from typing import Optional
 from .settings_manager import SettingsManager
 from .history_manager import HistoryManager
 from .cleaner import SystemCleaner

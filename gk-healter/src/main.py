@@ -18,8 +18,9 @@ def main():
     settings = SettingsManager()
     I18nManager(settings.get("language"))
 
-    _app = MainWindow()
+    MainWindow()
     Gtk.main()
+
 
 if __name__ == "__main__":
     main()

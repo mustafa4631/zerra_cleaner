@@ -200,7 +200,7 @@ class PardusAnalyzer:
                 cmd, capture_output=True, text=True, timeout=15
             )
             if proc.stdout.strip():
-                lines = [l for l in proc.stdout.strip().split("\n") if l.strip()]
+                lines = [line for line in proc.stdout.strip().split("\n") if line.strip()]
                 result["broken_count"] = len(lines)
                 result["packages"] = lines[:20]  # cap at 20
 
@@ -330,7 +330,7 @@ class PardusAnalyzer:
                 cmd, capture_output=True, text=True, timeout=10
             )
             if proc.returncode == 0:
-                held = [l.strip() for l in proc.stdout.strip().split("\n") if l.strip()]
+                held = [line.strip() for line in proc.stdout.strip().split("\n") if line.strip()]
         except Exception as e:
             logger.error("Hold check failed: %s", e)
 

@@ -18,7 +18,7 @@ import json
 import urllib.request
 import urllib.error
 import logging
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 
 logger = logging.getLogger("gk-healter.ai")
 
@@ -405,4 +405,3 @@ class AIEngine:
             raise RuntimeError(
                 f"Gemini API Error: {e.code} {e.reason}"
             ) from e
-

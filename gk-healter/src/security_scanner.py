@@ -347,9 +347,9 @@ class SecurityScanner:
             )
             if proc.returncode == 0:
                 lines = [
-                    l.strip()
-                    for l in proc.stdout.strip().splitlines()
-                    if l.strip()
+                    line.strip()
+                    for line in proc.stdout.strip().splitlines()
+                    if line.strip()
                 ]
                 result["count"] = len(lines)
                 result["samples"] = lines[:10]
@@ -387,7 +387,7 @@ class SecurityScanner:
 
         # Tally severities from list-based scans
         for key in ("world_writable", "suid_binaries", "sudoers_audit",
-                     "ssh_config"):
+                    "ssh_config"):
             for item in results[key]:
                 sev = item.get("severity", "info")
                 if sev in results["summary"]:

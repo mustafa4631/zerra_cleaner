@@ -1,5 +1,4 @@
 import os
-import shutil
 import subprocess
 import logging
 from src.utils import get_size, format_size
@@ -8,6 +7,7 @@ from typing import List, Dict, Any, Tuple
 from src.i18n_manager import _
 
 logger = logging.getLogger("gk-healter.cleaner")
+
 
 class SystemCleaner:
     def __init__(self):
@@ -63,7 +63,7 @@ class SystemCleaner:
         These must be allowed through the safety check.
         """
         markers: set = set()
-        for _, p, _ in self.distro_manager.get_package_cache_paths():
+        for _key, p, _desc in self.distro_manager.get_package_cache_paths():
             # A marker is a path that resolves to a binary, not a cache dir
             if self.distro_manager.get_clean_command(p):
                 if not os.path.isdir(p) or p.startswith("/usr/"):
@@ -94,7 +94,7 @@ class SystemCleaner:
 
         # Add distro specific real cache paths to allowed list
         marker_set = self._get_marker_paths()
-        for _, p, _ in self.distro_manager.get_package_cache_paths():
+        for _key, p, _desc in self.distro_manager.get_package_cache_paths():
             if os.path.abspath(p) not in marker_set:
                 allowed_system.append(p)
 
@@ -214,4 +214,3 @@ class SystemCleaner:
             return False, _("err_sys_clean_code").format(e.returncode, path)
         except Exception as e:
             return False, _("err_unexpected").format(path, e)
-

@@ -63,6 +63,7 @@ class I18nManager:
         """Returns the translated text for a given key."""
         return self.translations.get(key, default if default is not None else key)
 
+
 # Helper function for translation
 def _(key, default=None):
     return I18nManager().get_text(key, default)

@@ -324,7 +324,7 @@ class MainWindow:
     @staticmethod
     def _apply_css() -> None:
         """Inject runtime CSS for a polished, professional appearance."""
-        css = """
+        _css = """
             /* -- Global polish ------------------------------------------------- */
             .view, .sidebar {
                 /* ensure clean background */
@@ -439,7 +439,7 @@ class MainWindow:
             }
         """
         provider = Gtk.CssProvider()
-        #provider.load_from_data(css.encode('utf-8'))
+        # provider.load_from_data(_css.encode('utf-8'))
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             provider,
@@ -1410,10 +1410,14 @@ class MainWindow:
                 action = r.get('action')
                 # Determine smart label
                 label = _("btn_fix_now")
-                if action == "clean_disk": label = _("btn_clean_disk")
-                elif action == "open_system_monitor": label = _("btn_sys_mon")
-                elif action == "view_services": label = _("btn_view_svcs")
-                elif action == "optimize_ram": label = _("btn_fix_now")
+                if action == "clean_disk":
+                    label = _("btn_clean_disk")
+                elif action == "open_system_monitor":
+                    label = _("btn_sys_mon")
+                elif action == "view_services":
+                    label = _("btn_view_svcs")
+                elif action == "optimize_ram":
+                    label = _("btn_fix_now")
 
                 self._add_insight_card(r['message'], icon, level, action, label)
 
@@ -1519,8 +1523,8 @@ class MainWindow:
         # Icon
         try:
             img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.DND) # Larger icon
-        except:
-             img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
+        except Exception:
+            img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.BUTTON)
 
         img.set_visible(True)
         if level == "error":
@@ -1589,7 +1593,6 @@ class MainWindow:
         dialog.format_secondary_text(message)
         dialog.run()
         dialog.destroy()
-
 
     # ── History ──────────────────────────────────────────────────────────────
     def _load_history_into_view(self) -> None:

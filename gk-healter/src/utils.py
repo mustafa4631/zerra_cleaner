@@ -29,6 +29,7 @@ def get_size(path: str) -> int:
         pass
     return total_size
 
+
 def format_size(size: int) -> str:
     """Convert byte count to human-readable string (e.g. '1.50 MB')."""
     if size < 0:

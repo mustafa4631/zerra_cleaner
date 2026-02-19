@@ -95,7 +95,7 @@ class RecommendationEngine:
         """Generates recommendations based on log analysis."""
         recommendations = []
         if error_count > 100:
-             recommendations.append({
+            recommendations.append({
                 'type': 'warning',
                 'message': _('rec_high_errors').format(count=error_count),
                 'action': 'view_logs'

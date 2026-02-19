@@ -1,5 +1,4 @@
 import shutil
-import os
 import logging
 from typing import List, Tuple
 
@@ -18,11 +17,16 @@ class DistroManager:
     def _detect_pkg_manager(self) -> str:
         """Detect available package manager binary."""
         # Prioritize widely used ones
-        if shutil.which("apt-get"): return "apt"
-        if shutil.which("pacman"): return "pacman"
-        if shutil.which("dnf"): return "dnf"
-        if shutil.which("zypper"): return "zypper"
-        if shutil.which("yum"): return "yum"
+        if shutil.which("apt-get"):
+            return "apt"
+        if shutil.which("pacman"):
+            return "pacman"
+        if shutil.which("dnf"):
+            return "dnf"
+        if shutil.which("zypper"):
+            return "zypper"
+        if shutil.which("yum"):
+            return "yum"
         return "unknown"
 
     def get_package_cache_paths(self) -> List[Tuple[str, str, str]]:
@@ -45,7 +49,7 @@ class DistroManager:
                 ("cat_autoremove", "/usr/bin/dnf", "desc_autoremove")
             ]
         elif self.pkg_manager == "zypper":
-             return [
+            return [
                 ("cat_pkg_cache", "/var/cache/zypp/packages", "desc_pkg_cache"),
                 ("cat_autoremove", "/usr/bin/zypper", "desc_autoremove")
             ]
