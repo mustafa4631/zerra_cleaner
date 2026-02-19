@@ -188,5 +188,42 @@
     "security_repo_trust": "Depo Güven Puanı",
     "security_repo_trust_detail": "Güven puanı: {score}/100",
     "security_repair_available": "Otomatik Onarım Mevcut",
-    "security_repair_desc": "Bozuk paketler düzeltilebilir ve {count} yetim paket kaldırılabilir."
-}
+    "security_repair_desc": "Bozuk paketler düzeltilebilir ve {count} yetim paket kaldırılabilir.",
+
+    "pardus_detected": "Pardus Algılandı",
+    "pardus_features_active": "Pardus'a özgü tanılama araçları etkin",
+    "pardus_insights_subtitle": "Pardus'a özel paket, servis ve güvenlik analizi etkinleştirildi.",
+    "pardus_chip_services": "Servisler",
+    "pardus_chip_security": "Güvenlik",
+    "pardus_chip_packages": "Paketler",
+    "pardus_svc_not_installed": "yüklü değil",
+
+    "health_cores": "çekirdek",
+    "health_free": "boş",
+
+    "health_status_excellent": "Mükemmel",
+    "health_status_good": "İyi",
+    "health_status_fair": "Orta",
+    "health_status_poor": "Kötü",
+    "health_status_critical": "Kritik",
+
+    "rec_high_cpu": "Yüksek CPU kullanımı tespit edildi. Sistem tepkisi düşük olabilir.",
+    "rec_high_ram": "Kullanılabilir bellek düşük. Ağır uygulamaları kapatmayı deneyin.",
+    "rec_disk_critical": "Disk alanı kritik düzeyde düşük. Acil temizlik önerilir.",
+    "rec_disk_warning": "Disk alanı dolmak üzere.",
+    "rec_failed_services": "{count} sistem servisi başarısız oldu.",
+    "rec_slow_service": "'{service}' servisi başlamak için {time} sürüyor. Devre dışı bırakmayı veya optimize etmeyi düşünün.",
+    "rec_high_errors": "Son 24 saatte olağandışı sayıda sistem hatası ({count}).",
+
+    "pardus_mirror_health": "Pardus Depo Erişimi",
+    "pardus_mirror_reachable": "Pardus deposu erişilebilir ({ms} ms)",
+    "pardus_mirror_unreachable": "Pardus deposuna erişilemiyor. Ağ bağlantınızı kontrol edin.",
+    "pardus_mirror_recommended": "Önerilen depo: {url}",
+    "pardus_release_compat": "Sürüm Uyumluluğu",
+    "pardus_release_mismatch": "APT kaynakları farklı bir Pardus sürümü için yapılandırılmış (sistem: {os}, depo: {repo}).",
+    "pardus_release_ok": "Tüm APT kaynakları doğru Pardus sürümünü ({codename}) kullanıyor.",
+    "pardus_log_analysis": "Paket İşlem Günlüğü",
+    "pardus_log_summary": "Son {days} günde {total} işlem: {installs} kurulum, {removes} kaldırma, {upgrades} güncelleme.",
+    "pardus_log_no_updates": "Son {days} günde paket güncellemesi yapılmamış. Sistem güncel olmayabilir.",
+    "pardus_log_failed": "{count} başarısız paket işlemi tespit edildi."
+}}

@@ -198,5 +198,31 @@
     "security_repo_trust": "Repository Trust Score",
     "security_repo_trust_detail": "Trust score: {score}/100",
     "security_repair_available": "Automatic Repair Available",
-    "security_repair_desc": "Broken packages can be fixed and {count} orphan package(s) can be removed."
-}
+    "security_repair_desc": "Broken packages can be fixed and {count} orphan package(s) can be removed.",
+
+    "health_status_excellent": "Excellent",
+    "health_status_good": "Good",
+    "health_status_fair": "Fair",
+    "health_status_poor": "Poor",
+    "health_status_critical": "Critical",
+
+    "rec_high_cpu": "High CPU usage detected. System responsiveness may be low.",
+    "rec_high_ram": "Available Memory is low. Consider closing heavy applications.",
+    "rec_disk_critical": "Disk space is critically low. Immediate cleanup recommended.",
+    "rec_disk_warning": "Disk space is getting full.",
+    "rec_failed_services": "{count} system services have failed.",
+    "rec_slow_service": "Service '{service}' takes {time} to start. Consider disabling or optimizing it.",
+    "rec_high_errors": "Unusually high number of system errors ({count}) in last 24h.",
+
+    "pardus_mirror_health": "Pardus Mirror Health",
+    "pardus_mirror_reachable": "Pardus repository reachable ({ms} ms)",
+    "pardus_mirror_unreachable": "Pardus repository unreachable. Check your network connection.",
+    "pardus_mirror_recommended": "Recommended mirror: {url}",
+    "pardus_release_compat": "Release Compatibility",
+    "pardus_release_mismatch": "APT sources configured for a different Pardus release (system: {os}, repo: {repo}).",
+    "pardus_release_ok": "All APT sources match the current Pardus release ({codename}).",
+    "pardus_log_analysis": "Package Activity Log",
+    "pardus_log_summary": "{total} operations in last {days} days: {installs} installs, {removes} removals, {upgrades} upgrades.",
+    "pardus_log_no_updates": "No package updates in the last {days} days. System may be outdated.",
+    "pardus_log_failed": "{count} failed package operation(s) detected."
+}}
