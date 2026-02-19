@@ -3,7 +3,7 @@
 # Configuration
 APP_NAME = gk-healter
 APP_ID = io.github.gkdevelopers.GKHealter
-VERSION = 0.1.3
+VERSION = 0.1.4
 PYTHON = python3
 MAIN_SCRIPT = src/main.py
 

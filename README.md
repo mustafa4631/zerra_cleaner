@@ -90,7 +90,7 @@ src/
 ```bash
 cd gk-healter
 make deb
-sudo dpkg -i gk-healter_0.1.3_all.deb
+sudo dpkg -i gk-healter_0.1.4_all.deb
 sudo apt-get install -f  # Fix any missing dependencies
 ```
 
