@@ -179,45 +179,38 @@ class TestReleaseCompatibility:
     """Tests for Pardus release compatibility check."""
 
     def test_compatible_repos(self, tmp_path):
-        os_release = tmp_path / "os-release"
-        os_release.write_text(
-            'PRETTY_NAME="Pardus 23.2"\n'
-            'VERSION_ID="23.2"\n'
-            'VERSION_CODENAME=yirmiuc\n'
-            'ID=pardus\n'
-            'ID_LIKE=debian\n'
-        )
         sources = tmp_path / "sources.list"
         sources.write_text(
             "deb http://depo.pardus.org.tr/pardus yirmiuc main\n"
         )
 
         pa = PardusAnalyzer()
-        with patch("os.path.exists", side_effect=lambda p: True if p in ("/etc/os-release", "/etc/apt/sources.list") else False), \
+        # Patch get_pardus_version to avoid file-open recursion
+        with patch.object(pa, "get_pardus_version", return_value={
+                "name": "Pardus 23.2", "version": "23.2",
+                "codename": "yirmiuc", "base": "debian"
+             }), \
+             patch("os.path.exists", side_effect=lambda p: p == "/etc/apt/sources.list"), \
              patch("os.path.isdir", return_value=False), \
-             patch("builtins.open", side_effect=lambda p, *a, **kw: open(str(os_release)) if "os-release" in p else open(str(sources))):
+             patch("builtins.open", return_value=open(str(sources))):
             result = pa.check_pardus_release_compatibility()
         assert result["compatible"] is True
         assert result["os_codename"] == "yirmiuc"
 
     def test_mismatched_repos(self, tmp_path):
-        os_release = tmp_path / "os-release"
-        os_release.write_text(
-            'PRETTY_NAME="Pardus 23.2"\n'
-            'VERSION_ID="23.2"\n'
-            'VERSION_CODENAME=yirmiuc\n'
-            'ID=pardus\n'
-            'ID_LIKE=debian\n'
-        )
         sources = tmp_path / "sources.list"
         sources.write_text(
             "deb http://depo.pardus.org.tr/pardus yirmibir main\n"
         )
 
         pa = PardusAnalyzer()
-        with patch("os.path.exists", side_effect=lambda p: True if p in ("/etc/os-release", "/etc/apt/sources.list") else False), \
+        with patch.object(pa, "get_pardus_version", return_value={
+                "name": "Pardus 23.2", "version": "23.2",
+                "codename": "yirmiuc", "base": "debian"
+             }), \
+             patch("os.path.exists", side_effect=lambda p: p == "/etc/apt/sources.list"), \
              patch("os.path.isdir", return_value=False), \
-             patch("builtins.open", side_effect=lambda p, *a, **kw: open(str(os_release)) if "os-release" in p else open(str(sources))):
+             patch("builtins.open", return_value=open(str(sources))):
             result = pa.check_pardus_release_compatibility()
         assert result["compatible"] is False
         assert len(result["mismatched_repos"]) > 0

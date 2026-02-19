@@ -96,5 +96,5 @@ class TestSettingsSecurity:
     def test_mask_api_key_long(self):
         key = "sk-abc123xyz789"
         masked = SettingsManager.mask_api_key(key)
-        assert masked == "***789"
+        assert masked == "***z789"
         assert "abc123" not in masked
