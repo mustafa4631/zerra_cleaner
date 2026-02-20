@@ -363,6 +363,7 @@ class MainWindow:
 
     # ── Header bar ───────────────────────────────────────────────────────────
     def on_about_clicked(self, _btn: Gtk.Button) -> None:
+        self.about_dialog.set_logo_icon_name("io.github.gkdevelopers.GKHealter")
         self.about_dialog.run()
         self.about_dialog.hide()
 
@@ -1156,6 +1157,13 @@ class MainWindow:
                         None, None,
                     )
 
+            if not broken and not updates and not held:
+                has_content = True
+                self._add_section_header(_("pardus_chip_packages"))
+                self._add_insight_card(
+                    _("security_all_clear"), "emblem-ok-symbolic", "info", None, None
+                )
+
             # Pardus-specific services (list of dicts with name/installed/status)
             pardus_svcs = pardus_results.get("pardus_services", [])
             if isinstance(pardus_svcs, list):
@@ -1184,6 +1192,12 @@ class MainWindow:
                         unit, "dialog-error-symbolic", "error",
                         "view_services", _("btn_view_svcs"),
                     )
+            else:
+                has_content = True
+                self._add_section_header(_("pardus_chip_services"))
+                self._add_insight_card(
+                    _("security_all_clear"), "emblem-ok-symbolic", "info", None, None
+                )
 
         # ── Security Audit ──
         if security_results:
@@ -1242,6 +1256,12 @@ class MainWindow:
                         "dialog-password-symbolic", sev, "analyze_logs",
                         _("btn_view_logs"),
                     )
+            else:
+                has_content = True
+                self._add_section_header(_("security_title"))
+                self._add_insight_card(
+                    _("security_all_clear"), "emblem-ok-symbolic", "info", None, None
+                )
 
             # Repo trust score (from pardus_results)
             if pardus_results:
