@@ -29,7 +29,8 @@ class PardusAnalyzer:
 
     # Known Pardus-specific services
     PARDUS_SERVICES = [
-        "pardus-software-center",
+        "pardus-software",
+        "pardus-store",
         "pardus-power-manager",
         "pardus-lightdm-greeter",
         "pardus-locales",
