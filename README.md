@@ -45,6 +45,8 @@ Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**
 ### User Experience
 - **Native GTK 3 Interface:** Modern, responsive design that respects system themes and dark mode.
 - **Multi-Language Support:** Turkish and English with extensible JSON-based i18n system.
+- **Report Export:** Generate TXT, HTML, and JSON system analysis reports for documentation and demo purposes.
+- **Dedicated Security Page:** Separate tab with Pardus verification data, colour-coded findings, and one-click export.
 
 ## Screenshot
 
@@ -55,7 +57,7 @@ Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**
 - **Language:** [Python 3](https://www.python.org/)
 - **GUI Toolkit:** [GTK 3 (PyGObject)](https://pygobject.readthedocs.io/)
 - **Build System:** [Meson](https://mesonbuild.com/) / Make
-- **Testing:** [pytest](https://docs.pytest.org/) (182 tests, %85+ coverage) with CI via GitHub Actions
+- **Testing:** [pytest](https://docs.pytest.org/) (298 tests, %75+ coverage) with CI via GitHub Actions
 - **Packaging:** [Flatpak](https://flatpak.org/), Debian (.deb), Arch (PKGBUILD), RPM (.spec)
 - **Privilege Escalation:** Polkit (pkexec) with custom policy file
 
@@ -69,6 +71,8 @@ src/
 ├── health_engine.py         # Real-time system health monitoring
 ├── pardus_analyzer.py       # Pardus/Debian-specific diagnostics
 ├── security_scanner.py      # System security audit engine
+├── pardus_verifier.py       # Pardus identity verification & evidence
+├── report_exporter.py       # TXT / HTML / JSON report generator
 ├── distro_manager.py        # Multi-distro package manager abstraction
 ├── disk_analyzer.py         # Large file discovery
 ├── log_analyzer.py          # Journal error analysis
@@ -152,7 +156,7 @@ pip install pytest pytest-cov
 pytest -v --cov=src --cov-report=term-missing
 ```
 
-**182 tests** covering 15 modules across 14 test files.
+**298 tests** covering 17 modules across 18 test files.
 
 ## Packaging
 
