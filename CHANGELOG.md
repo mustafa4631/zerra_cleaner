@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] — 2026-02-21
+
+### Added
+- **Pardus Verification Module** (`pardus_verifier.py`) — collects /etc/os-release, lsb_release,
+  hardware info, installed Pardus packages, desktop environment, and hostname into a structured
+  report for competition evidence / jury demo.
+- **Report Exporter Module** (`report_exporter.py`) — generates comprehensive system analysis
+  reports in TXT, HTML (inline CSS, self-contained), and JSON formats.
+- **Security Page** — dedicated GTK stack page (`page_security`) with:
+  - Pardus verification section showing live system identity data
+  - Colour-coded security findings (critical/high/warning)
+  - One-click security scan button
+  - Report export button (TXT + HTML)
+- **Turkish README** (`README.tr.md`) — full Turkish documentation with project overview,
+  Pardus-specific features, architecture, installation, security approach.
+- 18 new i18n keys for Security page, Pardus verification, and report export
+  (both `en.json` and `tr.json`).
+- 52 new test functions across 2 new test files (`test_pardus_verifier.py`,
+  `test_report_exporter.py`) — total test count: 298.
+
+### Fixed
+- **Flatpak manifest** (`flathub_submission.yml`) — added missing `https://` protocol to git URL.
+- `meson.build` — added `pardus_verifier.py`, `report_exporter.py`, `security_scanner.py`,
+  and `distro_manager.py` to the `python_sources` install list.
+
+### Changed
+- Security audit findings moved from Insights sub-section to dedicated Security page.
+- `ui.py` refactored with new signal handlers, widget bindings, and background threads
+  for security scan, Pardus verification display, and report export.
+
 ## [0.1.3] — 2026-02-19
 
 ### Added
