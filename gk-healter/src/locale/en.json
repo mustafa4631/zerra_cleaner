@@ -13,6 +13,7 @@
     "page_health": "Health",
     "page_insights": "Insights",
     "page_history": "History",
+    "page_security": "Security",
     "page_settings": "Settings",
 
     "lbl_welcome": "System Overview",
@@ -224,5 +225,22 @@
     "pardus_log_analysis": "Package Activity Log",
     "pardus_log_summary": "{total} operations in last {days} days: {installs} installs, {removes} removals, {upgrades} upgrades.",
     "pardus_log_no_updates": "No package updates in the last {days} days. System may be outdated.",
-    "pardus_log_failed": "{count} failed package operation(s) detected."
+    "pardus_log_failed": "{count} failed package operation(s) detected.",
+
+    "btn_security_scan": "Run Security Scan",
+    "btn_export_report": "Export Report",
+    "btn_demo_report": "Generate Demo Report",
+    "pardus_verify_title": "Pardus Verification",
+    "pardus_verify_kernel": "Kernel",
+    "pardus_verify_arch": "Architecture",
+    "pardus_verify_cpu": "CPU Cores",
+    "pardus_verify_ram": "Total RAM",
+    "pardus_verify_desktop": "Desktop Environment",
+    "pardus_verify_hostname": "Hostname",
+    "pardus_verify_packages": "Pardus Packages",
+    "security_scan_running": "Security scan in progress...",
+    "security_scan_complete": "Security scan complete.",
+    "export_success_msg": "Report exported successfully.\nFile: {path}",
+    "export_failed_msg": "Report export failed.",
+    "export_running": "Exporting report..."
 }

@@ -13,6 +13,7 @@
     "page_health": "Sağlık",
     "page_insights": "Analizler",
     "page_history": "Geçmiş",
+    "page_security": "Güvenlik",
     "page_settings": "Ayarlar",
 
     "lbl_welcome": "Sistem Özeti",
@@ -225,5 +226,22 @@
     "pardus_log_analysis": "Paket İşlem Günlüğü",
     "pardus_log_summary": "Son {days} günde {total} işlem: {installs} kurulum, {removes} kaldırma, {upgrades} güncelleme.",
     "pardus_log_no_updates": "Son {days} günde paket güncellemesi yapılmamış. Sistem güncel olmayabilir.",
-    "pardus_log_failed": "{count} başarısız paket işlemi tespit edildi."
+    "pardus_log_failed": "{count} başarısız paket işlemi tespit edildi.",
+
+    "btn_security_scan": "Güvenlik Taraması Başlat",
+    "btn_export_report": "Rapor Dışa Aktar",
+    "btn_demo_report": "Demo Rapor Oluştur",
+    "pardus_verify_title": "Pardus Doğrulama",
+    "pardus_verify_kernel": "Çekirdek",
+    "pardus_verify_arch": "Mimari",
+    "pardus_verify_cpu": "CPU Çekirdek",
+    "pardus_verify_ram": "Toplam RAM",
+    "pardus_verify_desktop": "Masaüstü Ortamı",
+    "pardus_verify_hostname": "Ana Bilgisayar Adı",
+    "pardus_verify_packages": "Pardus Paketleri",
+    "security_scan_running": "Güvenlik taraması devam ediyor...",
+    "security_scan_complete": "Güvenlik taraması tamamlandı.",
+    "export_success_msg": "Rapor başarıyla dışa aktarıldı.\nDosya: {path}",
+    "export_failed_msg": "Rapor dışa aktarılamadı.",
+    "export_running": "Rapor dışa aktarılıyor..."
 }
