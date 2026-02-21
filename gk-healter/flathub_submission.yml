@@ -24,5 +24,5 @@ modules:
     buildsystem: meson
     sources:
       - type: git
-        url: github.com/GK-Developers/GK-Healter
+        url: https://github.com/GK-Developers/GK-Healter
         branch: master

@@ -51,6 +51,10 @@ python_sources = [
   'src/ai_engine.py',
   'src/pardus_analyzer.py',
   'src/logger.py',
+  'src/pardus_verifier.py',
+  'src/report_exporter.py',
+  'src/security_scanner.py',
+  'src/distro_manager.py',
 ]
 
 install_data(python_sources, install_dir: join_paths(pkgdatadir, 'src'))
