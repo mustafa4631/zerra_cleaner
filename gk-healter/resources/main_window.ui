@@ -1465,7 +1465,129 @@
             </child>
 
             <!-- ══════════════════════════════════════════════════════════════
-                 PAGE 6: SETTINGS
+                 PAGE 6: SECURITY
+                 ══════════════════════════════════════════════════════════════ -->
+            <child>
+              <object class="GtkScrolledWindow">
+                <property name="visible">True</property>
+                <property name="hscrollbar_policy">never</property>
+                <child>
+                  <object class="GtkViewport">
+                    <property name="visible">True</property>
+                    <property name="shadow_type">none</property>
+                    <child>
+                      <object class="GtkBox" id="security_page">
+                        <property name="visible">True</property>
+                        <property name="orientation">vertical</property>
+                        <property name="spacing">12</property>
+                        <property name="margin">24</property>
+
+                        <!-- Title -->
+                        <child>
+                          <object class="GtkLabel" id="lbl_security_page_title">
+                            <property name="visible">True</property>
+                            <property name="label">Security Audit</property>
+                            <property name="xalign">0</property>
+                            <attributes>
+                              <attribute name="weight" value="bold"/>
+                              <attribute name="scale" value="1.4"/>
+                            </attributes>
+                          </object>
+                        </child>
+
+                        <!-- Summary bar -->
+                        <child>
+                          <object class="GtkBox" id="box_security_summary">
+                            <property name="visible">True</property>
+                            <property name="orientation">horizontal</property>
+                            <property name="spacing">18</property>
+                            <property name="border_width">12</property>
+
+                            <child>
+                              <object class="GtkLabel" id="lbl_security_summary">
+                                <property name="visible">True</property>
+                                <property name="label">Click "Run Security Scan" to begin.</property>
+                                <property name="xalign">0</property>
+                                <property name="hexpand">True</property>
+                                <property name="wrap">True</property>
+                              </object>
+                            </child>
+
+                            <child>
+                              <object class="GtkButton" id="btn_security_scan">
+                                <property name="visible">True</property>
+                                <property name="label">Run Security Scan</property>
+                                <signal name="clicked" handler="on_security_scan_clicked"/>
+                              </object>
+                            </child>
+
+                            <child>
+                              <object class="GtkButton" id="btn_export_report">
+                                <property name="visible">True</property>
+                                <property name="label">Export Report</property>
+                                <signal name="clicked" handler="on_export_report_clicked"/>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
+                        <!-- Pardus Verification section -->
+                        <child>
+                          <object class="GtkBox" id="box_pardus_verification">
+                            <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">6</property>
+
+                            <child>
+                              <object class="GtkLabel" id="lbl_pardus_verify_title">
+                                <property name="visible">True</property>
+                                <property name="label">Pardus Verification</property>
+                                <property name="xalign">0</property>
+                                <attributes>
+                                  <attribute name="weight" value="bold"/>
+                                  <attribute name="scale" value="1.1"/>
+                                </attributes>
+                              </object>
+                            </child>
+
+                            <child>
+                              <object class="GtkBox" id="box_pardus_verify_content">
+                                <property name="visible">True</property>
+                                <property name="orientation">vertical</property>
+                                <property name="spacing">4</property>
+                                <property name="border_width">8</property>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
+                        <!-- Security findings container -->
+                        <child>
+                          <object class="GtkBox" id="box_security_findings">
+                            <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">6</property>
+                          </object>
+                          <packing>
+                            <property name="expand">True</property>
+                            <property name="fill">True</property>
+                          </packing>
+                        </child>
+
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+              <packing>
+                <property name="name">page_security</property>
+                <property name="title">Security</property>
+                <property name="icon-name">security-high-symbolic</property>
+              </packing>
+            </child>
+
+            <!-- ══════════════════════════════════════════════════════════════
+                 PAGE 7: SETTINGS
                  ══════════════════════════════════════════════════════════════ -->
             <child>
               <object class="GtkScrolledWindow">

@@ -29,6 +29,8 @@ from src.recommendation_engine import RecommendationEngine
 from src.ai_engine import AIEngine
 from src.pardus_analyzer import PardusAnalyzer
 from src.security_scanner import SecurityScanner
+from src.pardus_verifier import PardusVerifier
+from src.report_exporter import ReportExporter
 from src.utils import format_size
 
 
@@ -55,6 +57,8 @@ class MainWindow:
         self.ai_engine = AIEngine()
         self.pardus_analyzer = PardusAnalyzer()
         self.security_scanner = SecurityScanner()
+        self.pardus_verifier = PardusVerifier()
+        self.report_exporter = ReportExporter()
 
         # State
         self.scan_data: List[Dict[str, Any]] = []
@@ -101,6 +105,9 @@ class MainWindow:
         self._is_pardus: bool = False
         self._pardus_version: str = ""
         threading.Thread(target=self._detect_pardus_async, daemon=True).start()
+
+        # Run Pardus verification and populate Security page
+        threading.Thread(target=self._run_pardus_verification, daemon=True).start()
 
     # ── Widget binding (from builder) ────────────────────────────────────────
     def _bind_widgets(self) -> None:
@@ -225,6 +232,15 @@ class MainWindow:
         self.lbl_last_maintenance_title: Gtk.Label = g("lbl_last_maintenance_title")
         self.lbl_last_maintenance: Gtk.Label = g("lbl_last_maintenance")
 
+        # ── Security page ──
+        self.lbl_security_page_title: Gtk.Label = g("lbl_security_page_title")
+        self.lbl_security_summary: Gtk.Label = g("lbl_security_summary")
+        self.btn_security_scan: Gtk.Button = g("btn_security_scan")
+        self.btn_export_report: Gtk.Button = g("btn_export_report")
+        self.box_security_findings: Gtk.Box = g("box_security_findings")
+        self.box_pardus_verify_content: Gtk.Box = g("box_pardus_verify_content")
+        self.lbl_pardus_verify_title: Gtk.Label = g("lbl_pardus_verify_title")
+
         # ── Dialogs ──
         self.about_dialog: Gtk.AboutDialog = g("about_dialog")
         self.clean_confirm_dialog: Gtk.MessageDialog = g("clean_confirm_dialog")
@@ -265,6 +281,14 @@ class MainWindow:
             self.content_stack.get_child_by_name("page_history"), "title", _("page_history"))
         self.content_stack.child_set_property(
             self.content_stack.get_child_by_name("page_settings"), "title", _("page_settings"))
+
+        # ── Security page ──
+        self.content_stack.child_set_property(
+            self.content_stack.get_child_by_name("page_security"), "title", _("page_security"))
+        self.lbl_security_page_title.set_text(_("security_title"))
+        self.btn_security_scan.set_label(_("btn_security_scan"))
+        self.btn_export_report.set_label(_("btn_export_report"))
+        self.lbl_pardus_verify_title.set_text(_("pardus_verify_title"))
 
         # ── Cleaner page ──
         self.info_label.set_text(_("msg_ready"))
@@ -381,6 +405,26 @@ class MainWindow:
     def on_dash_insights_clicked(self, _btn: Gtk.Button) -> None:
         self.content_stack.set_visible_child_name("page_insights")
         self.on_refresh_insights_clicked(None)
+
+    # ── Security page ────────────────────────────────────────────────────────
+    def on_security_scan_clicked(self, _btn: Optional[Gtk.Button] = None) -> None:
+        """Run a full security scan and display results in the Security tab."""
+        self.lbl_security_summary.set_text(_("msg_analyzing"))
+        self.btn_security_scan.set_sensitive(False)
+        # Clear old findings
+        for child in self.box_security_findings.get_children():
+            self.box_security_findings.remove(child)
+        threading.Thread(target=self._security_scan_thread, daemon=True).start()
+
+    def on_export_report_clicked(self, _btn: Optional[Gtk.Button] = None) -> None:
+        """Generate and export a comprehensive system report."""
+        self.btn_export_report.set_sensitive(False)
+        threading.Thread(target=self._export_report_thread, daemon=True).start()
+
+    def on_demo_report_clicked(self, _btn: Optional[Gtk.Button] = None) -> None:
+        """Generate Demo Report — run all analysis phases and display results."""
+        self.content_stack.set_visible_child_name("page_security")
+        self.on_security_scan_clicked(None)
 
     # ── Window ───────────────────────────────────────────────────────────────
     def on_window_destroy(self, _win: Gtk.Window) -> None:
@@ -1498,6 +1542,305 @@ class MainWindow:
         dialog.format_secondary_text(message)
         dialog.run()
         dialog.destroy()
+
+    # ── Pardus Verification (Security page) ──────────────────────────────────
+    def _run_pardus_verification(self) -> None:
+        """Run pardus verification in background and populate UI."""
+        try:
+            report = self.pardus_verifier.verify()
+            GLib.idle_add(self._display_pardus_verification, report)
+        except Exception as e:
+            logger.error("Pardus verification failed: %s", e)
+
+    def _display_pardus_verification(self, report: Dict[str, Any]) -> None:
+        """Populate the Pardus Verification section on the Security page."""
+        container = self.box_pardus_verify_content
+        for child in container.get_children():
+            container.remove(child)
+
+        is_pardus = report.get("is_pardus", False)
+        os_rel = report.get("os_release", {})
+        hw = report.get("hardware", {})
+
+        # Status badge
+        status_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        status_box.set_border_width(8)
+        if is_pardus:
+            status_box.get_style_context().add_class("pardus-badge")
+            icon = Gtk.Image.new_from_icon_name(
+                "emblem-ok-symbolic", Gtk.IconSize.LARGE_TOOLBAR,
+            )
+            text = f"<b>{_('pardus_detected')}</b> — {os_rel.get('PRETTY_NAME', '')}"
+        else:
+            icon = Gtk.Image.new_from_icon_name(
+                "computer-symbolic", Gtk.IconSize.LARGE_TOOLBAR,
+            )
+            distro = os_rel.get("PRETTY_NAME", "Linux")
+            text = f"<b>{distro}</b> — {_('pardus_not_detected')}"
+
+        icon.set_visible(True)
+        status_box.pack_start(icon, False, False, 0)
+        lbl = Gtk.Label()
+        lbl.set_markup(text)
+        lbl.set_visible(True)
+        lbl.set_xalign(0)
+        status_box.pack_start(lbl, True, True, 0)
+        status_box.show_all()
+        container.pack_start(status_box, False, False, 0)
+
+        # Detail info
+        details = [
+            (_("pardus_verify_kernel"), hw.get("kernel", "N/A")),
+            (_("pardus_verify_arch"), hw.get("architecture", "N/A")),
+            (_("pardus_verify_cpu"), f"{hw.get('cpu_count', '?')} cores"),
+            (_("pardus_verify_ram"), f"{hw.get('total_ram_bytes', 0) / (1024**3):.1f} GB"),
+            (_("pardus_verify_desktop"), report.get("desktop_environment", "N/A")),
+            (_("pardus_verify_hostname"), report.get("hostname", "N/A")),
+        ]
+
+        pardus_pkgs = report.get("pardus_packages", [])
+        if pardus_pkgs:
+            details.append((_("pardus_verify_packages"), ", ".join(pardus_pkgs[:8])))
+
+        for label_text, value_text in details:
+            row = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=8)
+            row.set_margin_start(8)
+            lbl_key = Gtk.Label(label=f"{label_text}:")
+            lbl_key.set_xalign(0)
+            lbl_key.set_size_request(140, -1)
+            lbl_key.get_style_context().add_class("dim-label")
+            lbl_val = Gtk.Label(label=str(value_text))
+            lbl_val.set_xalign(0)
+            lbl_val.set_selectable(True)
+            row.pack_start(lbl_key, False, False, 0)
+            row.pack_start(lbl_val, True, True, 0)
+            row.show_all()
+            container.pack_start(row, False, False, 0)
+
+        container.show_all()
+
+    # ── Security scan thread (Security page) ─────────────────────────────────
+    def _security_scan_thread(self) -> None:
+        """Run security scan + pardus diagnostics in background."""
+        security = self.security_scanner.run_full_scan()
+        pardus = self.pardus_analyzer.run_full_diagnostics()
+        GLib.idle_add(self._display_security_results, security, pardus)
+
+    def _display_security_results(
+        self,
+        security: Dict[str, Any],
+        pardus: Dict[str, Any],
+    ) -> None:
+        """Populate the Security findings panel with colour-coded results."""
+        container = self.box_security_findings
+        for child in container.get_children():
+            container.remove(child)
+
+        summary = security.get("summary", {})
+        total = summary.get("total_issues", 0)
+        critical = summary.get("critical", 0)
+        high = summary.get("high", 0)
+        warning = summary.get("warning", 0)
+
+        # Update summary label
+        if total == 0:
+            self.lbl_security_summary.set_text(_("security_all_clear"))
+        else:
+            self.lbl_security_summary.set_text(
+                _("security_scan_summary")
+                .replace("{total}", str(total))
+                .replace("{critical}", str(critical))
+                .replace("{high}", str(high))
+                .replace("{warning}", str(warning))
+            )
+
+        self.btn_security_scan.set_sensitive(True)
+
+        # Helper to add a section
+        def add_section(title: str) -> None:
+            lbl = Gtk.Label(label=title)
+            lbl.set_xalign(0)
+            lbl.get_style_context().add_class("dim-label")
+            lbl.set_margin_top(12)
+            attrs = Pango.AttrList()
+            attrs.insert(Pango.attr_weight_new(Pango.Weight.BOLD))
+            lbl.set_attributes(attrs)
+            lbl.show()
+            container.pack_start(lbl, False, False, 0)
+
+        def add_finding(msg: str, icon_name: str, severity: str) -> None:
+            box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+            box.set_margin_start(4)
+            box.set_margin_end(4)
+            box.set_margin_bottom(4)
+            box.set_border_width(6)
+            box.get_style_context().add_class("card")
+
+            # Severity colour indicator
+            color_bar = Gtk.DrawingArea()
+            color_bar.set_size_request(4, -1)
+            if severity == "critical" or severity == "error":
+                color_bar.get_style_context().add_class("error")
+            elif severity == "high":
+                color_bar.get_style_context().add_class("error")
+            elif severity == "warning":
+                color_bar.get_style_context().add_class("warning")
+            box.pack_start(color_bar, False, False, 0)
+
+            img = Gtk.Image.new_from_icon_name(icon_name, Gtk.IconSize.MENU)
+            if severity in ("critical", "high", "error"):
+                img.get_style_context().add_class("error")
+            elif severity == "warning":
+                img.get_style_context().add_class("warning")
+            box.pack_start(img, False, False, 0)
+
+            lbl = Gtk.Label(label=msg)
+            lbl.set_xalign(0)
+            lbl.set_line_wrap(True)
+            lbl.set_selectable(True)
+            box.pack_start(lbl, True, True, 0)
+
+            sev_lbl = Gtk.Label(label=severity.upper())
+            sev_lbl.get_style_context().add_class("dim-label")
+            box.pack_end(sev_lbl, False, False, 0)
+
+            box.show_all()
+            container.pack_start(box, False, False, 0)
+
+        # ── World-writable ──
+        ww = security.get("world_writable", [])
+        if ww:
+            add_section(f"{_('security_world_writable')} ({len(ww)})")
+            for item in ww[:15]:
+                add_finding(item["path"], "dialog-warning-symbolic", item.get("severity", "high"))
+
+        # ── SUID binaries ──
+        suid = security.get("suid_binaries", [])
+        if suid:
+            add_section(f"{_('security_suid_binaries')} ({len(suid)})")
+            for item in suid[:15]:
+                add_finding(item["path"], "dialog-error-symbolic", item.get("severity", "critical"))
+
+        # ── Sudoers ──
+        sudoers = security.get("sudoers_audit", [])
+        if sudoers:
+            add_section(_("security_sudoers_risk"))
+            for item in sudoers:
+                add_finding(item.get("content", ""), "dialog-error-symbolic", "critical")
+
+        # ── SSH ──
+        ssh = security.get("ssh_config", [])
+        if ssh:
+            add_section(_("security_ssh_issues"))
+            for item in ssh:
+                add_finding(
+                    item.get("recommendation", ""),
+                    "dialog-warning-symbolic",
+                    item.get("severity", "warning"),
+                )
+
+        # ── Unattended upgrades ──
+        ua = security.get("unattended_upgrades", {})
+        if not ua.get("enabled", True):
+            add_section(_("security_unattended_disabled"))
+            add_finding(
+                _("security_unattended_disabled"),
+                "software-update-urgent-symbolic", "warning",
+            )
+
+        # ── Failed logins ──
+        logins = security.get("failed_logins", {})
+        if logins.get("count", 0) > 0:
+            add_section(f"{_('security_failed_logins')} — {logins['count']}")
+            for sample in logins.get("samples", [])[:5]:
+                add_finding(sample, "dialog-password-symbolic", "warning")
+
+        # ── Pardus diagnostics summary ──
+        if pardus:
+            trust = pardus.get("repo_trust_score", {})
+            trust_score = trust.get("score", 100)
+            if trust_score < 100:
+                add_section(f"{_('security_repo_trust')} — {trust_score}/100")
+                for detail in trust.get("details", []):
+                    add_finding(
+                        detail.get("message", ""),
+                        "security-medium-symbolic",
+                        detail.get("severity", "info"),
+                    )
+
+            broken = pardus.get("broken_packages", {})
+            if broken.get("broken_count", 0) > 0:
+                add_section(f"{_('pardus_broken_packages')} ({broken['broken_count']})")
+                for pkg in broken.get("packages", [])[:10]:
+                    add_finding(str(pkg), "dialog-error-symbolic", "warning")
+
+        if total == 0:
+            add_section(_("security_title"))
+            add_finding(_("security_all_clear"), "emblem-ok-symbolic", "info")
+
+        container.show_all()
+
+    # ── Report export thread ─────────────────────────────────────────────────
+    def _export_report_thread(self) -> None:
+        """Collect data and export report in background."""
+        try:
+            # Gather all available data
+            pv = self.pardus_verifier.get_cached_report()
+            if not pv:
+                pv = self.pardus_verifier.verify()
+
+            metrics = self.health_engine.get_metrics()
+            status = self.health_engine.get_detailed_status()
+            security = self.security_scanner.run_full_scan()
+            pardus_diag = self.pardus_analyzer.run_full_diagnostics()
+            history = self.history_manager.get_all_entries()
+            large_files = self.disk_analyzer.get_large_files(
+                os.path.expanduser("~"), limit=10,
+            )
+            failed = self.service_analyzer.get_failed_services()
+            errors = self.log_analyzer.get_error_count_24h()
+
+            data = self.report_exporter.collect_report_data(
+                pardus_verification=pv,
+                health_metrics=metrics,
+                health_status=status,
+                security_results=security,
+                pardus_diagnostics=pardus_diag,
+                cleaning_history=history,
+                large_files=large_files,
+                failed_services=failed,
+                error_count_24h=errors,
+            )
+
+            # Export both TXT and HTML
+            txt_path = self.report_exporter.export_txt(data)
+            html_path = self.report_exporter.export_html(data)
+
+            GLib.idle_add(self._on_export_done, txt_path, html_path, None)
+        except Exception as e:
+            logger.error("Report export failed: %s", e)
+            GLib.idle_add(self._on_export_done, None, None, str(e))
+
+    def _on_export_done(
+        self,
+        txt_path: Optional[str],
+        html_path: Optional[str],
+        error: Optional[str],
+    ) -> None:
+        """Show result dialog after export."""
+        self.btn_export_report.set_sensitive(True)
+        if error:
+            self._show_simple_dialog(
+                _("btn_export_report"),
+                f"{_('status_failed')}: {error}",
+            )
+        else:
+            msg = _("export_success_msg").replace(
+                "{path}", txt_path or "N/A"
+            )
+            if html_path:
+                msg += f"\nHTML: {html_path}"
+            self._show_simple_dialog(_("btn_export_report"), msg)
 
     # ── History ──────────────────────────────────────────────────────────────
     def _load_history_into_view(self) -> None:
