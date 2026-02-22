@@ -1,7 +1,10 @@
 import os
 import json
 import locale
-import sys
+import logging
+
+logger = logging.getLogger("gk-healter.i18n")
+
 
 class I18nManager:
     """
@@ -18,12 +21,12 @@ class I18nManager:
     def __init__(self, language='auto'):
         if hasattr(self, '_initialized') and self._initialized:
             return
-            
+
         self.locale_dir = os.path.join(os.path.dirname(__file__), "locale")
         self.current_language = language
         self.translations = {}
         self.default_language = 'en'
-        
+
         self.load_language(language)
         self._initialized = True
 
@@ -31,7 +34,7 @@ class I18nManager:
         """Loads the specified language or detects system language if 'auto'."""
         if language == 'auto':
             try:
-                sys_lang = locale.getdefaultlocale()[0]
+                sys_lang = locale.getlocale()[0]
                 if sys_lang and sys_lang.startswith('tr'):
                     target_lang = 'tr'
                 else:
@@ -42,7 +45,7 @@ class I18nManager:
             target_lang = language
 
         file_path = os.path.join(self.locale_dir, f"{target_lang}.json")
-        
+
         # Fallback to English if file doesn't exist
         if not os.path.exists(file_path):
             file_path = os.path.join(self.locale_dir, f"{self.default_language}.json")
@@ -53,12 +56,13 @@ class I18nManager:
                 self.translations = json.load(f)
                 self.current_language = target_lang
         except Exception as e:
-            print(f"Failed to load translations for {target_lang}: {e}")
+            logger.error("Failed to load translations for %s: %s", target_lang, e)
             self.translations = {}
 
     def get_text(self, key, default=None):
         """Returns the translated text for a given key."""
         return self.translations.get(key, default if default is not None else key)
+
 
 # Helper function for translation
 def _(key, default=None):

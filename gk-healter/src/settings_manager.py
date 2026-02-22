@@ -1,6 +1,10 @@
 import os
 import json
 import datetime
+import logging
+
+logger = logging.getLogger("gk-healter.settings")
+
 
 class SettingsManager:
     """
@@ -19,14 +23,23 @@ class SettingsManager:
             "disk_threshold_percent": 90,
             "check_ac_power": True,
             "notify_on_completion": False,
-            "language": "auto"
+            "language": "auto",
+            "ai_provider": "gemini",
+            "ai_api_key": "",
+            "ai_model": "gemini-2.5-flash",
         }
         self.settings = self.defaults.copy()
         self._load_settings()
 
     def _ensure_dir_exists(self):
         if not os.path.exists(self.config_dir):
-            os.makedirs(self.config_dir, exist_ok=True)
+            os.makedirs(self.config_dir, mode=0o700, exist_ok=True)
+        else:
+            # Harden existing directory permissions
+            try:
+                os.chmod(self.config_dir, 0o700)
+            except OSError:
+                pass
 
     def _load_settings(self):
         if os.path.exists(self.config_file):
@@ -34,16 +47,30 @@ class SettingsManager:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     loaded = json.load(f)
                     self.settings.update(loaded)
+                # Ensure file permissions are restrictive
+                try:
+                    os.chmod(self.config_file, 0o600)
+                except OSError:
+                    pass
             except Exception as e:
-                print(f"Failed to load settings: {e}")
+                logger.error("Failed to load settings: %s", e)
 
     def save_settings(self):
         self._ensure_dir_exists()
         try:
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(self.settings, f, ensure_ascii=False, indent=4)
+            # Restrict file to owner-only read/write (API key protection)
+            os.chmod(self.config_file, 0o600)
         except Exception as e:
-            print(f"Failed to save settings: {e}")
+            logger.error("Failed to save settings: %s", e)
+
+    @staticmethod
+    def mask_api_key(key: str) -> str:
+        """Return a masked version of an API key for safe logging."""
+        if not key or len(key) <= 4:
+            return "***"
+        return "***" + key[-4:]
 
     def get(self, key):
         return self.settings.get(key, self.defaults.get(key))
@@ -56,16 +83,16 @@ class SettingsManager:
         """Checks if monthly maintenance is due."""
         if not self.get("auto_maintenance_enabled"):
             return False
-            
+
         last_date_str = self.get("last_maintenance_date")
         if not last_date_str:
             return True # Never run, so it's due
-            
+
         try:
             last_date = datetime.datetime.strptime(last_date_str, "%Y-%m-%d %H:%M:%S")
             now = datetime.datetime.now()
             diff = now - last_date
             return diff.days >= self.get("maintenance_frequency_days")
         except Exception as e:
-            print(f"Error parsing date: {e}")
+            logger.error("Error parsing date: %s", e)
             return True

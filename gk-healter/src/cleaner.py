@@ -1,29 +1,37 @@
 import os
-import shutil
 import subprocess
+import logging
 from src.utils import get_size, format_size
+from src.distro_manager import DistroManager
 from typing import List, Dict, Any, Tuple
 from src.i18n_manager import _
+
+logger = logging.getLogger("gk-healter.cleaner")
+
 
 class SystemCleaner:
     def __init__(self):
         self.scan_results = []
-        # Categories to scan
-        # (Name, Path, IsSystem, Description)
-        # Note: We store keys here, but we will translate them when needed or just here if dynamic update is not needed immediately. 
-        # However, to be dynamic on language switch, we should probably translate in scan() or property if the class is long lived. 
-        # But for now, let's translate them at initialization or during scan traversal.
-        # Ideally, cleaner is instantiated, and if language changes, we might need to re-instantiate or re-fetch.
-        # Let's use the keys in the tuple, and translate in `scan`.
+        self.distro_manager = DistroManager()
+
+        # Base categories (universal)
         self.categories = [
-            ("cat_apt_cache", "/var/cache/apt/archives", True, "desc_apt_cache"),
             ("cat_sys_logs", "/var/log", True, "desc_sys_logs"),
-            ("cat_autoremove", "/usr/bin/apt", True, "desc_autoremove"),
             ("cat_coredumps", "/var/lib/systemd/coredump", True, "desc_coredumps"),
             ("cat_thumbnails", os.path.expanduser("~/.cache/thumbnails"), False, "desc_thumbnails"),
             ("cat_firefox", os.path.expanduser("~/.cache/mozilla"), False, "desc_firefox"),
             ("cat_chrome", os.path.expanduser("~/.cache/google-chrome"), False, "desc_chrome")
         ]
+
+        # Add distro-specific categories (pkg cache)
+        # Note: get_package_cache_paths returns list of (key, path, desc_key)
+        pkg_paths = self.distro_manager.get_package_cache_paths()
+        # We need to insert them as tuples into self.categories
+        # But wait, self.categories expects (name, path, is_system, desc)
+        # Distro manager returns (key, path, desc_key)
+        # We must add is_system=True manually here.
+        for key, path, desc_key in pkg_paths:
+            self.categories.insert(0, (key, path, True, desc_key))
 
     def scan(self) -> List[Dict[str, Any]]:
         """
@@ -47,34 +55,64 @@ class SystemCleaner:
         self.scan_results = results
         return results
 
+    def _get_marker_paths(self) -> set:
+        """Return the set of pseudo-paths used as action markers by distro_manager.
+
+        Marker paths (e.g. /usr/bin/apt) are not real deletion targets;
+        they trigger distro-specific commands (apt autoremove, etc.).
+        These must be allowed through the safety check.
+        """
+        markers: set = set()
+        for _key, p, _desc in self.distro_manager.get_package_cache_paths():
+            # A marker is a path that resolves to a binary, not a cache dir
+            if self.distro_manager.get_clean_command(p):
+                if not os.path.isdir(p) or p.startswith("/usr/"):
+                    markers.add(os.path.abspath(p))
+        return markers
+
     def is_safe_to_delete(self, path: str) -> bool:
         """
         Safety check: ensure we are not deleting critical system paths.
         This acts as a whitelist mechanism.
+
+        Marker paths (e.g. /usr/bin/apt used to trigger 'apt autoremove')
+        are explicitly allowed because they invoke distro commands, not
+        actual file deletion.
         """
+        path = os.path.abspath(path)
+
+        # 0. Allow distro-manager marker paths unconditionally.
+        #    These trigger commands (apt clean, autoremove) — no files are deleted.
+        if path in self._get_marker_paths():
+            return True
+
         # Forbidden paths (prefixes)
         forbidden = ["/bin", "/boot", "/dev", "/etc", "/lib", "/proc", "/sys", "/usr/bin", "/usr/lib", "/usr/sbin"]
-        
+
         # Explicitly allowed prefixes for System cleaning
-        allowed_system = ["/var/cache/apt/archives", "/var/log", "/usr/bin/apt", "/var/lib/systemd/coredump"]
-        
+        allowed_system = ["/var/log", "/var/lib/systemd/coredump"]
+
+        # Add distro specific real cache paths to allowed list
+        marker_set = self._get_marker_paths()
+        for _key, p, _desc in self.distro_manager.get_package_cache_paths():
+            if os.path.abspath(p) not in marker_set:
+                allowed_system.append(p)
+
         # Explicitly allowed prefixes for User cleaning
         allowed_user = [os.path.expanduser("~/.cache")]
-
-        path = os.path.abspath(path)
 
         # 1. Check strict forbidden list
         for f in forbidden:
             if path.startswith(f):
                 return False
-        
+
         # 2. Check if it matches an allowed category prefix
         is_allowed = False
         for a in allowed_system + allowed_user:
-            if path.startswith(a):
+            if path == a or path.startswith(a + os.sep):
                 is_allowed = True
                 break
-        
+
         return is_allowed
 
     def clean(self, selected_items: List[Dict[str, Any]]) -> Tuple[int, int, List[str]]:
@@ -92,8 +130,7 @@ class SystemCleaner:
 
             if not self.is_safe_to_delete(path):
                 msg = _("msg_safety_warning").format(path)
-                print(msg)
-                errors.append(msg)
+                logger.warning(msg)
                 fail_count += 1
                 continue
 
@@ -111,7 +148,7 @@ class SystemCleaner:
                 fail_count += 1
                 if error_msg:
                     errors.append(error_msg)
-                    
+
         return success_count, fail_count, errors
 
     def _clean_user(self, path: str) -> Tuple[bool, str]:
@@ -131,7 +168,7 @@ class SystemCleaner:
             return True, None
         except Exception as e:
             msg = _("err_user_clean_fail").format(path, e)
-            print(msg)
+            logger.error(msg)
             return False, msg
 
     def _clean_system(self, path: str) -> Tuple[bool, str]:
@@ -139,11 +176,16 @@ class SystemCleaner:
         Uses pkexec to clean system paths. Returns (Bool Success, String ErrorMsg).
         """
         cmd = []
-        
-        if path == "/var/cache/apt/archives":
-            cmd = ["pkexec", "apt-get", "clean"]
-        elif path == "/usr/bin/apt":
-            cmd = ["pkexec", "apt-get", "autoremove", "-y"]
+
+        # Check if this path is handled by distro manager
+        # Some paths are distro-specific (pkg cache), others are generic (/var/log)
+
+        # Distro specific paths
+        distro_cmd = self.distro_manager.get_clean_command(path)
+        if distro_cmd:
+            cmd = distro_cmd
+
+        # Generic system paths
         elif path == "/var/log":
             bash_cmd = (
                 "find /var/log -type f -regex '.*\\.\\(gz\\|[0-9]+\\)$' -delete && "
@@ -151,15 +193,20 @@ class SystemCleaner:
                 "journalctl --vacuum-time=1s"
             )
             cmd = ["pkexec", "sh", "-c", bash_cmd]
+
         elif path == "/var/lib/systemd/coredump":
             cmd = ["pkexec", "sh", "-c", "rm -rf /var/lib/systemd/coredump/*"]
+
         else:
             return False, _("err_unknown_sys_path").format(path)
 
         try:
-            print(f"Executing system clean: {cmd}")
-            subprocess.run(cmd, check=True)
+            logger.info("Executing system clean: %s", cmd)
+            subprocess.run(cmd, check=True, timeout=120)
             return True, None
+        except subprocess.TimeoutExpired:
+            logger.error("System clean timed out for: %s", path)
+            return False, _("err_unexpected").format(path, "Operation timed out")
         except subprocess.CalledProcessError as e:
             # e.returncode 126 or 127 or 1 usually means auth failed or cancelled
             if e.returncode in [126, 127]:
@@ -167,6 +214,3 @@ class SystemCleaner:
             return False, _("err_sys_clean_code").format(e.returncode, path)
         except Exception as e:
             return False, _("err_unexpected").format(path, e)
-
-
-

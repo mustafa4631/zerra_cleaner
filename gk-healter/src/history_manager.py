@@ -1,7 +1,11 @@
 import os
 import json
 import datetime
+import logging
 from typing import List, Dict, Any
+
+logger = logging.getLogger("gk-healter.history")
+
 
 class HistoryManager:
     """
@@ -42,16 +46,16 @@ class HistoryManager:
             with open(self.history_file, 'w', encoding='utf-8') as f:
                 json.dump(history, f, ensure_ascii=False, indent=4)
         except Exception as e:
-            print(f"Failed to save history: {e}")
+            logger.error("Failed to save history: %s", e)
 
     def get_all_entries(self) -> List[Dict[str, Any]]:
         """Retrieves all history entries."""
         if not os.path.exists(self.history_file):
             return []
-        
+
         try:
             with open(self.history_file, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except Exception as e:
-            print(f"Failed to read history: {e}")
+            logger.error("Failed to read history: %s", e)
             return []
