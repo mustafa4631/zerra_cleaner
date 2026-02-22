@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="512" height="512" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <!-- 
+    GK-Healter Minimalist SVG Logo (v4 - Added Bristle Details)
+    Designed to follow Flathub/GNOME HIG with added detail
+  -->
+  <defs>
+    <!-- Professional Slate Gradient for Depth -->
+    <linearGradient id="baseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#334155;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Clean Mint/Teal Action Color -->
+    <linearGradient id="actionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4fd1c5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#38b2ac;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow for the symbol -->
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Background Base (GNOME style Squircle) -->
+  <rect x="40" y="40" width="432" height="432" rx="100" fill="url(#baseGrad)" />
+  
+  <!-- Subtle Inner Glow Border -->
+  <rect x="42" y="42" width="428" height="428" rx="98" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2" />
+
+  <!-- The Minimalist Symbol: A stylized long brush with bristle details & sparkle -->
+  <g transform="translate(256, 290)" filter="url(#shadow)">
+    
+    <!-- Stylized sweep motion / brush part -->
+    <path d="M-90,60 C-75,90 75,90 90,60 L60,-30 C45,-60 -45,-60 -60,-30 Z" fill="url(#actionGrad)" />
+    
+    <!-- Bristle Lines (Subtle details) -->
+    <g stroke="rgba(255,255,255,0.25)" stroke-width="4" stroke-linecap="round">
+      <line x1="-40" y1="-10" x2="-55" y2="65" />
+      <line x1="0" y1="-15" x2="0" y2="75" />
+      <line x1="40" y1="-10" x2="55" y2="65" />
+    </g>
+    
+    <!-- Brush handle (Much longer cylinder) -->
+    <path d="M-12,-40 C-12,-60 -12,-220 0,-220 C12,-220 12,-60 12,-40 Z" fill="#94a3b8" />
+    
+    <!-- Sparkle: Located to balance the long handle -->
+    <path d="M100,-40 L108,-10 L138,-2 L108,6 L100,36 L92,6 L62,-2 L92,-10 Z" fill="white" />
+    
+  </g>
+
+  <!-- Bottom highlight for extra depth -->
+  <path d="M140,472 L372,472 C420,472 432,460 432,432 L432,460 C432,472 420,472 372,472 L140,472 C92,472 80,472 80,460 L80,432 C80,460 92,472 140,472 Z" fill="rgba(0,0,0,0.1)" />
+
+</svg>
