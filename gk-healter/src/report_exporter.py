@@ -393,4 +393,4 @@ def _get_version() -> str:
         from src.__init__ import __version__
         return __version__
     except Exception:
-        return "0.1.4"
+        return "0.1.5"

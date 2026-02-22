@@ -289,7 +289,7 @@ class TestGetVersion:
     def test_fallback_version(self):
         with patch.dict("sys.modules", {"src.__init__": None}):
             result = mod._get_version()
-        assert result == "0.1.4"
+        assert result == "0.1.5"
 
     def test_reads_version_from_init(self):
         mock_init = MagicMock()

@@ -1,5 +1,10 @@
 # GK Healter
 
+<div align="center">
+  <a href="README.tr.md">🇹🇷 Türkçe</a> &nbsp;|&nbsp; 
+  <a href="README.md">🇬🇧 English (İngilizce)</a>
+</div>
+
 <center>
 
 ![Icon](/gk-healter/icons/hicolor/256x256/apps/io.github.gkdevelopers.GKHealter.png)
@@ -161,7 +166,7 @@ src/
 ```bash
 cd gk-healter
 make deb
-sudo dpkg -i gk-healter_0.1.4_all.deb
+sudo dpkg -i gk-healter_0.1.5_all.deb
 sudo apt-get install -f  # Eksik bağımlılıkları düzelt
 ```
 
