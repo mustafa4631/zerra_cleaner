@@ -1,15 +1,18 @@
 # GK Healter
 
+<div align="center">
+  <a href="README.tr.md">🇹🇷 Türkçe (Turkish)</a> &nbsp;|&nbsp; 
+  <a href="README.md">🇬🇧 English</a>
+</div>
+
 <center>
 
 ![Icon](/gk-healter/icons/hicolor/256x256/apps/io.github.gkdevelopers.GKHealter.png)
 </center>
 
-**GK Healter**, Pardus ve Debian tabanlı Linux dağıtımları için tasarlanmış profesyonel bir sistem bakım ve sağlık izleme aracıdır. Güvenlik ve verimlilik ön plandadır; kullanıcılara sistem kararlılığını bozmadan disk alanı kazandırma, hata tespiti ve proaktif bakım imkânı sunar.
+**GK Healter** is a professional system maintenance and health-monitoring utility designed primarily for **Pardus** and Debian-based Linux distributions. It emphasizes safety and efficiency, providing users with reliable disk space recovery, error detection, and proactive maintenance capabilities without compromising system stability.
 
-> 🏆 **TEKNOFEST 2026 — Pardus Hata Yakalama ve Öneri Yarışması** (Geliştirme Kategorisi) için geliştirilmektedir.
-
-GK Healter is a professional system maintenance and health-monitoring utility designed primarily for **Pardus** and Debian-based Linux distributions. It emphasizes safety and efficiency, providing users with reliable disk recovery, error detection, and proactive maintenance capabilities.
+> 🏆 Developed for **TEKNOFEST 2026 — Pardus Bug Catching and Suggestion Competition** (Development Category).
 
 Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**.
 
