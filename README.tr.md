@@ -1,6 +1,10 @@
 # GK Healter
 
-![Icon](/screenshots/logo.png)
+<center>
+
+![Icon](/gk-healter/icons/hicolor/256x256/apps/io.github.gkdevelopers.GKHealter.png)
+</center>
+
 
 **GK Healter**, Pardus ve Debian tabanlı Linux dağıtımları için tasarlanmış profesyonel bir **sistem bakım, sağlık izleme ve güvenlik denetim** aracıdır. Güvenlik ve verimlilik ön plandadır; kullanıcılara sistem kararlılığını bozmadan disk alanı kazandırma, hata tespiti ve proaktif bakım imkânı sunar.
 
