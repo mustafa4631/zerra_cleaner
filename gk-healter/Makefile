@@ -95,6 +95,7 @@ deb: clean
 	# note: do NOT copy the original debian/control after running sed
 	# as that would undo the filtering.
 	sed -n '/^Package:/,$$p' debian/control > dist/DEBIAN/control
+	sed -i '1s/^/Version: $(VERSION)\nMaintainer: GK Developers <vastseaoffical0@outlook.com>\n/' dist/DEBIAN/control
 	cp debian/postinst dist/DEBIAN/
 	cp debian/prerm    dist/DEBIAN/
 	
