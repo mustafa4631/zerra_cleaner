@@ -11,6 +11,6 @@ Terminal=false
 Categories=GTK;System;Utility;Settings;
 Keywords=cleaner;system;clean;cache;disk;maintenance;temizlik;sistem;bakim;healter;
 StartupNotify=true
-StartupWMClass=main.py
+StartupWMClass=io.github.gkdevelopers.GKHealter
 X-Flatpak-Renamed-From=gk-healter.desktop
 DBusActivatable=false

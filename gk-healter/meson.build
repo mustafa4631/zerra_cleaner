@@ -17,6 +17,17 @@ app_id  = 'io.github.gkdevelopers.GKHealter'
 app_name = meson.project_name()       # gk-healter
 pkgdatadir = join_paths(datadir, app_name)
 
+# ── Dependencies ─────────────────────────────────────────────────────────────
+dependency('glib-2.0')
+dependency('gobject-introspection-1.0')
+dependency('gtk+-3.0')
+find_program('pkexec', required: true)
+
+# Check for required Python modules
+python.dependency()
+run_command(python, '-c', 'import gi', check: true)
+run_command(python, '-c', 'import psutil', check: true)
+
 # ── Launcher script ─────────────────────────────────────────────────────────
 conf = configuration_data()
 conf.set('PYTHON', python.full_path())
@@ -80,16 +91,28 @@ install_data(
 )
 
 # ── Desktop file ─────────────────────────────────────────────────────────────
+desktop_file = join_paths('data', app_id + '.desktop')
 install_data(
-  join_paths('data', app_id + '.desktop'),
+  desktop_file,
   install_dir: join_paths(datadir, 'applications'),
 )
 
+desktop_file_validate = find_program('desktop-file-validate', required: false)
+if desktop_file_validate.found()
+  test('Validate desktop file', desktop_file_validate, args: [desktop_file])
+endif
+
 # ── AppStream metainfo ───────────────────────────────────────────────────────
+metainfo_file = join_paths('data', app_id + '.metainfo.xml')
 install_data(
-  join_paths('data', app_id + '.metainfo.xml'),
+  metainfo_file,
   install_dir: join_paths(datadir, 'metainfo'),
 )
+
+appstream_util = find_program('appstream-util', required: false)
+if appstream_util.found()
+  test('Validate appstream file', appstream_util, args: ['validate', metainfo_file])
+endif
 
 # ── Icons ────────────────────────────────────────────────────────────────────
 icon_sizes = ['scalable', '64x64', '128x128', '256x256']

@@ -363,8 +363,16 @@ class MainWindow:
                 self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
             else:
                 # Try loading SVG first (scalable), then fallback to PNG
+                base_dir = os.path.dirname(__file__)
+                # If installed, base_dir is PREFIX/share/gk-healter/src
+                # So icons are in PREFIX/share/icons
+                installed_icon_base = os.path.abspath(os.path.join(base_dir, "..", "..", "icons"))
+                dev_icon_base = os.path.abspath(os.path.join(base_dir, "..", "icons"))
+                
+                icon_base = installed_icon_base if os.path.exists(os.path.join(installed_icon_base, "hicolor", "scalable", "apps", "io.github.gkdevelopers.GKHealter.svg")) else dev_icon_base
+
                 icon_path_svg = os.path.join(
-                    os.path.dirname(__file__), "..", "icons",
+                    icon_base,
                     "hicolor", "scalable", "apps",
                     "io.github.gkdevelopers.GKHealter.svg",
                 )
@@ -372,7 +380,7 @@ class MainWindow:
                     self.window.set_icon_from_file(icon_path_svg)
                 else:
                     icon_path_png = os.path.join(
-                        os.path.dirname(__file__), "..", "icons",
+                        icon_base,
                         "hicolor", "128x128", "apps",
                         "io.github.gkdevelopers.GKHealter.png",
                     )

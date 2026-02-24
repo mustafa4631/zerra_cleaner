@@ -99,5 +99,5 @@ deb: clean
 	chmod 755 dist/DEBIAN/prerm
 	
 	# 5. Build .deb
-	dpkg-deb --build dist $(APP_NAME)_$(VERSION)_all.deb
+	fakeroot dpkg-deb --build dist $(APP_NAME)_$(VERSION)_all.deb
 	@echo "Package built successfully: $(APP_NAME)_$(VERSION)_all.deb"
