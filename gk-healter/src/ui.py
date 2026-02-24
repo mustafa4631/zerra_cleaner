@@ -75,21 +75,102 @@ class MainWindow:
         # Connect signals declared in XML to handler methods
         self.builder.connect_signals(self)
 
-        # Grab references to widgets we will update at runtime
-        self._bind_widgets()
+        # Get Main Window
+        self.window: Gtk.Window = builder.get_object("main_window")
+        
+        # Set Application Icon (works for both Flatpak and system install)
+        try:
+            # Try themed icon first (Flatpak uses this)
+            icon_theme = Gtk.IconTheme.get_default()
+            if icon_theme.has_icon("io.github.gkdevelopers.GKHealter"):
+                self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
+            else:
+                # Fallback to local file
+                svg_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.svg")
+                png_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.png")
+                
+                if os.path.exists(svg_icon_path):
+                    self.window.set_icon_from_file(svg_icon_path)
+                elif os.path.exists(png_icon_path):
+                    self.window.set_icon_from_file(png_icon_path)
+        except Exception as e:
+            print(f"Error setting icon: {e}")
 
-        # Apply minimal CSS that cannot be expressed in XML
-        self._apply_css()
+        self.window.connect("destroy", Gtk.main_quit)
+        
+        # Get Objects
+        self.main_stack: Gtk.Stack = builder.get_object("main_stack")
+        self.info_bar: Gtk.InfoBar = builder.get_object("info_bar")
+        self.info_label: Gtk.Label = builder.get_object("info_label")
+        self.treeview: Gtk.TreeView = builder.get_object("treeview")
+        self.store: Gtk.ListStore = builder.get_object("file_list_store")
+        self.summary_label: Gtk.Label = builder.get_object("summary_label")
+        self.btn_scan: Gtk.Button = builder.get_object("btn_scan")
+        self.btn_clean: Gtk.Button = builder.get_object("btn_clean")
+        self.btn_about: Gtk.Button = builder.get_object("btn_about")
 
-        # Populate combos, restore saved settings, load history
-        self._init_settings_ui()
-        self._load_history_into_view()
+        # History Objects
+        self.history_treeview: Gtk.TreeView = builder.get_object("history_treeview")
+        self.history_store: Gtk.ListStore = builder.get_object("history_list_store")
+        self.notebook: Gtk.Notebook = builder.get_object("notebook")
+        self.btn_settings: Gtk.Button = builder.get_object("btn_settings")
 
-        # Apply i18n translations to all hardcoded XML labels
-        self._apply_translations()
+        # Settings Objects
+        self.switch_auto_maintenance: Gtk.Switch = builder.get_object("switch_auto_maintenance")
+        self.combo_frequency: Gtk.ComboBoxText = builder.get_object("combo_frequency")
+        self.spin_idle: Gtk.SpinButton = builder.get_object("spin_idle")
+        self.switch_disk_threshold: Gtk.Switch = builder.get_object("switch_disk_threshold")
+        self.spin_disk_percent: Gtk.SpinButton = builder.get_object("spin_disk_percent")
+        self.switch_ac_power: Gtk.Switch = builder.get_object("switch_ac_power")
+        self.switch_notify: Gtk.Switch = builder.get_object("switch_notify")
+        self.lbl_last_maintenance: Gtk.Label = builder.get_object("lbl_last_maintenance")
+        self.btn_back: Gtk.Button = builder.get_object("btn_back")
+        self.box_auto_settings: Gtk.Box = builder.get_object("box_auto_settings")
+        self.combo_language: Gtk.ComboBoxText = builder.get_object("combo_language")
 
-        # Set the application icon
-        self._set_app_icon()
+        # Translation labels (need IDs from UI file)
+        self.lbl_settings_language: Gtk.Label = builder.get_object("lbl_settings_language")
+        self.lbl_language_select: Gtk.Label = builder.get_object("lbl_language_select")
+        self.lbl_last_maintenance_title: Gtk.Label = builder.get_object("lbl_last_maintenance_title")
+        
+        # Other translated labels
+        self.lbl_settings_title: Gtk.Label = builder.get_object("lbl_settings_title")
+        self.lbl_auto_maintenance_title: Gtk.Label = builder.get_object("lbl_auto_maintenance_title")
+        self.lbl_auto_maintenance_desc: Gtk.Label = builder.get_object("lbl_auto_maintenance_desc")
+        self.lbl_scheduling_title: Gtk.Label = builder.get_object("lbl_scheduling_title")
+        self.lbl_frequency_title: Gtk.Label = builder.get_object("lbl_frequency_title")
+        self.lbl_conditions_title: Gtk.Label = builder.get_object("lbl_conditions_title")
+        self.lbl_idle_title: Gtk.Label = builder.get_object("lbl_idle_title")
+        self.lbl_minutes_suffix: Gtk.Label = builder.get_object("lbl_minutes_suffix")
+        self.lbl_ac_power_title: Gtk.Label = builder.get_object("lbl_ac_power_title")
+        self.lbl_notifications_title: Gtk.Label = builder.get_object("lbl_notifications_title")
+        self.lbl_notify_done_title: Gtk.Label = builder.get_object("lbl_notify_done_title")
+        self.expander_advanced: Gtk.Expander = builder.get_object("expander_advanced")
+        self.lbl_disk_threshold_title: Gtk.Label = builder.get_object("lbl_disk_threshold_title")
+
+        # Get Dialogs
+        self.about_dialog: Gtk.AboutDialog = builder.get_object("about_dialog")
+        self.clean_confirm_dialog: Gtk.MessageDialog = builder.get_object("clean_confirm_dialog")
+
+        # Status Icon (programmatic addition to InfoBar)
+        self.status_icon = Gtk.Image()
+        info_content = self.info_bar.get_content_area()
+        # Add icon at the start of the box
+        info_content.pack_start(self.status_icon, False, False, 0)
+        info_content.reorder_child(self.status_icon, 0)
+        self.status_icon.show()
+
+        # Connect Signals
+        builder.connect_signals(self)
+        
+        # Initial History Load
+        self.populate_history()
+
+        # Translate UI
+        self._translate_ui()
+
+        # Load Settings UI
+        self._sync_settings_ui()
 
         # Show window and start background monitors
         self.window.show_all()
@@ -335,7 +416,28 @@ class MainWindow:
         self.lbl_disk_threshold_title.set_text(_("settings_disk_threshold"))
         self.lbl_last_maintenance_title.set_text(_("settings_last_maintenance"))
 
-        # ── Confirm dialog ──
+        # Combo Frequency items (manual translation)
+        active_freq = self.combo_frequency.get_active_id()
+        self.combo_frequency.remove_all()
+        self.combo_frequency.append("7", _("freq_7"))
+        self.combo_frequency.append("30", _("freq_30"))
+        self.combo_frequency.append("180", _("freq_180"))
+        self.combo_frequency.append("365", _("freq_365"))
+        self.combo_frequency.set_active_id(active_freq)
+
+        # Sync combo items
+        self.combo_language.remove_all()
+        self.combo_language.append("auto", _("lang_auto"))
+        self.combo_language.append("tr", _("lang_tr"))
+        self.combo_language.append("en", _("lang_en"))
+        self.combo_language.set_active_id(self.settings_manager.get("language"))
+
+        # About Dialog
+        self.about_dialog.set_property("program_name", _("app_title"))
+        self.about_dialog.set_property("copyright", "© 2026 GK Developers")
+        self.about_dialog.set_property("logo", self.window.get_icon())
+
+        # Confirm Dialog
         self.clean_confirm_dialog.set_property("text", _("confirm_title"))
 
         # ── AI Config ──
