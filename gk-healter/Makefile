@@ -90,7 +90,11 @@ deb: clean
 	$(MAKE) install DESTDIR=dist
 	
 	# 3. Copy Control files
-	cp debian/control  dist/DEBIAN/
+	# dpkg-deb wants a binary-only control file.  strip the source
+	# stanza and write the remaining package stanza directly.
+	# note: do NOT copy the original debian/control after running sed
+	# as that would undo the filtering.
+	sed -n '/^Package:/,$p' debian/control > dist/DEBIAN/control
 	cp debian/postinst dist/DEBIAN/
 	cp debian/prerm    dist/DEBIAN/
 	
