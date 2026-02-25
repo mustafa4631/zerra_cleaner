@@ -117,7 +117,10 @@ class MainWindow:
 
         # History Objects
         self.history_treeview: Gtk.TreeView = builder.get_object("history_treeview")
+        # legacy code references both `history_store` and `history_list_store`
+        # keep both attributes in sync to avoid AttributeErrors
         self.history_store: Gtk.ListStore = builder.get_object("history_list_store")
+        self.history_list_store: Gtk.ListStore = self.history_store
         self.notebook: Gtk.Notebook = builder.get_object("notebook")
         self.btn_settings: Gtk.Button = builder.get_object("btn_settings")
 
@@ -168,8 +171,11 @@ class MainWindow:
         # Connect Signals
         builder.connect_signals(self)
 
+        # Ensure all widget attributes are bound (compatibility with older UI layouts)
+        self._bind_widgets()
+
         # Initial History Load
-        self.populate_history()
+        self._load_history_into_view()
 
         # Translate UI
         self._translate_ui()
@@ -461,6 +467,24 @@ class MainWindow:
             provider,
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
+
+    def _translate_ui(self) -> None:
+        """Backward-compatible wrapper: apply translations and UI CSS."""
+        try:
+            self._apply_css()
+        except Exception:
+            pass
+        try:
+            self._apply_translations()
+        except Exception:
+            pass
+
+    def _sync_settings_ui(self) -> None:
+        """Backward-compatible wrapper to initialise settings UI state."""
+        try:
+            self._init_settings_ui()
+        except Exception:
+            pass
 
     # ── Application icon ────────────────────────────────────────────────────
     def _set_app_icon(self) -> None:
