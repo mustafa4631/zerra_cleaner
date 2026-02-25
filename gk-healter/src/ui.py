@@ -3,6 +3,8 @@ GK Healter – Main UI Module
 All layout is defined in resources/main_window.ui (GTK Builder XML).
 This module handles signal connections, business logic, and dynamic content only.
 """
+# flake8: noqa: E402
+
 
 import os
 import threading
@@ -10,9 +12,9 @@ import datetime
 import logging
 from typing import List, Dict, Any, Optional
 
-logger = logging.getLogger("gk-healter.ui")
 
 import gi
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Gdk, Pango
 
@@ -33,6 +35,7 @@ from src.pardus_verifier import PardusVerifier
 from src.report_exporter import ReportExporter
 from src.utils import format_size
 
+logger = logging.getLogger("gk-healter.ui")
 
 class MainWindow:
     """
@@ -75,9 +78,12 @@ class MainWindow:
         # Connect signals declared in XML to handler methods
         self.builder.connect_signals(self)
 
+        # convenience local alias to avoid repeatedly writing self.builder
+        builder = self.builder
+
         # Get Main Window
         self.window: Gtk.Window = builder.get_object("main_window")
-        
+
         # Set Application Icon (works for both Flatpak and system install)
         try:
             # Try themed icon first (Flatpak uses this)
@@ -88,7 +94,7 @@ class MainWindow:
                 # Fallback to local file
                 svg_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.svg")
                 png_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.png")
-                
+
                 if os.path.exists(svg_icon_path):
                     self.window.set_icon_from_file(svg_icon_path)
                 elif os.path.exists(png_icon_path):
@@ -97,7 +103,7 @@ class MainWindow:
             print(f"Error setting icon: {e}")
 
         self.window.connect("destroy", Gtk.main_quit)
-        
+
         # Get Objects
         self.main_stack: Gtk.Stack = builder.get_object("main_stack")
         self.info_bar: Gtk.InfoBar = builder.get_object("info_bar")
@@ -132,7 +138,7 @@ class MainWindow:
         self.lbl_settings_language: Gtk.Label = builder.get_object("lbl_settings_language")
         self.lbl_language_select: Gtk.Label = builder.get_object("lbl_language_select")
         self.lbl_last_maintenance_title: Gtk.Label = builder.get_object("lbl_last_maintenance_title")
-        
+
         # Other translated labels
         self.lbl_settings_title: Gtk.Label = builder.get_object("lbl_settings_title")
         self.lbl_auto_maintenance_title: Gtk.Label = builder.get_object("lbl_auto_maintenance_title")
@@ -151,7 +157,6 @@ class MainWindow:
         # Get Dialogs
         self.about_dialog: Gtk.AboutDialog = builder.get_object("about_dialog")
         self.clean_confirm_dialog: Gtk.MessageDialog = builder.get_object("clean_confirm_dialog")
-
         # Status Icon (programmatic addition to InfoBar)
         self.status_icon = Gtk.Image()
         info_content = self.info_bar.get_content_area()
@@ -162,7 +167,7 @@ class MainWindow:
 
         # Connect Signals
         builder.connect_signals(self)
-        
+
         # Initial History Load
         self.populate_history()
 
@@ -465,8 +470,16 @@ class MainWindow:
                 self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
             else:
                 # Try loading SVG first (scalable), then fallback to PNG
+                base_dir = os.path.dirname(__file__)
+                # If installed, base_dir is PREFIX/share/gk-healter/src
+                # So icons are in PREFIX/share/icons
+                installed_icon_base = os.path.abspath(os.path.join(base_dir, "..", "..", "icons"))
+                dev_icon_base = os.path.abspath(os.path.join(base_dir, "..", "icons"))
+
+                icon_base = installed_icon_base if os.path.exists(os.path.join(installed_icon_base, "hicolor", "scalable", "apps", "io.github.gkdevelopers.GKHealter.svg")) else dev_icon_base
+
                 icon_path_svg = os.path.join(
-                    os.path.dirname(__file__), "..", "icons",
+                    icon_base,
                     "hicolor", "scalable", "apps",
                     "io.github.gkdevelopers.GKHealter.svg",
                 )
@@ -474,7 +487,7 @@ class MainWindow:
                     self.window.set_icon_from_file(icon_path_svg)
                 else:
                     icon_path_png = os.path.join(
-                        os.path.dirname(__file__), "..", "icons",
+                        icon_base,
                         "hicolor", "128x128", "apps",
                         "io.github.gkdevelopers.GKHealter.png",
                     )

@@ -90,7 +90,12 @@ deb: clean
 	$(MAKE) install DESTDIR=dist
 	
 	# 3. Copy Control files
-	cp debian/control  dist/DEBIAN/
+	# dpkg-deb wants a binary-only control file.  strip the source
+	# stanza and write the remaining package stanza directly.
+	# note: do NOT copy the original debian/control after running sed
+	# as that would undo the filtering.
+	sed -n '/^Package:/,$$p' debian/control > dist/DEBIAN/control
+	sed -i '1s/^/Version: $(VERSION)\nMaintainer: GK Developers <vastseaoffical0@outlook.com>\n/' dist/DEBIAN/control
 	cp debian/postinst dist/DEBIAN/
 	cp debian/prerm    dist/DEBIAN/
 	
@@ -99,5 +104,5 @@ deb: clean
 	chmod 755 dist/DEBIAN/prerm
 	
 	# 5. Build .deb
-	dpkg-deb --build dist $(APP_NAME)_$(VERSION)_all.deb
+	fakeroot dpkg-deb --build dist $(APP_NAME)_$(VERSION)_all.deb
 	@echo "Package built successfully: $(APP_NAME)_$(VERSION)_all.deb"

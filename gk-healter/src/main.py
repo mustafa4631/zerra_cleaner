@@ -1,7 +1,10 @@
 import gi
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+gi.require_version('GLib', '2.0')
+gi.require_version('Gdk', '3.0')
+gi.require_version('Pango', '1.0')
+from gi.repository import Gtk, GLib
 
 from src.logger import setup_logging
 from src.settings_manager import SettingsManager
@@ -11,6 +14,9 @@ from src.ui import MainWindow
 
 def main():
     """Application entry point."""
+    # Set application name for WMClass
+    GLib.set_prgname('io.github.gkdevelopers.GKHealter')
+
     # Initialize logging first
     setup_logging()
 

@@ -1,56 +1,49 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg width="512" height="512" viewBox="0 0 512 512" version="1.1" xmlns="http://www.w3.org/2000/svg">
-  <!-- 
-    GK-Healter Minimalist SVG Logo (v4 - Added Bristle Details)
-    Designed to follow Flathub/GNOME HIG with added detail
-  -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
   <defs>
-    <!-- Professional Slate Gradient for Depth -->
-    <linearGradient id="baseGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" style="stop-color:#334155;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    <linearGradient id="handle_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#77767b"/>
+      <stop offset="100%" stop-color="#3d3846"/>
     </linearGradient>
-    
-    <!-- Clean Mint/Teal Action Color -->
-    <linearGradient id="actionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4fd1c5;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#38b2ac;stop-opacity:1" />
+    <linearGradient id="box_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#33d17a"/>
+      <stop offset="100%" stop-color="#26a269"/>
     </linearGradient>
-
-    <!-- Subtle Drop Shadow for the symbol -->
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-opacity="0.3" />
-    </filter>
+    <linearGradient id="box_hl" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="box_sh" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.3"/>
+    </linearGradient>
+    <linearGradient id="latch_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#d0cfce"/>
+    </linearGradient>
+    <linearGradient id="badge_grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f6f5f4"/>
+    </linearGradient>
   </defs>
-
-  <!-- Background Base (GNOME style Squircle) -->
-  <rect x="40" y="40" width="432" height="432" rx="100" fill="url(#baseGrad)" />
-  
-  <!-- Subtle Inner Glow Border -->
-  <rect x="42" y="42" width="428" height="428" rx="98" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="2" />
-
-  <!-- The Minimalist Symbol: A stylized long brush with bristle details & sparkle -->
-  <g transform="translate(256, 290)" filter="url(#shadow)">
-    
-    <!-- Stylized sweep motion / brush part -->
-    <path d="M-90,60 C-75,90 75,90 90,60 L60,-30 C45,-60 -45,-60 -60,-30 Z" fill="url(#actionGrad)" />
-    
-    <!-- Bristle Lines (Subtle details) -->
-    <g stroke="rgba(255,255,255,0.25)" stroke-width="4" stroke-linecap="round">
-      <line x1="-40" y1="-10" x2="-55" y2="65" />
-      <line x1="0" y1="-15" x2="0" y2="75" />
-      <line x1="40" y1="-10" x2="55" y2="65" />
-    </g>
-    
-    <!-- Brush handle (Much longer cylinder) -->
-    <path d="M-12,-40 C-12,-60 -12,-220 0,-220 C12,-220 12,-60 12,-40 Z" fill="#94a3b8" />
-    
-    <!-- Sparkle: Located to balance the long handle -->
-    <path d="M100,-40 L108,-10 L138,-2 L108,6 L100,36 L92,6 L62,-2 L92,-10 Z" fill="white" />
-    
-  </g>
-
-  <!-- Bottom highlight for extra depth -->
-  <path d="M140,472 L372,472 C420,472 432,460 432,432 L432,460 C432,472 420,472 372,472 L140,472 C92,472 80,472 80,460 L80,432 C80,460 92,472 140,472 Z" fill="rgba(0,0,0,0.1)" />
-
+  <path d="M 36 30 L 36 22 C 36 13.163 43.163 6 52 6 L 76 6 C 84.837 6 92 13.163 92 22 L 92 30 L 80 30 L 80 22 C 80 19.791 78.209 18 76 18 L 52 18 C 49.791 18 48 19.791 48 22 L 48 30 Z" fill="#000000" opacity="0.15"/>
+  <path d="M 36 28 L 36 20 C 36 11.163 43.163 4 52 4 L 76 4 C 84.837 4 92 11.163 92 20 L 92 28 L 80 28 L 80 20 C 80 17.791 78.209 16 76 16 L 52 16 C 49.791 16 48 17.791 48 20 L 48 28 Z" fill="url(#handle_grad)"/>
+  <rect x="12" y="32" width="104" height="84" rx="12" fill="#000000" opacity="0.15"/>
+  <rect x="12" y="28" width="104" height="84" rx="12" fill="url(#box_grad)"/>
+  <rect x="13" y="29" width="102" height="82" rx="11" fill="none" stroke="url(#box_hl)" stroke-width="2"/>
+  <rect x="13" y="29" width="102" height="82" rx="11" fill="none" stroke="url(#box_sh)" stroke-width="2"/>
+  <path d="M 12 48 L 116 48" stroke="#1e8b5a" stroke-width="2"/>
+  <path d="M 12 50 L 116 50" stroke="#ffffff" stroke-width="2" opacity="0.2"/>
+  <rect x="32" y="42" width="12" height="16" rx="2" fill="#000000" opacity="0.2"/>
+  <rect x="32" y="40" width="12" height="16" rx="2" fill="url(#latch_grad)"/>
+  <rect x="33" y="41" width="10" height="14" rx="1" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <rect x="36" y="50" width="4" height="4" rx="1" fill="#77767b"/>
+  <rect x="84" y="42" width="12" height="16" rx="2" fill="#000000" opacity="0.2"/>
+  <rect x="84" y="40" width="12" height="16" rx="2" fill="url(#latch_grad)"/>
+  <rect x="85" y="41" width="10" height="14" rx="1" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.6"/>
+  <rect x="88" y="50" width="4" height="4" rx="1" fill="#77767b"/>
+  <circle cx="64" cy="86" r="20" fill="#000000" opacity="0.15"/>
+  <circle cx="64" cy="84" r="20" fill="url(#badge_grad)"/>
+  <circle cx="64" cy="84" r="19" fill="none" stroke="#000000" stroke-width="2" opacity="0.05"/>
+  <path d="M 48 85 L 54 85 L 58 77 L 64 97 L 70 73 L 74 85 L 80 85" fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity="0.1"/>
+  <path d="M 48 84 L 54 84 L 58 76 L 64 96 L 70 72 L 74 84 L 80 84" fill="none" stroke="#2ec27e" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
