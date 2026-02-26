@@ -55,8 +55,19 @@ Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**
 - **Dedicated Security Page:** Separate tab with Pardus verification data, colour-coded findings, and one-click export.
 
 ## Screenshot
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-49-28" src="https://github.com/user-attachments/assets/c45eaf08-6e30-40e5-af78-c2c56e74bbab" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-48-28" src="https://github.com/user-attachments/assets/da6e4b54-7c6b-4412-91e9-29c17e084356" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-48-20" src="https://github.com/user-attachments/assets/20d80451-c0d5-4697-85fe-d8f3db95e3e6" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-48-11" src="https://github.com/user-attachments/assets/0dd369d8-fa3e-4ba2-af60-a1faf10ee1c5" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-48-03" src="https://github.com/user-attachments/assets/3a558a80-29f1-4215-bf9e-eea60a25fa07" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-47-46" src="https://github.com/user-attachments/assets/a6037c33-21ac-44d9-b01f-c1b7b3ddd744" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-47-07" src="https://github.com/user-attachments/assets/2f51be6e-1ce6-40c4-b27c-dd31a561409b" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-46-24" src="https://github.com/user-attachments/assets/41176ef1-8d15-4f48-a020-1db4a5446275" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-46-10" src="https://github.com/user-attachments/assets/dffe74c2-ff14-41af-9964-e6ee06a9fef8" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-45-19" src="https://github.com/user-attachments/assets/700bd689-1f7d-4a39-bbc9-5b757f2b5279" />
+<img width="1920" height="1080" alt="Ekran görüntüsü_2026-02-26_23-45-10" src="https://github.com/user-attachments/assets/02ff7df4-b06c-41a2-83bc-49430ab28654" />
 
-![GK Healter Main Window](screenshots/main-window.png)
+
 
 ## Technology Stack
 
