@@ -16,7 +16,7 @@ from typing import List, Dict, Any, Optional
 import gi
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk, Pango
+from gi.repository import Gtk, GLib, Gdk, Pango, GdkPixbuf
 
 from src.cleaner import SystemCleaner
 from src.history_manager import HistoryManager
@@ -67,6 +67,7 @@ class MainWindow:
         self.scan_data: List[Dict[str, Any]] = []
         self.is_cleaning_in_progress: bool = False
         self._health_timer_id: Optional[int] = None
+        self._translating: bool = False  # guard against recursive _apply_translations
 
         # Load the builder file
         self.builder = Gtk.Builder()
@@ -85,22 +86,7 @@ class MainWindow:
         self.window: Gtk.Window = builder.get_object("main_window")
 
         # Set Application Icon (works for both Flatpak and system install)
-        try:
-            # Try themed icon first (Flatpak uses this)
-            icon_theme = Gtk.IconTheme.get_default()
-            if icon_theme.has_icon("io.github.gkdevelopers.GKHealter"):
-                self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
-            else:
-                # Fallback to local file
-                svg_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.svg")
-                png_icon_path = os.path.join(os.path.dirname(__file__), "../resources/gk-healter.png")
-
-                if os.path.exists(svg_icon_path):
-                    self.window.set_icon_from_file(svg_icon_path)
-                elif os.path.exists(png_icon_path):
-                    self.window.set_icon_from_file(png_icon_path)
-        except Exception as e:
-            print(f"Error setting icon: {e}")
+        self._set_app_icon_safe()
 
         self.window.connect("destroy", Gtk.main_quit)
 
@@ -117,7 +103,10 @@ class MainWindow:
 
         # History Objects
         self.history_treeview: Gtk.TreeView = builder.get_object("history_treeview")
+        # legacy code references both `history_store` and `history_list_store`
+        # keep both attributes in sync to avoid AttributeErrors
         self.history_store: Gtk.ListStore = builder.get_object("history_list_store")
+        self.history_list_store: Gtk.ListStore = self.history_store
         self.notebook: Gtk.Notebook = builder.get_object("notebook")
         self.btn_settings: Gtk.Button = builder.get_object("btn_settings")
 
@@ -168,8 +157,11 @@ class MainWindow:
         # Connect Signals
         builder.connect_signals(self)
 
+        # Ensure all widget attributes are bound (compatibility with older UI layouts)
+        self._bind_widgets()
+
         # Initial History Load
-        self.populate_history()
+        self._load_history_into_view()
 
         # Translate UI
         self._translate_ui()
@@ -334,6 +326,17 @@ class MainWindow:
     # ── Translation ──────────────────────────────────────────────────────────
     def _apply_translations(self) -> None:
         """Replace all hardcoded English labels with the active locale strings."""
+        # Prevent re-entrant calls (combo set_active_id fires on_language_changed)
+        if self._translating:
+            return
+        self._translating = True
+        try:
+            self._apply_translations_inner()
+        finally:
+            self._translating = False
+
+    def _apply_translations_inner(self) -> None:
+        """Actual translation logic, called from _apply_translations with guard."""
         # Header bar
         self.builder.get_object("header_bar").set_subtitle(_("app_subtitle"))
 
@@ -462,37 +465,70 @@ class MainWindow:
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
-    # ── Application icon ────────────────────────────────────────────────────
-    def _set_app_icon(self) -> None:
+    def _translate_ui(self) -> None:
+        """Backward-compatible wrapper: apply translations and UI CSS."""
         try:
+            self._apply_css()
+        except Exception:
+            pass
+        try:
+            self._apply_translations()
+        except Exception:
+            pass
+
+    def _sync_settings_ui(self) -> None:
+        """Backward-compatible wrapper to initialise settings UI state."""
+        try:
+            self._init_settings_ui()
+        except Exception:
+            pass
+
+    # ── Application icon ────────────────────────────────────────────────────
+    def _set_app_icon_safe(self) -> None:
+        """Set the window icon with robust fallback for installed & dev layouts."""
+        ICON_NAME = "io.github.gkdevelopers.GKHealter"
+
+        def _try_pixbuf(path: str) -> bool:
+            """Try to load a file via GdkPixbuf and set it as the window icon."""
+            try:
+                if not os.path.exists(path):
+                    return False
+                pb = GdkPixbuf.Pixbuf.new_from_file(path)
+                self.window.set_icon(pb)
+                return True
+            except Exception:
+                return False
+
+        try:
+            # 1. Themed icon (Flatpak / properly cached system icon)
             icon_theme = Gtk.IconTheme.get_default()
-            if icon_theme.has_icon("io.github.gkdevelopers.GKHealter"):
-                self.window.set_icon_name("io.github.gkdevelopers.GKHealter")
-            else:
-                # Try loading SVG first (scalable), then fallback to PNG
-                base_dir = os.path.dirname(__file__)
-                # If installed, base_dir is PREFIX/share/gk-healter/src
-                # So icons are in PREFIX/share/icons
-                installed_icon_base = os.path.abspath(os.path.join(base_dir, "..", "..", "icons"))
-                dev_icon_base = os.path.abspath(os.path.join(base_dir, "..", "icons"))
+            if icon_theme.has_icon(ICON_NAME):
+                self.window.set_icon_name(ICON_NAME)
+                return
 
-                icon_base = installed_icon_base if os.path.exists(os.path.join(installed_icon_base, "hicolor", "scalable", "apps", "io.github.gkdevelopers.GKHealter.svg")) else dev_icon_base
+            # 2. Build a list of candidate paths (dev layout + installed layout)
+            base = os.path.dirname(__file__)  # .../src/
+            candidates = [
+                # Dev layout: gk-healter/icons/hicolor/.../
+                os.path.join(base, "..", "icons", "hicolor", "128x128", "apps", f"{ICON_NAME}.png"),
+                os.path.join(base, "..", "icons", "hicolor", "256x256", "apps", f"{ICON_NAME}.png"),
+                os.path.join(base, "..", "icons", "hicolor", "scalable", "apps", f"{ICON_NAME}.svg"),
+                # Dev layout: gk-healter/resources/
+                os.path.join(base, "..", "resources", "gk-healter.svg"),
+                os.path.join(base, "..", "resources", "gk-healter.png"),
+                # Installed layout: /usr/share/icons/hicolor/.../
+                os.path.join(base, "..", "..", "icons", "hicolor", "128x128", "apps", f"{ICON_NAME}.png"),
+                os.path.join(base, "..", "..", "icons", "hicolor", "256x256", "apps", f"{ICON_NAME}.png"),
+                os.path.join(base, "..", "..", "icons", "hicolor", "scalable", "apps", f"{ICON_NAME}.svg"),
+                # Absolute system paths (last resort)
+                f"/usr/share/icons/hicolor/128x128/apps/{ICON_NAME}.png",
+                f"/usr/share/icons/hicolor/256x256/apps/{ICON_NAME}.png",
+                f"/usr/share/icons/hicolor/scalable/apps/{ICON_NAME}.svg",
+            ]
 
-                icon_path_svg = os.path.join(
-                    icon_base,
-                    "hicolor", "scalable", "apps",
-                    "io.github.gkdevelopers.GKHealter.svg",
-                )
-                if os.path.exists(icon_path_svg):
-                    self.window.set_icon_from_file(icon_path_svg)
-                else:
-                    icon_path_png = os.path.join(
-                        icon_base,
-                        "hicolor", "128x128", "apps",
-                        "io.github.gkdevelopers.GKHealter.png",
-                    )
-                    if os.path.exists(icon_path_png):
-                        self.window.set_icon_from_file(icon_path_png)
+            for path in candidates:
+                if _try_pixbuf(os.path.abspath(path)):
+                    return
         except Exception:
             pass
 
@@ -613,7 +649,7 @@ class MainWindow:
     # ── Settings page ────────────────────────────────────────────────────────
     def on_language_changed(self, combo: Gtk.ComboBoxText) -> None:
         lang_id = combo.get_active_id()
-        if lang_id:
+        if lang_id and not self._translating:
             self.settings_manager.set("language", lang_id)
             I18nManager().load_language(lang_id)
             self._apply_translations()

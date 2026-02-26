@@ -166,7 +166,7 @@ src/
 ```bash
 cd gk-healter
 make deb
-sudo dpkg -i gk-healter_0.1.5_all.deb
+sudo dpkg -i gk-healter_0.1.6_all.deb
 sudo apt-get install -f  # Eksik bağımlılıkları düzelt
 ```
 

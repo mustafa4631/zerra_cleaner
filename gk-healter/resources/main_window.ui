@@ -1939,127 +1939,6 @@
                                   </object>
                                 </child>
 
-                                <!-- AI Configuration -->
-                                <child>
-                                  <object class="GtkBox">
-                                    <property name="visible">True</property>
-                                    <property name="orientation">vertical</property>
-                                    <property name="spacing">16</property>
-                                    <child>
-                                      <object class="GtkLabel" id="lbl_ai_config_title">
-                                        <property name="visible">True</property>
-                                        <property name="label">AI Analysis</property>
-                                        <property name="xalign">0</property>
-                                        <attributes>
-                                          <attribute name="weight" value="bold"/>
-                                        </attributes>
-                                      </object>
-                                    </child>
-                                    <child>
-                                      <object class="GtkListBox">
-                                        <property name="visible">True</property>
-                                        <property name="selection_mode">none</property>
-                                        <!-- Provider -->
-                                        <child>
-                                          <object class="GtkListBoxRow">
-                                            <property name="visible">True</property>
-                                            <property name="activatable">False</property>
-                                            <child>
-                                              <object class="GtkBox">
-                                                <property name="visible">True</property>
-                                                <property name="margin">12</property>
-                                                <property name="spacing">12</property>
-                                                <child>
-                                                  <object class="GtkLabel" id="lbl_ai_provider">
-                                                    <property name="visible">True</property>
-                                                    <property name="label">Provider</property>
-                                                    <property name="xalign">0</property>
-                                                  </object>
-                                                  <packing>
-                                                    <property name="expand">True</property>
-                                                  </packing>
-                                                </child>
-                                                <child>
-                                                  <object class="GtkComboBoxText" id="combo_ai_provider">
-                                                    <property name="visible">True</property>
-                                                    <property name="width_request">150</property>
-                                                    <signal name="changed" handler="on_ai_provider_changed" swapped="no"/>
-                                                  </object>
-                                                </child>
-                                              </object>
-                                            </child>
-                                          </object>
-                                        </child>
-                                        <!-- API Key -->
-                                        <child>
-                                          <object class="GtkListBoxRow">
-                                            <property name="visible">True</property>
-                                            <property name="activatable">False</property>
-                                            <child>
-                                              <object class="GtkBox">
-                                                <property name="visible">True</property>
-                                                <property name="margin">12</property>
-                                                <property name="spacing">12</property>
-                                                <child>
-                                                  <object class="GtkLabel" id="lbl_ai_api_key">
-                                                    <property name="visible">True</property>
-                                                    <property name="label">API Key</property>
-                                                    <property name="xalign">0</property>
-                                                  </object>
-                                                  <packing>
-                                                    <property name="expand">True</property>
-                                                  </packing>
-                                                </child>
-                                                <child>
-                                                  <object class="GtkEntry" id="entry_ai_api_key">
-                                                    <property name="visible">True</property>
-                                                    <property name="visibility">False</property>
-                                                    <property name="width_chars">20</property>
-                                                    <property name="placeholder_text">sk-...</property>
-                                                    <signal name="changed" handler="on_ai_key_changed" swapped="no"/>
-                                                  </object>
-                                                </child>
-                                              </object>
-                                            </child>
-                                          </object>
-                                        </child>
-                                        <!-- Model -->
-                                        <child>
-                                          <object class="GtkListBoxRow">
-                                            <property name="visible">True</property>
-                                            <property name="activatable">False</property>
-                                            <child>
-                                              <object class="GtkBox">
-                                                <property name="visible">True</property>
-                                                <property name="margin">12</property>
-                                                <property name="spacing">12</property>
-                                                <child>
-                                                  <object class="GtkLabel" id="lbl_ai_model">
-                                                    <property name="visible">True</property>
-                                                    <property name="label">Model</property>
-                                                    <property name="xalign">0</property>
-                                                  </object>
-                                                  <packing>
-                                                    <property name="expand">True</property>
-                                                  </packing>
-                                                </child>
-                                                <child>
-                                                  <object class="GtkComboBoxText" id="combo_ai_model">
-                                                    <property name="visible">True</property>
-                                                    <property name="has_entry">True</property>
-                                                    <property name="width_request">180</property>
-                                                    <signal name="changed" handler="on_ai_model_combo_changed" swapped="no"/>
-                                                  </object>
-                                                </child>
-                                              </object>
-                                            </child>
-                                          </object>
-                                        </child>
-                                      </object>
-                                    </child>
-                                  </object>
-                                </child>
-
                                 <!-- Advanced -->
                                 <child>
                                   <object class="GtkExpander" id="expander_advanced">
@@ -2151,6 +2030,127 @@
                           </object>
                         </child>
 
+                        <!-- ── AI Configuration ───────────────────────── -->
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="orientation">vertical</property>
+                            <property name="spacing">8</property>
+                            <child>
+                              <object class="GtkLabel" id="lbl_ai_config_title">
+                                <property name="visible">True</property>
+                                <property name="label">AI Analysis</property>
+                                <property name="xalign">0</property>
+                                <attributes>
+                                  <attribute name="weight" value="bold"/>
+                                </attributes>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkListBox">
+                                <property name="visible">True</property>
+                                <property name="selection_mode">none</property>
+                                <!-- Provider -->
+                                <child>
+                                  <object class="GtkListBoxRow">
+                                    <property name="visible">True</property>
+                                    <property name="activatable">False</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="visible">True</property>
+                                        <property name="margin">12</property>
+                                        <property name="spacing">12</property>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_ai_provider">
+                                            <property name="visible">True</property>
+                                            <property name="label">Provider</property>
+                                            <property name="xalign">0</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkComboBoxText" id="combo_ai_provider">
+                                            <property name="visible">True</property>
+                                            <property name="width_request">150</property>
+                                            <signal name="changed" handler="on_ai_provider_changed" swapped="no"/>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <!-- API Key -->
+                                <child>
+                                  <object class="GtkListBoxRow">
+                                    <property name="visible">True</property>
+                                    <property name="activatable">False</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="visible">True</property>
+                                        <property name="margin">12</property>
+                                        <property name="spacing">12</property>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_ai_api_key">
+                                            <property name="visible">True</property>
+                                            <property name="label">API Key</property>
+                                            <property name="xalign">0</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkEntry" id="entry_ai_api_key">
+                                            <property name="visible">True</property>
+                                            <property name="visibility">False</property>
+                                            <property name="width_chars">20</property>
+                                            <property name="placeholder_text">sk-...</property>
+                                            <signal name="changed" handler="on_ai_key_changed" swapped="no"/>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                                <!-- Model -->
+                                <child>
+                                  <object class="GtkListBoxRow">
+                                    <property name="visible">True</property>
+                                    <property name="activatable">False</property>
+                                    <child>
+                                      <object class="GtkBox">
+                                        <property name="visible">True</property>
+                                        <property name="margin">12</property>
+                                        <property name="spacing">12</property>
+                                        <child>
+                                          <object class="GtkLabel" id="lbl_ai_model">
+                                            <property name="visible">True</property>
+                                            <property name="label">Model</property>
+                                            <property name="xalign">0</property>
+                                          </object>
+                                          <packing>
+                                            <property name="expand">True</property>
+                                          </packing>
+                                        </child>
+                                        <child>
+                                          <object class="GtkComboBoxText" id="combo_ai_model">
+                                            <property name="visible">True</property>
+                                            <property name="has_entry">True</property>
+                                            <property name="width_request">180</property>
+                                            <signal name="changed" handler="on_ai_model_combo_changed" swapped="no"/>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                  </object>
+                                </child>
+                              </object>
+                            </child>
+                          </object>
+                        </child>
+
                       </object>
                     </child>
                   </object>
@@ -2178,12 +2178,12 @@
        ════════════════════════════════════════════════════════════════════════ -->
   <object class="GtkAboutDialog" id="about_dialog">
     <property name="program_name">GK Healter</property>
-    <property name="version">0.1.5</property>
+    <property name="version">0.1.6</property>
     <property name="copyright">© 2026 GK Developers</property>
     <property name="authors">Egehan KAHRAMAN, Mustafa GÖKPINAR</property>
     <property name="logo_icon_name">utilities-system-monitor</property>
     <property name="transient_for">main_window</property>
-    <property name="license_type">gpl-3-0</property>
+    <property name="license_type">mit-x11</property>
   </object>
 
   <object class="GtkMessageDialog" id="clean_confirm_dialog">

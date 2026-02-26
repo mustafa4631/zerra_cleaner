@@ -1,6 +1,6 @@
 # Maintainer: GK Developers <vastseaoffical0@outlook.com>
 pkgname=gk-healter
-pkgver=0.1.5
+pkgver=0.1.6
 pkgrel=1
 pkgdesc="A lightweight and safe system cleaning utility for Linux"
 arch=('any')
