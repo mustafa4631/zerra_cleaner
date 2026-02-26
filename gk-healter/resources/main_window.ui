@@ -2178,7 +2178,7 @@
        ════════════════════════════════════════════════════════════════════════ -->
   <object class="GtkAboutDialog" id="about_dialog">
     <property name="program_name">GK Healter</property>
-    <property name="version">0.1.5</property>
+    <property name="version">0.1.6</property>
     <property name="copyright">© 2026 GK Developers</property>
     <property name="authors">Egehan KAHRAMAN, Mustafa GÖKPINAR</property>
     <property name="logo_icon_name">utilities-system-monitor</property>
