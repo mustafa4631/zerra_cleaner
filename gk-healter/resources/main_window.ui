@@ -2183,7 +2183,7 @@
     <property name="authors">Egehan KAHRAMAN, Mustafa GÖKPINAR</property>
     <property name="logo_icon_name">utilities-system-monitor</property>
     <property name="transient_for">main_window</property>
-    <property name="license_type">gpl-3-0</property>
+    <property name="license_type">mit-x11</property>
   </object>
 
   <object class="GtkMessageDialog" id="clean_confirm_dialog">
