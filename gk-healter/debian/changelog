@@ -1,3 +1,9 @@
+gk-healter (0.1.6-2) unstable; urgency=medium
+
+  * Fix dependency issue on Pardus 25.0 by replacing policykit-1 with polkitd and pkexec.
+
+ -- GK Developers <vastseaoffical0@outlook.com>  Thu, 26 Feb 2026 23:45:00 +0300
+
 gk-healter (0.1.6-1) unstable; urgency=medium
 
   * Initial release.
