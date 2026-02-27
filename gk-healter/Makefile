@@ -128,6 +128,7 @@ rpm: clean
 	@echo "Release:        1"                                    >> rpmbuild/SPECS/$(APP_NAME).spec
 	@echo "Summary:        A lightweight system cleaning utility" >> rpmbuild/SPECS/$(APP_NAME).spec
 	@echo "License:        MIT"                                  >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "Source0:        $(APP_NAME)-$(VERSION).tar.gz"        >> rpmbuild/SPECS/$(APP_NAME).spec
 	@echo "BuildArch:      noarch"                               >> rpmbuild/SPECS/$(APP_NAME).spec
 	@echo ""                                                     >> rpmbuild/SPECS/$(APP_NAME).spec
 	@echo "%description"                                         >> rpmbuild/SPECS/$(APP_NAME).spec
