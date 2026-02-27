@@ -2,7 +2,7 @@
 
 <div align="center">
   <a href="README.tr.md">🇹🇷 Türkçe</a> &nbsp;|&nbsp; 
-  <a href="README.md">🇬🇧 English (İngilizce)</a>
+  <a href="README.md">🇬🇧 English</a>
 </div>
 
 <center>
