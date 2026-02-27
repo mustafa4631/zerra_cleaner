@@ -112,7 +112,7 @@ rpm: clean
 	@echo "Building RPM package..."
 
 	# 1. Set up rpmbuild directory structure
-	mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+	mkdir -p rpmbuild/BUILD rpmbuild/RPMS rpmbuild/SOURCES rpmbuild/SPECS rpmbuild/SRPMS
 
 	# 2. Create source tarball
 	mkdir -p rpmbuild/SOURCES/$(APP_NAME)-$(VERSION)
