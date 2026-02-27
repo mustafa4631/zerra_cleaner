@@ -424,20 +424,14 @@ class MainWindow:
         self.lbl_disk_threshold_title.set_text(_("settings_disk_threshold"))
         self.lbl_last_maintenance_title.set_text(_("settings_last_maintenance"))
 
-        # Combo Frequency items (manual translation)
-        active_freq = self.combo_frequency.get_active_id()
-        self.combo_frequency.remove_all()
-        self.combo_frequency.append("7", _("freq_7"))
-        self.combo_frequency.append("30", _("freq_30"))
-        self.combo_frequency.append("180", _("freq_180"))
-        self.combo_frequency.append("365", _("freq_365"))
-        self.combo_frequency.set_active_id(active_freq)
+        # Combo Frequency items
+        self._update_frequency_labels()
 
         # Sync combo items
         self.combo_language.remove_all()
-        self.combo_language.append("auto", _("lang_auto"))
-        self.combo_language.append("tr", _("lang_tr"))
-        self.combo_language.append("en", _("lang_en"))
+        self.combo_language.append("auto", "Auto")
+        self.combo_language.append("tr", "Türkçe")
+        self.combo_language.append("en", "English")
         self.combo_language.set_active_id(self.settings_manager.get("language"))
 
         # About Dialog
@@ -760,10 +754,7 @@ class MainWindow:
         """Populate combo-boxes and restore saved values into the Settings page."""
         sm = self.settings_manager
 
-        # Language combo (these stay untranslated – they are language names)
-        self.combo_language.append("auto", "Auto")
-        self.combo_language.append("en", "English")
-        self.combo_language.append("tr", "Türkçe")
+        # Language combo
         current_lang = sm.get("language") or "auto"
         self.combo_language.set_active_id(current_lang)
 
