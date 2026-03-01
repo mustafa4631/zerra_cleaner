@@ -1,4 +1,4 @@
-.PHONY: run clean build deb install uninstall
+.PHONY: run clean build deb rpm appimage install uninstall
 
 # Configuration
 APP_NAME = gk-healter
@@ -26,8 +26,8 @@ clean:
 	@echo "Cleaning up..."
 	find . -name "*.pyc" -delete
 	find . -name "__pycache__" -delete
-	rm -rf dist _build
-	rm -f *.deb *.rpm
+	rm -rf dist _build rpmbuild
+	rm -f *.deb *.rpm *.AppImage appimagetool
 
 # ── Generic install (works on any distro) ────────────────────────────────────
 install:
@@ -106,3 +106,91 @@ deb: clean
 	# 5. Build .deb
 	fakeroot dpkg-deb --build dist $(APP_NAME)_$(VERSION)_all.deb
 	@echo "Package built successfully: $(APP_NAME)_$(VERSION)_all.deb"
+
+# ── RPM packaging ───────────────────────────────────────────────────────────
+rpm: clean
+	@echo "Building RPM package..."
+
+	# 1. Set up rpmbuild directory structure
+	mkdir -p rpmbuild/BUILD rpmbuild/RPMS rpmbuild/SOURCES rpmbuild/SPECS rpmbuild/SRPMS
+
+	# 2. Create source tarball
+	mkdir -p rpmbuild/SOURCES/$(APP_NAME)-$(VERSION)
+	cp -r src resources data icons debian packaging Makefile meson.build \
+	      rpmbuild/SOURCES/$(APP_NAME)-$(VERSION)/
+	cp ../LICENSE ../README.md rpmbuild/SOURCES/$(APP_NAME)-$(VERSION)/
+	cd rpmbuild/SOURCES && tar czf $(APP_NAME)-$(VERSION).tar.gz $(APP_NAME)-$(VERSION)
+	rm -rf rpmbuild/SOURCES/$(APP_NAME)-$(VERSION)
+
+	# 3. Create a simple spec file for direct rpmbuild
+	@echo "Name:           $(APP_NAME)"                          >  rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "Version:        $(VERSION)"                           >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "Release:        1"                                    >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "Summary:        A lightweight system cleaning utility" >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "License:        MIT"                                  >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "Source0:        $(APP_NAME)-$(VERSION).tar.gz"        >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "BuildArch:      noarch"                               >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo ""                                                     >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%description"                                         >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "GK Healter — professional, lightweight system cleaning utility for Linux." >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo ""                                                     >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%prep"                                                >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%setup -q"                                            >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo ""                                                     >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%install"                                             >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "make install DESTDIR=%{buildroot}"                    >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo ""                                                     >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%files"                                               >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%{_bindir}/$(APP_NAME)"                               >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%{_datadir}/$(APP_NAME)/"                             >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%{_datadir}/applications/$(APP_ID).desktop"           >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%{_datadir}/metainfo/$(APP_ID).metainfo.xml"          >> rpmbuild/SPECS/$(APP_NAME).spec
+	@echo "%{_datadir}/icons/hicolor/*/apps/$(APP_ID).*"         >> rpmbuild/SPECS/$(APP_NAME).spec
+
+	# 4. Build RPM
+	rpmbuild --define "_topdir $$(pwd)/rpmbuild" -bb rpmbuild/SPECS/$(APP_NAME).spec
+
+	# 5. Copy result
+	find rpmbuild/RPMS -name "*.rpm" -exec cp {} . \;
+	@echo "RPM package built successfully!"
+
+# ── AppImage packaging ──────────────────────────────────────────────────────
+appimage: clean
+	@echo "Building AppImage..."
+
+	# 1. Create AppDir structure
+	mkdir -p dist/AppDir/usr
+
+	# 2. Install into AppDir
+	$(MAKE) install DESTDIR=dist/AppDir
+
+	# 3. Create AppRun script
+	@echo '#!/bin/bash'                                          >  dist/AppDir/AppRun
+	@echo 'SELF=$$(dirname "$$(readlink -f "$$0")")'             >> dist/AppDir/AppRun
+	@echo 'export PATH="$$SELF/usr/bin:$$PATH"'                  >> dist/AppDir/AppRun
+	@echo 'export PYTHONPATH="$$SELF/usr/share/$(APP_NAME):$$PYTHONPATH"' >> dist/AppDir/AppRun
+	@echo 'export XDG_DATA_DIRS="$$SELF/usr/share:$${XDG_DATA_DIRS:-/usr/share}"' >> dist/AppDir/AppRun
+	@echo 'exec python3 "$$SELF/usr/share/$(APP_NAME)/src/main.py" "$$@"' >> dist/AppDir/AppRun
+	chmod 755 dist/AppDir/AppRun
+
+	# 4. Copy desktop file and icon to AppDir root
+	cp data/$(APP_ID).desktop dist/AppDir/$(APP_ID).desktop
+	# Try SVG first, then fallback to PNG
+	cp icons/hicolor/256x256/apps/$(APP_ID).png dist/AppDir/$(APP_ID).png 2>/dev/null || \
+	cp icons/hicolor/128x128/apps/$(APP_ID).png dist/AppDir/$(APP_ID).png 2>/dev/null || \
+	cp icons/hicolor/scalable/apps/$(APP_ID).svg dist/AppDir/$(APP_ID).svg 2>/dev/null || true
+	# Also create a .DirIcon
+	cp dist/AppDir/$(APP_ID).png dist/AppDir/.DirIcon 2>/dev/null || true
+
+	# 5. Download appimagetool if not present
+	@if [ ! -f appimagetool ]; then \
+	    echo "Downloading appimagetool..."; \
+	    ARCH=$$(uname -m); \
+	    wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$${ARCH}.AppImage" \
+	         -O appimagetool; \
+	    chmod +x appimagetool; \
+	fi
+
+	# 6. Build AppImage
+	ARCH=$$(uname -m) ./appimagetool --no-appstream dist/AppDir $(APP_NAME)-$(VERSION)-$$(uname -m).AppImage
+	@echo "AppImage built successfully: $(APP_NAME)-$(VERSION)-$$(uname -m).AppImage"
