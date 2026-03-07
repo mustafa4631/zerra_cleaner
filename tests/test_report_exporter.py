@@ -19,8 +19,6 @@ ReportExporter = mod.ReportExporter
 def exporter():
     return ReportExporter()
 
-
-@pytest.fixture
 def sample_pardus_verification():
     return {
         "is_pardus": True,
