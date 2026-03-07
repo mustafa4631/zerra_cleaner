@@ -703,6 +703,9 @@ class MainWindow:
         elif val == "gemini":
             if "gemini" not in current_model:
                 new_model = "gemini-2.5-flash"
+        elif val == "claude":
+            if "claude" not in current_model:
+                new_model = "claude-3-5-sonnet-20241022"
 
         if new_model != current_model:
             self.settings_manager.set("ai_model", new_model)
@@ -748,6 +751,11 @@ class MainWindow:
             ]
         elif provider == "openai":
             models = ["gpt-4o", "gpt-5.2", "gpt-3.5-turbo"]
+        elif provider == "claude":
+            models = [
+                "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022",
+                "claude-3-opus-20240229", "claude-3-sonnet-20240229"
+            ]
 
         for m in models:
             self.combo_ai_model.append_text(m)
@@ -773,6 +781,7 @@ class MainWindow:
         # AI Settings
         self.combo_ai_provider.append("gemini", "Gemini (Google)")
         self.combo_ai_provider.append("openai", "ChatGPT (OpenAI)")
+        self.combo_ai_provider.append("claude", "Claude (Anthropic)")
         ai_prov = sm.get("ai_provider") or "gemini"
         self.combo_ai_provider.set_active_id(ai_prov)
 
@@ -786,8 +795,10 @@ class MainWindow:
         if not current_model:
             if ai_prov == "gemini":
                 current_model = "gemini-2.5-flash"
-            else:
+            elif ai_prov == "openai":
                 current_model = "gpt-4o"
+            else:
+                current_model = "claude-3-5-sonnet-20241022"
 
         # Combo entry
         child = self.combo_ai_model.get_child()

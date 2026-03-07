@@ -31,7 +31,7 @@ Developed by **Egehan KAHRAMAN** and **Mustafa GÖKPINAR** — **GK Developers**
 
 ### Monitoring & Intelligence
 - **Real-Time Health Score:** CPU, RAM, and disk usage monitoring with a composite health score (0–100).
-- **Hybrid AI Analysis:** Offline rule-based `LocalAnalysisEngine` always available; optional cloud enrichment via Gemini/OpenAI APIs.
+- **Hybrid AI Analysis:** Offline rule-based `LocalAnalysisEngine` always available; optional cloud enrichment via Gemini, OpenAI, and Claude (Anthropic) APIs.
 - **Smart Recommendations:** Rule-based engine generates actionable suggestions based on system metrics.
 - **Service Analyzer:** Detects failed systemd services and slow-starting units.
 - **Log Analyzer:** Identifies critical/error-level journal entries with severity classification.

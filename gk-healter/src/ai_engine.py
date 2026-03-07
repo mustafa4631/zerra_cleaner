@@ -234,7 +234,7 @@ class AIEngine:
         """Set the AI provider credentials.
 
         Args:
-            provider: ``"openai"`` or ``"gemini"``.
+            provider: ``"openai"``, ``"gemini"`` or ``"claude"``.
             api_key: API key string.
             model: Model identifier.
         """
@@ -279,6 +279,8 @@ class AIEngine:
                 ai_text = self._call_openai(prompt)
             elif self.provider == "gemini":
                 ai_text = self._call_gemini(prompt)
+            elif self.provider == "claude":
+                ai_text = self._call_claude(prompt)
             else:
                 return local_text
 
@@ -404,4 +406,37 @@ class AIEngine:
         except urllib.error.HTTPError as e:
             raise RuntimeError(
                 f"Gemini API Error: {e.code} {e.reason}"
+            ) from e
+
+    def _call_claude(self, prompt: str) -> str:
+        """Send a prompt to the Anthropic Claude API."""
+        url = "https://api.anthropic.com/v1/messages"
+        headers = {
+            "Content-Type": "application/json",
+            "x-api-key": self.api_key,
+            "anthropic-version": "2023-06-01",
+        }
+        data = {
+            "model": self.model or "claude-3-5-sonnet-20241022",
+            "max_tokens": 1024,
+            "messages": [{"role": "user", "content": prompt}],
+        }
+
+        req = urllib.request.Request(
+            url, json.dumps(data).encode("utf-8"), headers
+        )
+        try:
+            with urllib.request.urlopen(
+                req, timeout=self.HTTP_TIMEOUT
+            ) as resp:
+                result = json.loads(resp.read().decode("utf-8"))
+                try:
+                    return result["content"][0]["text"].strip()
+                except (KeyError, IndexError):
+                    raise RuntimeError(
+                        "Received malformed response from Claude."
+                    )
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(
+                f"Claude API Error: {e.code} {e.reason}"
             ) from e
