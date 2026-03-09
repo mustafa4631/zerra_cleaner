@@ -219,6 +219,10 @@
     "settings_ram_cleaner_title": "RAM Cleaner",
     "settings_ram_cleaner_desc": "Clear system RAM cache using Drop Caches method.",
     "info_ram_cleaning": "Cleaning RAM, please wait...",
-    "history_cat_ram": "RAM Cache (Drop Caches)",
-    "status_not_needed": "Not Needed"
+    "history_cat_ram": "RAM Memory (Drop Caches)",
+    "status_not_needed": "Not Needed",
+    "cat_ram_page_cache": "RAM Page Cache",
+    "desc_ram_page_cache": "Filesystem cache used by applications",
+    "cat_ram_slab_cache": "RAM Slab Cache",
+    "desc_ram_slab_cache": "Kernel-level data structures and directory cache"
 }

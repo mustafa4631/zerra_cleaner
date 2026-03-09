@@ -163,9 +163,59 @@ class RAMCleaner:
         from src.ram_manager import RAMManager
         self.ram_manager = RAMManager()
 
-    def clean_ram(self) -> Dict[str, Any]:
+    def scan(self) -> List[Dict[str, Any]]:
         """
-        Triggers RAM optimization (drop_caches).
+        Scans current RAM usage and returns list of clearable cache categories.
         """
-        return self.ram_manager.clean_ram(level=3)
+        import psutil
+        from src.utils import format_size
+        results = []
+        mem = psutil.virtual_memory()
+        
+        # Category 1: Page Cache
+        if hasattr(mem, 'cached'):
+            size = mem.cached
+            if size > 0:
+                results.append({
+                    'category': _("cat_ram_page_cache"),
+                    'path': 'ram:1',
+                    'size_str': format_size(size),
+                    'size_bytes': size,
+                    'system': True,
+                    'desc': _("desc_ram_page_cache")
+                })
+        
+        # Category 2: Dentries & Inodes
+        if hasattr(mem, 'slab'):
+            size = mem.slab
+            if size > 0:
+                results.append({
+                    'category': _("cat_ram_slab_cache"),
+                    'path': 'ram:2',
+                    'size_str': format_size(size),
+                    'size_bytes': size,
+                    'system': True,
+                    'desc': _("desc_ram_slab_cache")
+                })
+        
+        return results
+
+    def clean_ram(self, selected_items: List[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Triggers RAM optimization based on selected categories.
+        If selected_items is None, cleans level 3 (everything).
+        """
+        if not selected_items:
+            return self.ram_manager.clean_ram(level=3)
+        
+        # Determine highest level requested
+        paths = [item['path'] for item in selected_items]
+        if 'ram:1' in paths and 'ram:2' in paths:
+            level = 3
+        elif 'ram:2' in paths:
+            level = 2
+        else:
+            level = 1
+            
+        return self.ram_manager.clean_ram(level=level)
 

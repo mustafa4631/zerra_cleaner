@@ -16,7 +16,7 @@ from typing import List, Dict, Any, Optional
 import gi
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk, Pango, GdkPixbuf
+from gi.repository import Gtk, GLib, Gdk, Pango, GdkPixbuf, GObject
 
 from src.cleaner import FileCleaner, RAMCleaner
 from src.history_manager import HistoryManager
@@ -597,6 +597,11 @@ class MainWindow:
         self.ram_usage_label_tab = Gtk.Label(label="")
         self.ram_usage_bar_tab = Gtk.LevelBar()
         self.lbl_ram_result = Gtk.Label(label="")
+        
+        # RAM TreeView components
+        self.ram_list_store = Gtk.ListStore(bool, str, str, str, GObject.TYPE_INT64, str, bool)
+        self.ram_scan_data = []
+        self.is_ram_cleaning = False
 
         # 1. Capture existing widgets to move them later
         children = cleaner_page.get_children()
@@ -660,11 +665,42 @@ class MainWindow:
 
         ram_box.pack_start(meter_box, False, False, 0)
 
-        btn_ram = Gtk.Button(label=_("RAM'i Boşalt"))
-        btn_ram.get_style_context().add_class("suggested-action")
-        btn_ram.set_halign(Gtk.Align.CENTER)
-        btn_ram.connect("clicked", self.on_ram_boost_clicked)
-        ram_box.pack_start(btn_ram, False, False, 0)
+        # RAM TreeView (Replicating File Cleaner style)
+        ram_scroll = Gtk.ScrolledWindow()
+        ram_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        ram_scroll.set_shadow_type(Gtk.ShadowType.IN)
+        
+        self.ram_treeview = Gtk.TreeView(model=self.ram_list_store)
+        self.ram_treeview.set_vexpand(True)
+        
+        # Columns
+        col_toggle = Gtk.TreeViewColumn("", Gtk.CellRendererToggle(), active=0)
+        col_toggle.get_cells()[0].connect("toggled", self.on_ram_cell_toggled)
+        self.ram_treeview.append_column(col_toggle)
+        
+        self.ram_treeview.append_column(Gtk.TreeViewColumn(_("Kategori"), Gtk.CellRendererText(), text=1))
+        self.ram_treeview.append_column(Gtk.TreeViewColumn(_("Açıklama"), Gtk.CellRendererText(), text=2))
+        self.ram_treeview.append_column(Gtk.TreeViewColumn(_("Boyut"), Gtk.CellRendererText(), text=3))
+        
+        ram_scroll.add(self.ram_treeview)
+        ram_box.pack_start(ram_scroll, True, True, 0)
+
+        # Action Buttons
+        ram_btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        ram_btn_box.set_halign(Gtk.Align.CENTER)
+        ram_btn_box.set_margin_bottom(10)
+        
+        self.btn_ram_scan = Gtk.Button(label=_("RAM Tara"))
+        self.btn_ram_scan.connect("clicked", self.on_ram_scan_clicked)
+        ram_btn_box.pack_start(self.btn_ram_scan, False, False, 0)
+        
+        self.btn_ram_clean = Gtk.Button(label=_("RAM'i Boşalt"))
+        self.btn_ram_clean.get_style_context().add_class("suggested-action")
+        self.btn_ram_clean.set_sensitive(False)
+        self.btn_ram_clean.connect("clicked", self.on_ram_clean_clicked)
+        ram_btn_box.pack_start(self.btn_ram_clean, False, False, 0)
+        
+        ram_box.pack_start(ram_btn_box, False, False, 0)
 
         ram_box.pack_start(self.lbl_ram_result, False, False, 0)
 
@@ -684,15 +720,74 @@ class MainWindow:
         self.on_scan_clicked(None)
         self.lbl_dash_clean_result.set_text(f"{_('RAM Boşaltıldı')}: {ram_res.get('freed_mb', 0):.1f} MB")
 
-    def on_ram_boost_clicked(self, _btn: Gtk.Button) -> None:
-        """Triggers RAM optimization specifically."""
-        self.lbl_ram_result.set_text(_("RAM temizleniyor..."))
-        res = self.ram_booster.clean_ram()
+    def on_ram_scan_clicked(self, _btn: Gtk.Button) -> None:
+        if self.is_ram_cleaning:
+            return
+        self.ram_list_store.clear()
+        self.btn_ram_clean.set_sensitive(False)
+        self.lbl_ram_result.set_text(_("RAM taranıyor..."))
+        threading.Thread(target=self._ram_scan_thread, daemon=True).start()
+
+    def _ram_scan_thread(self) -> None:
+        results = self.ram_booster.scan()
+        GLib.idle_add(self._on_ram_scan_done, results)
+
+    def _on_ram_scan_done(self, results: List[Dict[str, Any]]) -> None:
+        self.ram_scan_data = results
+        for item in results:
+            self.ram_list_store.append([
+                True,
+                item['category'],
+                item['desc'],
+                item['size_str'],
+                item['size_bytes'],
+                item['path'],
+                item['system']
+            ])
+        self.btn_ram_clean.set_sensitive(len(results) > 0)
+        self.lbl_ram_result.set_text(_("RAM tarama tamamlandı."))
+
+    def on_ram_clean_clicked(self, _btn: Gtk.Button) -> None:
+        selected = self._get_selected_ram_items()
+        if not selected:
+            return
+        
+        self.is_ram_cleaning = True
+        self.btn_ram_scan.set_sensitive(False)
+        self.btn_ram_clean.set_sensitive(False)
+        self.lbl_ram_result.set_text(_("RAM boşaltılıyor..."))
+        threading.Thread(target=self._ram_clean_thread, args=(selected,), daemon=True).start()
+
+    def _ram_clean_thread(self, selected: List[Dict[str, Any]]) -> None:
+        res = self.ram_booster.clean_ram(selected)
+        GLib.idle_add(self._on_ram_clean_done, res)
+
+    def _on_ram_clean_done(self, res: Dict[str, Any]) -> None:
+        self.is_ram_cleaning = False
+        self.btn_ram_scan.set_sensitive(True)
         if res.get("success"):
             freed = res.get("freed_mb", 0)
             self.lbl_ram_result.set_text(f"{_('Başarılı')}: {freed:.1f} MB RAM {_('boşaltıldı')}.")
         else:
             self.lbl_ram_result.set_text(f"{_('Hata')}: {res.get('error', 'Bilinmeyen hata')}")
+        self.ram_list_store.clear()
+
+    def on_ram_cell_toggled(self, renderer, path):
+        self.ram_list_store[path][0] = not self.ram_list_store[path][0]
+
+    def _get_selected_ram_items(self) -> List[Dict[str, Any]]:
+        selected = []
+        for row in self.ram_list_store:
+            if row[0]:
+                selected.append({
+                    'category': row[1],
+                    'desc': row[2],
+                    'size_str': row[3],
+                    'size_bytes': row[4],
+                    'path': row[5],
+                    'system': row[6]
+                })
+        return selected
 
     def on_window_destroy(self, *args) -> None:
         self.health_engine.stop_monitoring()
