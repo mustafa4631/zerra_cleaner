@@ -18,7 +18,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, Gdk, Pango, GdkPixbuf
 
-from src.cleaner import SystemCleaner
+from src.cleaner import FileCleaner, RAMCleaner
 from src.history_manager import HistoryManager
 from src.settings_manager import SettingsManager
 from src.auto_maintenance_manager import AutoMaintenanceManager
@@ -47,7 +47,8 @@ class MainWindow:
     # ── Construction ─────────────────────────────────────────────────────────
     def __init__(self) -> None:
         # Back-end services
-        self.cleaner = SystemCleaner()
+        self.file_cleaner = FileCleaner()
+        self.ram_booster = RAMCleaner()
         self.settings_manager = SettingsManager()
         self.history_manager = HistoryManager()
         self.auto_maintenance_manager = AutoMaintenanceManager(
@@ -182,6 +183,7 @@ class MainWindow:
 
         self.health_engine.start_monitoring()
         self._start_health_timer()
+        self._setup_cleaner_tabs()
         self._refresh_dashboard()
 
         # Detect Pardus and show badge if applicable
@@ -579,12 +581,120 @@ class MainWindow:
         threading.Thread(target=self._export_report_thread, daemon=True).start()
 
     def on_demo_report_clicked(self, _btn: Optional[Gtk.Button] = None) -> None:
-        """Generate Demo Report — run all analysis phases and display results."""
         self.content_stack.set_visible_child_name("page_security")
         self.on_security_scan_clicked(None)
 
     # ── Window ───────────────────────────────────────────────────────────────
-    def on_window_destroy(self, _win: Gtk.Window) -> None:
+    def _setup_cleaner_tabs(self) -> None:
+        """Transforms the single cleaner page into a three-tab Notebook structure."""
+        cleaner_page = self.builder.get_object("cleaner_page")
+        if not cleaner_page:
+            return
+
+        # Initialize new widgets that will be used in the tabs
+        self.clean_notebook = Gtk.Notebook()
+        self.lbl_dash_clean_result = Gtk.Label(label="")
+        self.ram_usage_label_tab = Gtk.Label(label="")
+        self.ram_usage_bar_tab = Gtk.LevelBar()
+        self.lbl_ram_result = Gtk.Label(label="")
+
+        # 1. Capture existing widgets to move them later
+        children = cleaner_page.get_children()
+        for child in children:
+            cleaner_page.remove(child)
+
+        # 2. Setup Notebook
+        self.clean_notebook.set_scrollable(True)
+        self.clean_notebook.set_tab_pos(Gtk.PositionType.TOP)
+        cleaner_page.pack_start(self.clean_notebook, True, True, 0)
+
+        # ── Tab 1: Dashboard (Genel Temizlik) ──
+        dash_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        dash_box.set_margin_top(40)
+        dash_box.set_margin_bottom(40)
+
+        lbl_dash_title = Gtk.Label()
+        lbl_dash_title.set_markup(f"<span font_weight='bold' font_size='x-large'>{_('Genel Temizlik')}</span>")
+        dash_box.pack_start(lbl_dash_title, False, False, 0)
+
+        img_clean = Gtk.Image.new_from_icon_name("edit-clear-all-symbolic", Gtk.IconSize.DIALOG)
+        dash_box.pack_start(img_clean, False, False, 0)
+
+        btn_all = Gtk.Button(label=_("Tümünü Temizle"))
+        btn_all.get_style_context().add_class("suggested-action")
+        btn_all.set_size_request(200, 50)
+        btn_all.set_halign(Gtk.Align.CENTER)
+        btn_all.connect("clicked", self.on_clean_all_clicked)
+        dash_box.pack_start(btn_all, False, False, 0)
+
+        dash_box.pack_start(self.lbl_dash_clean_result, False, False, 0)
+
+        self.clean_notebook.append_page(dash_box, Gtk.Label(label=_("Genel Temizlik")))
+
+        # ── Tab 2: File Cleaner (Dosya Temizliği) ──
+        file_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        for child in children:
+            # Check if the child is a Gtk.ScrolledWindow or Gtk.TreeView to expand it
+            expand = isinstance(child, Gtk.ScrolledWindow) or isinstance(child, Gtk.TreeView)
+            file_box.pack_start(child, expand, expand, 0)
+        
+        self.clean_notebook.append_page(file_box, Gtk.Label(label=_("Dosya Temizliği")))
+
+        # ── Tab 3: RAM Booster (RAM Optimizasyonu) ──
+        ram_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        ram_box.set_margin_top(40)
+
+        lbl_ram_title = Gtk.Label()
+        lbl_ram_title.set_markup(f"<span font_weight='bold' font_size='x-large'>{_('RAM Optimizasyonu')}</span>")
+        ram_box.pack_start(lbl_ram_title, False, False, 0)
+
+        # RAM Meter
+        meter_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        meter_box.set_margin_start(100)
+        meter_box.set_margin_end(100)
+        
+        meter_box.pack_start(self.ram_usage_label_tab, False, False, 0)
+        self.ram_usage_bar_tab.set_min_value(0)
+        self.ram_usage_bar_tab.set_max_value(100)
+        meter_box.pack_start(self.ram_usage_bar_tab, False, False, 0)
+
+        ram_box.pack_start(meter_box, False, False, 0)
+
+        btn_ram = Gtk.Button(label=_("RAM'i Boşalt"))
+        btn_ram.get_style_context().add_class("suggested-action")
+        btn_ram.set_halign(Gtk.Align.CENTER)
+        btn_ram.connect("clicked", self.on_ram_boost_clicked)
+        ram_box.pack_start(btn_ram, False, False, 0)
+
+        ram_box.pack_start(self.lbl_ram_result, False, False, 0)
+
+        self.clean_notebook.append_page(ram_box, Gtk.Label(label=_("RAM Optimizasyonu")))
+
+        cleaner_page.show_all()
+
+    def on_clean_all_clicked(self, _btn: Gtk.Button) -> None:
+        """Triggers both file scan/clean and RAM optimization."""
+        self.lbl_dash_clean_result.set_text(_("Temizlik başlatılıyor..."))
+        # Optimized: First boost RAM
+        ram_res = self.ram_booster.clean_ram()
+        # Then trigger generic file cleaning (requires user interaction currently in on_clean_clicked)
+        # For "all", we might want a non-interactive mode, but safety first.
+        # Let's just switch to file tab and start scan.
+        self.clean_notebook.set_current_page(1)
+        self.on_scan_clicked(None)
+        self.lbl_dash_clean_result.set_text(f"{_('RAM Boşaltıldı')}: {ram_res.get('freed_mb', 0):.1f} MB")
+
+    def on_ram_boost_clicked(self, _btn: Gtk.Button) -> None:
+        """Triggers RAM optimization specifically."""
+        self.lbl_ram_result.set_text(_("RAM temizleniyor..."))
+        res = self.ram_booster.clean_ram()
+        if res.get("success"):
+            freed = res.get("freed_mb", 0)
+            self.lbl_ram_result.set_text(f"{_('Başarılı')}: {freed:.1f} MB RAM {_('boşaltıldı')}.")
+        else:
+            self.lbl_ram_result.set_text(f"{_('Hata')}: {res.get('error', 'Bilinmeyen hata')}")
+
+    def on_window_destroy(self, *args) -> None:
         self.health_engine.stop_monitoring()
         if self._health_timer_id:
             GLib.source_remove(self._health_timer_id)
@@ -1081,6 +1191,11 @@ class MainWindow:
             self.lbl_health_disk_val, disk,
         )
 
+        # ── RAM Tab live update ──
+        if hasattr(self, 'ram_usage_label_tab'):
+            self.ram_usage_label_tab.set_text(f"{ram:.1f}% ({self._format_bytes(ram_used)} / {self._format_bytes(ram_total)})")
+            self.ram_usage_bar_tab.set_value(ram)
+
         return True  # keep the timer alive
 
     def _apply_score_colour(self, score: float) -> None:
@@ -1135,7 +1250,7 @@ class MainWindow:
 
     # ── Scan thread ──────────────────────────────────────────────────────────
     def _scan_thread(self) -> None:
-        results = self.cleaner.scan()
+        results = self.file_cleaner.scan()
         GLib.idle_add(self._on_scan_done, results)
 
     def _on_scan_done(self, results: List[Dict[str, Any]]) -> None:
@@ -1166,7 +1281,7 @@ class MainWindow:
 
     # ── Clean thread ─────────────────────────────────────────────────────────
     def _clean_thread(self, selected: List[Dict[str, Any]]) -> None:
-        success, fail, errors = self.cleaner.clean(selected)
+        success, fail, errors = self.file_cleaner.clean_files(selected)
         categories = [item['category'] for item in selected]
         total_bytes = sum(item['size_bytes'] for item in selected)
         GLib.idle_add(
