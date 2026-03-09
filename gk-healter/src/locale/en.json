@@ -215,5 +215,10 @@
     "security_scan_complete": "Security scan complete.",
     "export_success_msg": "Report exported successfully.\nFile: {path}",
     "export_failed_msg": "Report export failed.",
-    "export_running": "Exporting report..."
+    "export_running": "Exporting report...",
+    "settings_ram_cleaner_title": "RAM Cleaner",
+    "settings_ram_cleaner_desc": "Clear system RAM cache using Drop Caches method.",
+    "info_ram_cleaning": "Cleaning RAM, please wait...",
+    "history_cat_ram": "RAM Cache (Drop Caches)",
+    "status_not_needed": "Not Needed"
 }

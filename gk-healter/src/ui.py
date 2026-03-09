@@ -34,6 +34,7 @@ from src.security_scanner import SecurityScanner
 from src.pardus_verifier import PardusVerifier
 from src.report_exporter import ReportExporter
 from src.utils import format_size
+from src.ram_manager import RAMManager
 
 logger = logging.getLogger("gk-healter.ui")
 
@@ -62,6 +63,7 @@ class MainWindow:
         self.security_scanner = SecurityScanner()
         self.pardus_verifier = PardusVerifier()
         self.report_exporter = ReportExporter()
+        self.ram_manager = RAMManager()
 
         # State
         self.scan_data: List[Dict[str, Any]] = []
@@ -146,6 +148,9 @@ class MainWindow:
         # Get Dialogs
         self.about_dialog: Gtk.AboutDialog = builder.get_object("about_dialog")
         self.clean_confirm_dialog: Gtk.MessageDialog = builder.get_object("clean_confirm_dialog")
+        # Setup Experimental RAM Cleaner button
+        self._setup_experimental_ram_cleaner()
+
         # Status Icon (programmatic addition to InfoBar)
         self.status_icon = Gtk.Image()
         info_content = self.info_bar.get_content_area()
@@ -1674,6 +1679,75 @@ class MainWindow:
 
         self.box_insights_container.add(box)
 
+    def _setup_experimental_ram_cleaner(self) -> None:
+        """Adds a RAM Cleaner button to the Experimental Options."""
+        # Find the list_experimental list box
+        list_experimental = self.builder.get_object("list_experimental")
+        if not list_experimental:
+            return
+            
+        row = Gtk.ListBoxRow()
+        row.set_activatable(False)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        box.set_visible(True)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_margin_top(8)
+        box.set_margin_bottom(8)
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        vbox.set_visible(True)
+        
+        lbl_title = Gtk.Label(label=_("settings_ram_cleaner_title"))
+        lbl_title.set_visible(True)
+        lbl_title.set_xalign(0)
+        lbl_title.get_style_context().add_class("bold-label")
+        
+        lbl_desc = Gtk.Label(label=_("settings_ram_cleaner_desc"))
+        lbl_desc.set_visible(True)
+        lbl_desc.set_xalign(0)
+        lbl_desc.get_style_context().add_class("dim-label")
+        
+        vbox.pack_start(lbl_title, False, False, 0)
+        vbox.pack_start(lbl_desc, False, False, 0)
+        box.pack_start(vbox, True, True, 0)
+
+        btn_clean = Gtk.Button(label=_("btn_fix_now"))
+        btn_clean.set_visible(True)
+        btn_clean.set_valign(Gtk.Align.CENTER)
+        btn_clean.get_style_context().add_class("suggested-action")
+        btn_clean.connect("clicked", lambda b: self._perform_ram_clean())
+        box.pack_start(btn_clean, False, False, 0)
+
+        row.add(box)
+        row.set_visible(True)
+        list_experimental.add(row)
+
+    def _perform_ram_clean(self) -> None:
+        """Starts the RAM cleaning process in a background thread."""
+        self._set_info(_("info_ram_cleaning"), "info")
+        
+        def run_clean():
+            result = self.ram_manager.clean_ram(level=3)
+            GLib.idle_add(self._on_ram_clean_done, result)
+            
+        threading.Thread(target=run_clean, daemon=True).start()
+
+    def _on_ram_clean_done(self, result: Dict[str, Any]) -> None:
+        """Handles the completion of the RAM cleaning process."""
+        if result["success"] and result["needed"]:
+            msg = result.get("message", "")
+            self._set_info(msg, "info")
+            self.history_manager.add_entry([_("history_cat_ram")], f"{result.get('freed_mb', 0):.2f} MB", _("status_success"))
+        elif not result["needed"]:
+            msg = result.get("message", "")
+            self._set_info(msg, "info")
+            self.history_manager.add_entry([_("history_cat_ram")], "0.00 MB", _("status_not_needed"))
+        else:
+            msg = result.get("error", "")
+            self._set_info(f"Hata: {msg}", "error")
+            self.history_manager.add_entry([_("history_cat_ram")], "0.00 MB", _("status_failed"))
+
     def _on_action_clicked(self, action_id: str) -> None:
         """Handle insight action buttons."""
         if action_id == "clean_disk":
@@ -1684,8 +1758,7 @@ class MainWindow:
              # Simple dialog for now as we don't have a service manager view
              self._show_simple_dialog("Service Manager", "Run 'systemctl --failed' in a terminal to inspect failed services.")
         elif action_id == "optimize_ram":
-             self._set_info("Optimizing RAM caches... (Simulated)", "info")
-             # In real app: could run 'sync; echo 3 > /proc/sys/vm/drop_caches' with pkexec
+             self._perform_ram_clean()
         elif action_id == "analyze_logs":
              self._show_simple_dialog("System Logs", "Check journalctl -xe or /var/log/syslog for details.")
         else:
