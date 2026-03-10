@@ -74,8 +74,8 @@ class RAMManager:
             
             logger.info("RAM önbellek temizliği başlatılıyor. Komut: %s", cmd)
             
-            # Subprocess without capture_output to avoid hangs with some pkexec agents.
-            subprocess.run(cmd, check=True, timeout=120)
+            # Capture stderr to provide better error messages if pkexec fails
+            subprocess.run(cmd, check=True, timeout=120, stderr=subprocess.PIPE)
             
             # Temizlik işlemi sonrasında belleğin durumu kontrol edilir
             mem_after = psutil.virtual_memory()
@@ -103,13 +103,14 @@ class RAMManager:
             result["error"] = "Yetkilendirme zaman aşımı"
             result["message"] = "İşlem çok uzun sürdü"
         except subprocess.CalledProcessError as e:
-            logger.error("RAM temizliği komutu başarısız oldu. Hata Kodu: %s, Çıktı: %s", e.returncode, e.stderr)
+            stderr_msg = e.stderr.decode(errors='replace') if e.stderr else "Bilinmeyen hata"
+            logger.error("RAM temizliği komutu başarısız oldu. Hata Kodu: %s, Hata: %s", e.returncode, stderr_msg)
             # pkexec hataları (126, 127 genellikle iptal veya no-auth)
             if e.returncode in [126, 127, 1]:
                 result["error"] = "Kullanıcı root yetkisini iptal etti veya yetki reddedildi."
                 result["message"] = "Yetkilendirme iptal edildi"
             else:
-                result["error"] = f"Komut başarısız oldu: {e.stderr}"
+                result["error"] = f"Komut başarısız oldu: {stderr_msg}"
                 result["message"] = "Temizlik komutu çalışmadı"
         except PermissionError:
             logger.error("RAM temizleyici için root yetkisi verilmedi (PermissionError).")

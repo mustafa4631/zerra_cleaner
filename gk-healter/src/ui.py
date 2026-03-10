@@ -757,18 +757,18 @@ class MainWindow:
         self.is_ram_cleaning = True
         self.btn_ram_scan.set_sensitive(False)
         self.btn_ram_clean.set_sensitive(False)
-        self.lbl_ram_result.set_text(_("RAM boşaltılıyor..."))
+        self.lbl_ram_result.set_text(_("info_ram_cleaning"))
         threading.Thread(target=self._ram_clean_thread, args=(selected,), daemon=True).start()
 
     def _ram_clean_thread(self, selected: List[Dict[str, Any]]) -> None:
         try:
             res = self.ram_booster.clean_ram(selected)
-            GLib.idle_add(self._on_ram_clean_done, res)
+            GLib.idle_add(self._on_booster_ram_clean_done, res)
         except Exception as e:
             logger.exception("RAM cleaning thread failed")
-            GLib.idle_add(self._on_ram_clean_done, {"success": False, "error": str(e)})
+            GLib.idle_add(self._on_booster_ram_clean_done, {"success": False, "error": str(e)})
 
-    def _on_ram_clean_done(self, res: Dict[str, Any]) -> None:
+    def _on_booster_ram_clean_done(self, res: Dict[str, Any]) -> None:
         self.is_ram_cleaning = False
         self.btn_ram_scan.set_sensitive(True)
         self.btn_ram_clean.set_sensitive(False)  # Reset until next scan
@@ -1951,11 +1951,11 @@ class MainWindow:
         
         def run_clean():
             result = self.ram_manager.clean_ram(level=3)
-            GLib.idle_add(self._on_ram_clean_done, result)
+            GLib.idle_add(self._on_experimental_ram_clean_done, result)
             
         threading.Thread(target=run_clean, daemon=True).start()
 
-    def _on_ram_clean_done(self, result: Dict[str, Any]) -> None:
+    def _on_experimental_ram_clean_done(self, result: Dict[str, Any]) -> None:
         """Handles the completion of the RAM cleaning process."""
         if result["success"] and result["needed"]:
             msg = result.get("message", "")
