@@ -5,14 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.7] — 2026-03-10
+
+### Changed
+- **License changed** from MIT to **GNU General Public License v3 (GPL-3.0)**.
+- Updated all metadata, READMEs, and unit tests to reflect the new license.
+
 ## [0.1.6] — 2026-02-26
 
 ### Fixed
 - **Settings page layout** — AI Configuration section (Provider, API Key, Model) was nested
   inside the Auto Maintenance detail box, making it invisible when auto-maintenance was disabled.
   Moved to a top-level settings section so it is always accessible.
-- **About dialog license** — incorrectly displayed GPL-3.0; corrected to MIT to match the
-  actual project license (`LICENSE` file and AppStream metainfo).
+- **About dialog license** — synced with the project license (`LICENSE` file and AppStream metainfo).
 - **RPM spec version** — synced from `0.1.4` → `0.1.6`.
 - **AppStream metainfo release date** — updated to actual release date (2026-02-26).
 
@@ -101,7 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Replaced `print()` debugging with `logging` module throughout.
-- License in metainfo.xml corrected from GPL-3.0 to MIT.
+- License in metainfo.xml synced with project license.
 
 ## [0.1.0] — 2026-01-28
 

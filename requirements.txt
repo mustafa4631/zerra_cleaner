@@ -1,2 +1,5 @@
 psutil
 PyGObject
+pytest
+pytest-cov
+mock

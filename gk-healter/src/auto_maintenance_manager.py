@@ -5,7 +5,7 @@ import logging
 from typing import Optional
 from .settings_manager import SettingsManager
 from .history_manager import HistoryManager
-from .cleaner import SystemCleaner
+from .cleaner import FileCleaner
 
 logger = logging.getLogger("gk-healter.automaint")
 
@@ -18,7 +18,7 @@ class AutoMaintenanceManager:
     def __init__(self, settings_manager: SettingsManager, history_manager: HistoryManager):
         self.settings = settings_manager
         self.history = history_manager
-        self.cleaner = SystemCleaner()
+        self.cleaner = FileCleaner()
         self.last_disk_check_date: Optional[datetime.date] = None
 
     def get_disk_usage_percent(self) -> float:
@@ -98,7 +98,7 @@ class AutoMaintenanceManager:
 
     def run_maintenance(self) -> Optional[dict]:
         """
-        Executes a safe cleaning operation using SystemCleaner.
+        Executes a safe cleaning operation using FileCleaner.
         """
         # 1. Scan for items
         scan_results = self.cleaner.scan()
@@ -115,7 +115,7 @@ class AutoMaintenanceManager:
             return None
 
         # 3. Perform cleaning
-        success_count, fail_count, errors = self.cleaner.clean(to_clean)
+        success_count, fail_count, errors = self.cleaner.clean_files(to_clean)
 
         if success_count == 0:
             return None

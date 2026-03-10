@@ -16,9 +16,9 @@ from typing import List, Dict, Any, Optional
 import gi
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GLib, Gdk, Pango, GdkPixbuf
+from gi.repository import Gtk, GLib, Gdk, Pango, GdkPixbuf, GObject
 
-from src.cleaner import SystemCleaner
+from src.cleaner import FileCleaner, RAMCleaner
 from src.history_manager import HistoryManager
 from src.settings_manager import SettingsManager
 from src.auto_maintenance_manager import AutoMaintenanceManager
@@ -34,6 +34,7 @@ from src.security_scanner import SecurityScanner
 from src.pardus_verifier import PardusVerifier
 from src.report_exporter import ReportExporter
 from src.utils import format_size
+from src.ram_manager import RAMManager
 
 logger = logging.getLogger("gk-healter.ui")
 
@@ -46,7 +47,8 @@ class MainWindow:
     # ── Construction ─────────────────────────────────────────────────────────
     def __init__(self) -> None:
         # Back-end services
-        self.cleaner = SystemCleaner()
+        self.file_cleaner = FileCleaner()
+        self.ram_booster = RAMCleaner()
         self.settings_manager = SettingsManager()
         self.history_manager = HistoryManager()
         self.auto_maintenance_manager = AutoMaintenanceManager(
@@ -62,6 +64,7 @@ class MainWindow:
         self.security_scanner = SecurityScanner()
         self.pardus_verifier = PardusVerifier()
         self.report_exporter = ReportExporter()
+        self.ram_manager = RAMManager()
 
         # State
         self.scan_data: List[Dict[str, Any]] = []
@@ -146,6 +149,9 @@ class MainWindow:
         # Get Dialogs
         self.about_dialog: Gtk.AboutDialog = builder.get_object("about_dialog")
         self.clean_confirm_dialog: Gtk.MessageDialog = builder.get_object("clean_confirm_dialog")
+        # Setup Experimental RAM Cleaner button
+        self._setup_experimental_ram_cleaner()
+
         # Status Icon (programmatic addition to InfoBar)
         self.status_icon = Gtk.Image()
         info_content = self.info_bar.get_content_area()
@@ -177,6 +183,7 @@ class MainWindow:
 
         self.health_engine.start_monitoring()
         self._start_health_timer()
+        self._setup_cleaner_tabs()
         self._refresh_dashboard()
 
         # Detect Pardus and show badge if applicable
@@ -309,6 +316,9 @@ class MainWindow:
         self.spin_disk_percent: Gtk.SpinButton = g("spin_disk_percent")
         self.lbl_last_maintenance_title: Gtk.Label = g("lbl_last_maintenance_title")
         self.lbl_last_maintenance: Gtk.Label = g("lbl_last_maintenance")
+
+        self.lbl_experimental_title: Gtk.Label = g("lbl_experimental_title")
+        self.lbl_experimental_desc: Gtk.Label = g("lbl_experimental_desc")
 
         # ── Security page ──
         self.lbl_security_page_title: Gtk.Label = g("lbl_security_page_title")
@@ -448,6 +458,10 @@ class MainWindow:
         self.lbl_ai_api_key.set_text(_("settings_ai_api_key"))
         self.lbl_ai_model.set_text(_("settings_ai_model"))
 
+        # ── Experimental ──
+        self.lbl_experimental_title.set_text(_("settings_experimental"))
+        self.lbl_experimental_desc.set_text(_("settings_experimental_desc"))
+
     # ── CSS ──────────────────────────────────────────────────────────────────
     @staticmethod
     def _apply_css() -> None:
@@ -567,12 +581,227 @@ class MainWindow:
         threading.Thread(target=self._export_report_thread, daemon=True).start()
 
     def on_demo_report_clicked(self, _btn: Optional[Gtk.Button] = None) -> None:
-        """Generate Demo Report — run all analysis phases and display results."""
         self.content_stack.set_visible_child_name("page_security")
         self.on_security_scan_clicked(None)
 
     # ── Window ───────────────────────────────────────────────────────────────
-    def on_window_destroy(self, _win: Gtk.Window) -> None:
+    def _setup_cleaner_tabs(self) -> None:
+        """Transforms the single cleaner page into a three-tab Notebook structure."""
+        cleaner_page = self.builder.get_object("cleaner_page")
+        if not cleaner_page:
+            return
+
+        # Initialize new widgets that will be used in the tabs
+        self.clean_notebook = Gtk.Notebook()
+        self.lbl_dash_clean_result = Gtk.Label(label="")
+        self.ram_usage_label_tab = Gtk.Label(label="")
+        self.ram_usage_bar_tab = Gtk.LevelBar()
+        self.lbl_ram_result = Gtk.Label(label="")
+        
+        # RAM TreeView components
+        self.ram_list_store = Gtk.ListStore(bool, str, str, str, GObject.TYPE_INT64, str, bool)
+        self.ram_scan_data = []
+        self.is_ram_cleaning = False
+
+        # 1. Capture existing widgets to move them later
+        children = cleaner_page.get_children()
+        for child in children:
+            cleaner_page.remove(child)
+
+        # 2. Setup Notebook
+        self.clean_notebook.set_scrollable(True)
+        self.clean_notebook.set_tab_pos(Gtk.PositionType.TOP)
+        cleaner_page.pack_start(self.clean_notebook, True, True, 0)
+
+        # ── Tab 1: Dashboard (Genel Temizlik) ──
+        dash_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        dash_box.set_margin_top(40)
+        dash_box.set_margin_bottom(40)
+
+        lbl_dash_title = Gtk.Label()
+        lbl_dash_title.set_markup(f"<span font_weight='bold' font_size='x-large'>{_('Genel Temizlik')}</span>")
+        dash_box.pack_start(lbl_dash_title, False, False, 0)
+
+        img_clean = Gtk.Image.new_from_icon_name("edit-clear-all-symbolic", Gtk.IconSize.DIALOG)
+        dash_box.pack_start(img_clean, False, False, 0)
+
+        btn_all = Gtk.Button(label=_("Tümünü Temizle"))
+        btn_all.get_style_context().add_class("suggested-action")
+        btn_all.set_size_request(200, 50)
+        btn_all.set_halign(Gtk.Align.CENTER)
+        btn_all.connect("clicked", self.on_clean_all_clicked)
+        dash_box.pack_start(btn_all, False, False, 0)
+
+        dash_box.pack_start(self.lbl_dash_clean_result, False, False, 0)
+
+        self.clean_notebook.append_page(dash_box, Gtk.Label(label=_("Genel Temizlik")))
+
+        # ── Tab 2: File Cleaner (Dosya Temizliği) ──
+        file_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        for child in children:
+            # Check if the child is a Gtk.ScrolledWindow or Gtk.TreeView to expand it
+            expand = isinstance(child, Gtk.ScrolledWindow) or isinstance(child, Gtk.TreeView)
+            file_box.pack_start(child, expand, expand, 0)
+        
+        self.clean_notebook.append_page(file_box, Gtk.Label(label=_("Dosya Temizliği")))
+
+        # ── Tab 3: RAM Booster (RAM Optimizasyonu) ──
+        ram_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=20)
+        ram_box.set_margin_top(40)
+
+        lbl_ram_title = Gtk.Label()
+        lbl_ram_title.set_markup(f"<span font_weight='bold' font_size='x-large'>{_('RAM Optimizasyonu')}</span>")
+        ram_box.pack_start(lbl_ram_title, False, False, 0)
+
+        # RAM Meter
+        meter_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        meter_box.set_margin_start(100)
+        meter_box.set_margin_end(100)
+        
+        meter_box.pack_start(self.ram_usage_label_tab, False, False, 0)
+        self.ram_usage_bar_tab.set_min_value(0)
+        self.ram_usage_bar_tab.set_max_value(100)
+        meter_box.pack_start(self.ram_usage_bar_tab, False, False, 0)
+
+        ram_box.pack_start(meter_box, False, False, 0)
+
+        # RAM TreeView (Replicating File Cleaner style)
+        ram_scroll = Gtk.ScrolledWindow()
+        ram_scroll.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        ram_scroll.set_shadow_type(Gtk.ShadowType.IN)
+        
+        self.ram_treeview = Gtk.TreeView(model=self.ram_list_store)
+        self.ram_treeview.set_vexpand(True)
+        
+        # Columns
+        col_toggle = Gtk.TreeViewColumn("", Gtk.CellRendererToggle(), active=0)
+        col_toggle.get_cells()[0].connect("toggled", self.on_ram_cell_toggled)
+        self.ram_treeview.append_column(col_toggle)
+        
+        self.ram_treeview.append_column(Gtk.TreeViewColumn(_("Kategori"), Gtk.CellRendererText(), text=1))
+        self.ram_treeview.append_column(Gtk.TreeViewColumn(_("Açıklama"), Gtk.CellRendererText(), text=2))
+        self.ram_treeview.append_column(Gtk.TreeViewColumn(_("Boyut"), Gtk.CellRendererText(), text=3))
+        
+        ram_scroll.add(self.ram_treeview)
+        ram_box.pack_start(ram_scroll, True, True, 0)
+
+        # Action Buttons
+        ram_btn_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
+        ram_btn_box.set_halign(Gtk.Align.CENTER)
+        ram_btn_box.set_margin_bottom(10)
+        
+        self.btn_ram_scan = Gtk.Button(label=_("RAM Tara"))
+        self.btn_ram_scan.connect("clicked", self.on_ram_scan_clicked)
+        ram_btn_box.pack_start(self.btn_ram_scan, False, False, 0)
+        
+        self.btn_ram_clean = Gtk.Button(label=_("RAM'i Boşalt"))
+        self.btn_ram_clean.get_style_context().add_class("suggested-action")
+        self.btn_ram_clean.set_sensitive(False)
+        self.btn_ram_clean.connect("clicked", self.on_ram_clean_clicked)
+        ram_btn_box.pack_start(self.btn_ram_clean, False, False, 0)
+        
+        ram_box.pack_start(ram_btn_box, False, False, 0)
+
+        ram_box.pack_start(self.lbl_ram_result, False, False, 0)
+
+        self.clean_notebook.append_page(ram_box, Gtk.Label(label=_("RAM Optimizasyonu")))
+
+        cleaner_page.show_all()
+
+    def on_clean_all_clicked(self, _btn: Gtk.Button) -> None:
+        """Triggers both file scan/clean and RAM optimization."""
+        self.lbl_dash_clean_result.set_text(_("Genel temizlik başlatıldı..."))
+        
+        def _all_clean_thread():
+            # 1. Boost RAM (Silent)
+            self.ram_booster.clean_ram()
+            # 2. Trigger File Scan
+            GLib.idle_add(lambda: self.clean_notebook.set_current_page(1))
+            GLib.idle_add(self.on_scan_clicked, None)
+            GLib.idle_add(lambda: self.lbl_dash_clean_result.set_text(_("RAM boşaltıldı, dosya taraması başladı.")))
+        
+        threading.Thread(target=_all_clean_thread, daemon=True).start()
+
+    def on_ram_scan_clicked(self, _btn: Gtk.Button) -> None:
+        if self.is_ram_cleaning:
+            return
+        self.ram_list_store.clear()
+        self.btn_ram_clean.set_sensitive(False)
+        self.lbl_ram_result.set_text(_("RAM taranıyor..."))
+        threading.Thread(target=self._ram_scan_thread, daemon=True).start()
+
+    def _ram_scan_thread(self) -> None:
+        results = self.ram_booster.scan()
+        GLib.idle_add(self._on_ram_scan_done, results)
+
+    def _on_ram_scan_done(self, results: List[Dict[str, Any]]) -> None:
+        self.ram_scan_data = results
+        for item in results:
+            self.ram_list_store.append([
+                True,
+                item['category'],
+                item['desc'],
+                item['size_str'],
+                item['size_bytes'],
+                item['path'],
+                item['system']
+            ])
+        self.btn_ram_clean.set_sensitive(len(results) > 0)
+        self.lbl_ram_result.set_text(_("RAM tarama tamamlandı."))
+
+    def on_ram_clean_clicked(self, _btn: Gtk.Button) -> None:
+        selected = self._get_selected_ram_items()
+        if not selected:
+            return
+        
+        self.is_ram_cleaning = True
+        self.btn_ram_scan.set_sensitive(False)
+        self.btn_ram_clean.set_sensitive(False)
+        self.lbl_ram_result.set_text(_("info_ram_cleaning"))
+        threading.Thread(target=self._ram_clean_thread, args=(selected,), daemon=True).start()
+
+    def _ram_clean_thread(self, selected: List[Dict[str, Any]]) -> None:
+        try:
+            res = self.ram_booster.clean_ram(selected)
+            GLib.idle_add(self._on_booster_ram_clean_done, res)
+        except Exception as e:
+            logger.exception("RAM cleaning thread failed")
+            GLib.idle_add(self._on_booster_ram_clean_done, {"success": False, "error": str(e)})
+
+    def _on_booster_ram_clean_done(self, res: Dict[str, Any]) -> None:
+        self.is_ram_cleaning = False
+        self.btn_ram_scan.set_sensitive(True)
+        self.btn_ram_clean.set_sensitive(False)  # Reset until next scan
+        
+        if res.get("success"):
+            freed = res.get("freed_mb", 0)
+            if freed > 0:
+                self.lbl_ram_result.set_text(f"{_('Başarılı')}: {freed:.1f} MB RAM {_('boşaltıldı')}.")
+            else:
+                self.lbl_ram_result.set_text(_("RAM zaten temiz veya boşaltılamadı."))
+        else:
+            self.lbl_ram_result.set_text(f"{_('Hata')}: {res.get('error', 'Bilinmeyen hata')}")
+        
+        self.ram_list_store.clear()
+
+    def on_ram_cell_toggled(self, renderer, path):
+        self.ram_list_store[path][0] = not self.ram_list_store[path][0]
+
+    def _get_selected_ram_items(self) -> List[Dict[str, Any]]:
+        selected = []
+        for row in self.ram_list_store:
+            if row[0]:
+                selected.append({
+                    'category': row[1],
+                    'desc': row[2],
+                    'size_str': row[3],
+                    'size_bytes': row[4],
+                    'path': row[5],
+                    'system': row[6]
+                })
+        return selected
+
+    def on_window_destroy(self, *args) -> None:
         self.health_engine.stop_monitoring()
         if self._health_timer_id:
             GLib.source_remove(self._health_timer_id)
@@ -696,6 +925,9 @@ class MainWindow:
         elif val == "gemini":
             if "gemini" not in current_model:
                 new_model = "gemini-2.5-flash"
+        elif val == "claude":
+            if "claude" not in current_model:
+                new_model = "claude-3-5-sonnet-20241022"
 
         if new_model != current_model:
             self.settings_manager.set("ai_model", new_model)
@@ -741,6 +973,11 @@ class MainWindow:
             ]
         elif provider == "openai":
             models = ["gpt-4o", "gpt-5.2", "gpt-3.5-turbo"]
+        elif provider == "claude":
+            models = [
+                "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022",
+                "claude-3-opus-20240229", "claude-3-sonnet-20240229"
+            ]
 
         for m in models:
             self.combo_ai_model.append_text(m)
@@ -766,6 +1003,7 @@ class MainWindow:
         # AI Settings
         self.combo_ai_provider.append("gemini", "Gemini (Google)")
         self.combo_ai_provider.append("openai", "ChatGPT (OpenAI)")
+        self.combo_ai_provider.append("claude", "Claude (Anthropic)")
         ai_prov = sm.get("ai_provider") or "gemini"
         self.combo_ai_provider.set_active_id(ai_prov)
 
@@ -779,8 +1017,10 @@ class MainWindow:
         if not current_model:
             if ai_prov == "gemini":
                 current_model = "gemini-2.5-flash"
-            else:
+            elif ai_prov == "openai":
                 current_model = "gpt-4o"
+            else:
+                current_model = "claude-3-5-sonnet-20241022"
 
         # Combo entry
         child = self.combo_ai_model.get_child()
@@ -1058,6 +1298,11 @@ class MainWindow:
             self.lbl_health_disk_val, disk,
         )
 
+        # ── RAM Tab live update ──
+        if hasattr(self, 'ram_usage_label_tab'):
+            self.ram_usage_label_tab.set_text(f"{ram:.1f}% ({self._format_bytes(ram_used)} / {self._format_bytes(ram_total)})")
+            self.ram_usage_bar_tab.set_value(ram)
+
         return True  # keep the timer alive
 
     def _apply_score_colour(self, score: float) -> None:
@@ -1112,7 +1357,7 @@ class MainWindow:
 
     # ── Scan thread ──────────────────────────────────────────────────────────
     def _scan_thread(self) -> None:
-        results = self.cleaner.scan()
+        results = self.file_cleaner.scan()
         GLib.idle_add(self._on_scan_done, results)
 
     def _on_scan_done(self, results: List[Dict[str, Any]]) -> None:
@@ -1143,7 +1388,7 @@ class MainWindow:
 
     # ── Clean thread ─────────────────────────────────────────────────────────
     def _clean_thread(self, selected: List[Dict[str, Any]]) -> None:
-        success, fail, errors = self.cleaner.clean(selected)
+        success, fail, errors = self.file_cleaner.clean_files(selected)
         categories = [item['category'] for item in selected]
         total_bytes = sum(item['size_bytes'] for item in selected)
         GLib.idle_add(
@@ -1656,6 +1901,75 @@ class MainWindow:
 
         self.box_insights_container.add(box)
 
+    def _setup_experimental_ram_cleaner(self) -> None:
+        """Adds a RAM Cleaner button to the Experimental Options."""
+        # Find the list_experimental list box
+        list_experimental = self.builder.get_object("list_experimental")
+        if not list_experimental:
+            return
+            
+        row = Gtk.ListBoxRow()
+        row.set_activatable(False)
+        box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=12)
+        box.set_visible(True)
+        box.set_margin_start(12)
+        box.set_margin_end(12)
+        box.set_margin_top(8)
+        box.set_margin_bottom(8)
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        vbox.set_visible(True)
+        
+        lbl_title = Gtk.Label(label=_("settings_ram_cleaner_title"))
+        lbl_title.set_visible(True)
+        lbl_title.set_xalign(0)
+        lbl_title.get_style_context().add_class("bold-label")
+        
+        lbl_desc = Gtk.Label(label=_("settings_ram_cleaner_desc"))
+        lbl_desc.set_visible(True)
+        lbl_desc.set_xalign(0)
+        lbl_desc.get_style_context().add_class("dim-label")
+        
+        vbox.pack_start(lbl_title, False, False, 0)
+        vbox.pack_start(lbl_desc, False, False, 0)
+        box.pack_start(vbox, True, True, 0)
+
+        btn_clean = Gtk.Button(label=_("btn_fix_now"))
+        btn_clean.set_visible(True)
+        btn_clean.set_valign(Gtk.Align.CENTER)
+        btn_clean.get_style_context().add_class("suggested-action")
+        btn_clean.connect("clicked", lambda b: self._perform_ram_clean())
+        box.pack_start(btn_clean, False, False, 0)
+
+        row.add(box)
+        row.set_visible(True)
+        list_experimental.add(row)
+
+    def _perform_ram_clean(self) -> None:
+        """Starts the RAM cleaning process in a background thread."""
+        self._set_info(_("info_ram_cleaning"), "info")
+        
+        def run_clean():
+            result = self.ram_manager.clean_ram(level=3)
+            GLib.idle_add(self._on_experimental_ram_clean_done, result)
+            
+        threading.Thread(target=run_clean, daemon=True).start()
+
+    def _on_experimental_ram_clean_done(self, result: Dict[str, Any]) -> None:
+        """Handles the completion of the RAM cleaning process."""
+        if result["success"] and result["needed"]:
+            msg = result.get("message", "")
+            self._set_info(msg, "info")
+            self.history_manager.add_entry([_("history_cat_ram")], f"{result.get('freed_mb', 0):.2f} MB", _("status_success"))
+        elif not result["needed"]:
+            msg = result.get("message", "")
+            self._set_info(msg, "info")
+            self.history_manager.add_entry([_("history_cat_ram")], "0.00 MB", _("status_not_needed"))
+        else:
+            msg = result.get("error", "")
+            self._set_info(f"Hata: {msg}", "error")
+            self.history_manager.add_entry([_("history_cat_ram")], "0.00 MB", _("status_failed"))
+
     def _on_action_clicked(self, action_id: str) -> None:
         """Handle insight action buttons."""
         if action_id == "clean_disk":
@@ -1666,8 +1980,7 @@ class MainWindow:
              # Simple dialog for now as we don't have a service manager view
              self._show_simple_dialog("Service Manager", "Run 'systemctl --failed' in a terminal to inspect failed services.")
         elif action_id == "optimize_ram":
-             self._set_info("Optimizing RAM caches... (Simulated)", "info")
-             # In real app: could run 'sync; echo 3 > /proc/sys/vm/drop_caches' with pkexec
+             self._perform_ram_clean()
         elif action_id == "analyze_logs":
              self._show_simple_dialog("System Logs", "Check journalctl -xe or /var/log/syslog for details.")
         else:

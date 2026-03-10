@@ -142,7 +142,7 @@ class TestRunMaintenance:
              "size_bytes": 5000, "path": "/home/u/.cache/thumb",
              "desc": "thumbs", "size_str": "5 KB"},
         ]
-        manager.cleaner.clean.return_value = (1, 0, [])
+        manager.cleaner.clean_files.return_value = (1, 0, [])
         result = manager.run_maintenance()
         assert result is not None
         assert "freed" in result

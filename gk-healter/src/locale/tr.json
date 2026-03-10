@@ -1,13 +1,11 @@
 {
     "app_title": "GK Healter",
     "app_subtitle": "Sistem Sağlığı ve Temizleyici",
-
     "header_title": "GK Healter",
     "btn_about": "Hakkında",
     "tooltip_settings": "Ayarlar",
     "tooltip_back": "Geri",
     "tooltip_refresh": "Yenile",
-
     "page_dashboard": "Gösterge Paneli",
     "page_cleaner": "Temizleyici",
     "page_health": "Sağlık",
@@ -15,7 +13,6 @@
     "page_history": "Geçmiş",
     "page_security": "Güvenlik",
     "page_settings": "Ayarlar",
-
     "lbl_welcome": "Sistem Özeti",
     "lbl_welcome_sub": "Sisteminizin sağlık durumu bir bakışta",
     "lbl_quick_actions": "Hızlı İşlemler",
@@ -24,21 +21,18 @@
     "lbl_failed_services_label": "Başarısız Servisler:",
     "lbl_errors_24h_label": "Hatalar (24 saat):",
     "lbl_last_maintenance_dash": "Son Bakım:",
-
     "dash_scan_title": "Tara ve Temizle",
     "dash_scan_desc": "Gereksiz dosyaları bul ve sil",
     "dash_health_title": "Sistem Sağlığı",
     "dash_health_desc": "CPU, RAM ve Disk izleme",
     "dash_insights_title": "Analizler",
     "dash_insights_desc": "Servisler, günlükler ve öneriler",
-
     "lbl_cpu": "CPU",
     "lbl_memory": "Bellek",
     "lbl_disk": "Disk",
     "lbl_calculating": "Hesaplanıyor...",
     "lbl_monitoring": "Sistem kaynakları izleniyor...",
     "lbl_score_100": "/ 100",
-
     "col_select": "Seç",
     "col_category": "Kategori",
     "col_description": "Açıklama",
@@ -47,7 +41,6 @@
     "col_categories": "Kategoriler",
     "col_freed": "Kazanılan",
     "col_status": "Durum",
-
     "btn_scan": "Sistemi Tara",
     "btn_clean_disk": "Diski Temizle",
     "btn_sys_mon": "Sistem Sağlığını Aç",
@@ -58,7 +51,6 @@
     "btn_clean": "Temizle",
     "btn_analyze": "Analiz Et",
     "summary_total": "Toplam: {size}",
-
     "msg_ready": "Taramaya hazır",
     "msg_scanning": "Sistem taranıyor, lütfen bekleyin...",
     "msg_scan_complete": "{count} öğe bulundu. Temizlemek istediklerinizi seçin.",
@@ -72,17 +64,14 @@
     "msg_clean_failed": "Temizlik başarısız oldu. Hiçbir öğe silinemedi.",
     "msg_analyzing": "Sistem analiz ediliyor... lütfen bekleyin...",
     "msg_cleaning_in_progress": "Başka bir temizlik işlemi devam ediyor.",
-
     "status_success": "Başarılı",
     "status_partial": "Kısmi",
     "status_failed": "Başarısız",
-
     "lbl_health_title": "Sistem Sağlık Monitörü",
     "lbl_health_score": "Sağlık Puanı",
     "lbl_cpu_usage": "CPU Kullanımı",
     "lbl_memory_usage": "Bellek Kullanımı",
     "lbl_disk_usage": "Disk Kullanımı",
-
     "score_excellent": "Mükemmel",
     "score_good": "İyi",
     "score_fair": "Orta",
@@ -91,7 +80,6 @@
     "score_detail_good": "Sistem çoğunlukla sağlıklı. Küçük kaynak baskısı tespit edildi.",
     "score_detail_fair": "Orta düzeyde kaynak kullanımı. Kullanılmayan uygulamaları kapatmayı deneyin.",
     "score_detail_critical": "Yüksek kaynak kullanımı tespit edildi. Acil müdahale önerilir.",
-
     "insights_title": "Sistem Analizleri",
     "insights_header": "═══  Sistem Analizleri  ═══",
     "insights_recommendations": "Öneriler",
@@ -100,9 +88,7 @@
     "insights_journal_errors": "Günlük Hataları (24 saat)",
     "insights_large_files": "Büyük Dosyalar (>100 MB)",
     "insights_ai": "Yapay Zekâ Analizi",
-
     "history_title": "Temizlik Geçmişi",
-
     "settings_title": "Ayarlar",
     "settings_language": "Dil",
     "language_selection": "Görüntüleme Dili",
@@ -118,20 +104,18 @@
     "settings_notify_done": "Bitince bildir",
     "settings_advanced": "Gelişmiş Seçenekler",
     "settings_disk_threshold": "Disk dolunca otomatik temizle",
-
     "settings_ai_title": "Yapay Zekâ Analizi",
     "settings_ai_provider": "Sağlayıcı",
     "settings_ai_api_key": "API Anahtarı",
     "settings_ai_model": "Model",
-
+    "settings_experimental": "Deneysel Seçenekler",
+    "settings_experimental_desc": "Yeni projeler ve özellikler burada yer alacak.",
     "settings_last_maintenance": "Son Bakım:",
     "lbl_never": "Hiçbir zaman",
-
     "freq_daily": "Günlük",
     "freq_weekly": "Haftalık",
     "freq_biweekly": "2 Haftada Bir",
     "freq_monthly": "Aylık",
-
     "cat_pkg_cache": "Paket Önbelleği",
     "desc_pkg_cache": "İndirilmiş paket dosyaları (Arşiv)",
     "cat_apt_cache": "APT Önbelleği",
@@ -148,7 +132,6 @@
     "desc_firefox": "Firefox tarayıcı önbelleği",
     "cat_chrome": "Chrome Önbelleği",
     "desc_chrome": "Chrome tarayıcı önbelleği",
-
     "msg_safety_warning": "GÜVENLİK UYARISI: {0} silinemez (izin listesinde yok).",
     "err_file_delete": "Dosya silinemedi {0}: {1}",
     "err_user_clean_fail": "Kullanıcı temizliği başarısız ({0}): {1}",
@@ -156,15 +139,12 @@
     "err_auth_cancelled": "Kimlik doğrulama iptal edildi veya reddedildi: {0}",
     "err_sys_clean_code": "Sistem temizliği hatası (kod {0}): {1}",
     "err_unexpected": "Beklenmeyen hata ({0}): {1}",
-
     "confirm_title": "Temizliği Onayla",
     "health_score_label": "Sağlık Puanı",
     "about_copyright": "© 2026 GK Developers",
-
     "auto_maintenance_title": "Otomatik Bakım Tamamlandı",
     "auto_maintenance_finished_msg": "{0} alan temizlendi.",
     "msg_reboot_required": "Değişiklikler uygulamayı yeniden başlattığınızda geçerli olacaktır.",
-
     "pardus_broken_packages": "Bozuk Paketler",
     "pardus_repo_health": "Depo Sağlık Sorunları",
     "pardus_updates_available": "Mevcut Güncellemeler",
@@ -173,9 +153,7 @@
     "pardus_diagnostics": "Pardus Tanılama",
     "pardus_version": "Pardus Sürümü",
     "pardus_not_detected": "Pardus dağıtımı algılanamadı",
-
     "insights_journal_errors_detail": "Son 24 saatte {count} hata düzeyinde günlük kaydı tespit edildi. journalctl ile inceleyin.",
-
     "security_title": "Güvenlik Denetimi",
     "security_world_writable": "Herkese Yazılabilir Dosyalar",
     "security_suid_binaries": "Beklenmeyen SUID/SGID Dosyaları",
@@ -190,7 +168,6 @@
     "security_repo_trust_detail": "Güven puanı: {score}/100",
     "security_repair_available": "Otomatik Onarım Mevcut",
     "security_repair_desc": "Bozuk paketler düzeltilebilir ve {count} yetim paket kaldırılabilir.",
-
     "pardus_detected": "Pardus Algılandı",
     "pardus_features_active": "Pardus'a özgü tanılama araçları etkin",
     "pardus_insights_subtitle": "Pardus'a özel paket, servis ve güvenlik analizi etkinleştirildi.",
@@ -198,16 +175,13 @@
     "pardus_chip_security": "Güvenlik",
     "pardus_chip_packages": "Paketler",
     "pardus_svc_not_installed": "yüklü değil",
-
     "health_cores": "çekirdek",
     "health_free": "boş",
-
     "health_status_excellent": "Mükemmel",
     "health_status_good": "İyi",
     "health_status_fair": "Orta",
     "health_status_poor": "Kötü",
     "health_status_critical": "Kritik",
-
     "rec_high_cpu": "Yüksek CPU kullanımı tespit edildi. Sistem tepkisi düşük olabilir.",
     "rec_high_ram": "Kullanılabilir bellek düşük. Ağır uygulamaları kapatmayı deneyin.",
     "rec_disk_critical": "Disk alanı kritik düzeyde düşük. Acil temizlik önerilir.",
@@ -215,7 +189,6 @@
     "rec_failed_services": "{count} sistem servisi başarısız oldu.",
     "rec_slow_service": "'{service}' servisi başlamak için {time} sürüyor. Devre dışı bırakmayı veya optimize etmeyi düşünün.",
     "rec_high_errors": "Son 24 saatte olağandışı sayıda sistem hatası ({count}).",
-
     "pardus_mirror_health": "Pardus Depo Erişimi",
     "pardus_mirror_reachable": "Pardus deposu erişilebilir ({ms} ms)",
     "pardus_mirror_unreachable": "Pardus deposuna erişilemiyor. Ağ bağlantınızı kontrol edin.",
@@ -227,7 +200,6 @@
     "pardus_log_summary": "Son {days} günde {total} işlem: {installs} kurulum, {removes} kaldırma, {upgrades} güncelleme.",
     "pardus_log_no_updates": "Son {days} günde paket güncellemesi yapılmamış. Sistem güncel olmayabilir.",
     "pardus_log_failed": "{count} başarısız paket işlemi tespit edildi.",
-
     "btn_security_scan": "Güvenlik Taraması Başlat",
     "btn_export_report": "Rapor Dışa Aktar",
     "btn_demo_report": "Demo Rapor Oluştur",
@@ -243,5 +215,14 @@
     "security_scan_complete": "Güvenlik taraması tamamlandı.",
     "export_success_msg": "Rapor başarıyla dışa aktarıldı.\nDosya: {path}",
     "export_failed_msg": "Rapor dışa aktarılamadı.",
-    "export_running": "Rapor dışa aktarılıyor..."
+    "export_running": "Rapor dışa aktarılıyor...",
+    "settings_ram_cleaner_title": "RAM Bellek Temizleyici",
+    "settings_ram_cleaner_desc": "Drop Caches yöntemiyle sistem RAM belleğini boşaltın.",
+    "info_ram_cleaning": "RAM Temizleniyor, lütfen bekleyin...",
+    "history_cat_ram": "RAM Bellek (Drop Caches)",
+    "status_not_needed": "Gerekli Değil",
+    "cat_ram_page_cache": "RAM Sayfa Önbelleği",
+    "desc_ram_page_cache": "Uygulamalar tarafından kullanılan dosya sistemi önbelleği",
+    "cat_ram_slab_cache": "RAM Nesne Önbelleği",
+    "desc_ram_slab_cache": "Çekirdek (Kernel) seviyesindeki veri yapıları ve dizin önbelleği"
 }

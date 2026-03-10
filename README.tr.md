@@ -84,7 +84,7 @@ GK Healter, Pardus kullanıcılarına ve sistem yöneticilerine şu konularda ya
 
 ### İzleme ve Zekâ
 - **Gerçek Zamanlı Sağlık Puanı:** CPU, RAM ve disk kullanımı izleme ile bileşik sağlık puanı (0–100)
-- **Hibrit Yapay Zekâ:** Her zaman çevrimdışı çalışan `LocalAnalysisEngine` + isteğe bağlı Gemini/OpenAI API desteği
+- **Hibrit Yapay Zekâ:** Her zaman çevrimdışı çalışan `LocalAnalysisEngine` + isteğe bağlı Gemini, OpenAI ve Claude (Anthropic) API desteği
 - **Akıllı Öneriler:** Sistem metriklerine dayalı kural tabanlı öneri motoru
 - **Servis Analizi:** Başarısız systemd servislerini ve yavaş başlayan birimleri tespit
 - **Log Analizi:** Kritik/hata düzeyindeki journal kayıtlarını önem derecesine göre sınıflandırma
@@ -273,7 +273,7 @@ Geliştirme kurulumu ve katkı kuralları için [CONTRIBUTING.md](CONTRIBUTING.m
 
 ## Lisans
 
-Bu proje **MIT Lisansı** altında lisanslanmıştır. Ayrıntılar için [LICENSE](LICENSE) dosyasına bakınız.
+Bu proje **GNU Genel Kamu Lisansı v3 (GPL-3.0)** altında lisanslanmıştır. Ayrıntılar için [LICENSE](LICENSE) dosyasına bakınız.
 
 ---
 

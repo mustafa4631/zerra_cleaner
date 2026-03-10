@@ -242,7 +242,7 @@ class TestAIEngine:
         assert "OpenAI insight here." in result
 
     def test_unknown_provider_falls_back(self, ai_engine):
-        ai_engine.configure("claude", "valid-key", "claude-3")
+        ai_engine.configure("unknown-ai", "valid-key", "model-x")
         result = ai_engine.generate_insight(
             {"cpu": 30, "ram": 30, "disk": 30, "score": 90},
             [], 0,
@@ -344,3 +344,37 @@ class TestGeminiCall:
         with patch("urllib.request.urlopen", return_value=mock_resp):
             with pytest.raises(RuntimeError, match="malformed"):
                 ai_engine._call_gemini("test prompt")
+
+
+class TestClaudeCall:
+    """Tests for _call_claude HTTP interaction."""
+
+    @pytest.fixture
+    def ai_engine(self):
+        e = AIEngine()
+        e.configure("claude", "test-key", "claude-3-5-sonnet-20241022")
+        return e
+
+    def test_successful_call(self, ai_engine):
+        response_data = {
+            "content": [{"text": "Claude response"}]
+        }
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps(response_data).encode()
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_resp):
+            result = ai_engine._call_claude("test prompt")
+        assert result == "Claude response"
+
+    def test_malformed_response_raises(self, ai_engine):
+        response_data = {"content": []}
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = json.dumps(response_data).encode()
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch("urllib.request.urlopen", return_value=mock_resp):
+            with pytest.raises(RuntimeError, match="malformed"):
+                ai_engine._call_claude("test prompt")

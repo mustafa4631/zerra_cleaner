@@ -1,13 +1,11 @@
 {
     "app_title": "GK Healter",
     "app_subtitle": "System Health & Cleaner",
-
     "header_title": "GK Healter",
     "btn_about": "About",
     "tooltip_settings": "Settings",
     "tooltip_back": "Go Back",
     "tooltip_refresh": "Refresh",
-
     "page_dashboard": "Dashboard",
     "page_cleaner": "Cleaner",
     "page_health": "Health",
@@ -15,7 +13,6 @@
     "page_history": "History",
     "page_security": "Security",
     "page_settings": "Settings",
-
     "lbl_welcome": "System Overview",
     "lbl_welcome_sub": "Your system health at a glance",
     "lbl_quick_actions": "Quick Actions",
@@ -24,14 +21,12 @@
     "lbl_failed_services_label": "Failed Services:",
     "lbl_errors_24h_label": "Errors (24h):",
     "lbl_last_maintenance_dash": "Last Maintenance:",
-
     "dash_scan_title": "Scan & Clean",
     "dash_scan_desc": "Find and remove junk files",
     "dash_health_title": "System Health",
     "dash_health_desc": "Monitor CPU, RAM & Disk",
     "dash_insights_title": "Insights",
     "dash_insights_desc": "Services, logs & recommendations",
-
     "cat_pkg_cache": "Package Cache",
     "desc_pkg_cache": "Downloaded package archive files",
     "cat_autoremove": "Unused Dependencies",
@@ -48,14 +43,12 @@
     "desc_chrome": "Web browser temporary files",
     "cat_apt_cache": "APT Cache",
     "desc_apt_cache": "Downloaded package files",
-
     "lbl_cpu": "CPU",
     "lbl_memory": "Memory",
     "lbl_disk": "Disk",
     "lbl_calculating": "Calculating...",
     "lbl_monitoring": "Monitoring system resources...",
     "lbl_score_100": "/ 100",
-
     "col_select": "Select",
     "col_category": "Category",
     "col_description": "Description",
@@ -64,7 +57,6 @@
     "col_categories": "Categories",
     "col_freed": "Freed",
     "col_status": "Status",
-
     "btn_scan": "Scan System",
     "btn_clean_disk": "Clean Disk",
     "btn_sys_mon": "Open System Health",
@@ -75,7 +67,6 @@
     "btn_clean": "Clean",
     "btn_analyze": "Analyze",
     "summary_total": "Total: {size}",
-
     "msg_ready": "Ready to scan",
     "msg_scanning": "Scanning system, please wait...",
     "msg_scan_complete": "{count} items found. Select items to clean.",
@@ -89,17 +80,14 @@
     "msg_clean_failed": "Cleaning failed. No items could be removed.",
     "msg_analyzing": "Analyzing system... please wait...",
     "msg_cleaning_in_progress": "Another cleaning operation is in progress.",
-
     "status_success": "Success",
     "status_partial": "Partial",
     "status_failed": "Failed",
-
     "lbl_health_title": "System Health Monitor",
     "lbl_health_score": "Health Score",
     "lbl_cpu_usage": "CPU Usage",
     "lbl_memory_usage": "Memory Usage",
     "lbl_disk_usage": "Disk Usage",
-
     "score_excellent": "Excellent",
     "score_good": "Good",
     "score_fair": "Fair",
@@ -108,7 +96,6 @@
     "score_detail_good": "System is mostly healthy. Minor resource pressure detected.",
     "score_detail_fair": "Moderate resource usage. Consider closing unused applications.",
     "score_detail_critical": "High resource usage detected. Immediate attention recommended.",
-
     "insights_title": "System Insights",
     "insights_header": "═══  System Insights  ═══",
     "insights_recommendations": "Recommendations",
@@ -117,9 +104,7 @@
     "insights_journal_errors": "Journal Errors (24h)",
     "insights_large_files": "Large Files (>100 MB)",
     "insights_ai": "AI Insight",
-
     "history_title": "Cleaning History",
-
     "settings_title": "Settings",
     "settings_language": "Language",
     "language_selection": "Display Language",
@@ -135,20 +120,18 @@
     "settings_notify_done": "Notify when finished",
     "settings_advanced": "Advanced Options",
     "settings_disk_threshold": "Auto clean when disk full",
-
     "settings_ai_title": "AI Analysis",
     "settings_ai_provider": "Provider",
     "settings_ai_api_key": "API Key",
     "settings_ai_model": "Model",
-
+    "settings_experimental": "Experimental Options",
+    "settings_experimental_desc": "New features and projects will appear here.",
     "settings_last_maintenance": "Last Maintenance:",
     "lbl_never": "Never",
-
     "freq_daily": "Daily",
     "freq_weekly": "Weekly",
     "freq_biweekly": "Every 2 Weeks",
     "freq_monthly": "Monthly",
-
     "msg_safety_warning": "SAFETY WARNING: {0} cannot be deleted (not in allowed list).",
     "err_file_delete": "Could not delete file {0}: {1}",
     "err_user_clean_fail": "User cleanup failed ({0}): {1}",
@@ -156,15 +139,12 @@
     "err_auth_cancelled": "Authentication cancelled or denied for: {0}",
     "err_sys_clean_code": "System clean error (code {0}): {1}",
     "err_unexpected": "Unexpected error ({0}): {1}",
-
     "confirm_title": "Confirm Cleaning",
     "health_score_label": "Health Score",
     "about_copyright": "© 2026 GK Developers",
-
     "auto_maintenance_title": "Auto Maintenance Complete",
     "auto_maintenance_finished_msg": "{0} areas have been cleaned.",
     "msg_reboot_required": "Changes will take effect when you restart the application.",
-
     "pardus_broken_packages": "Broken Packages",
     "pardus_repo_health": "Repository Health Issues",
     "pardus_updates_available": "Available Updates",
@@ -180,12 +160,9 @@
     "pardus_chip_security": "Security",
     "pardus_chip_packages": "Packages",
     "pardus_svc_not_installed": "not installed",
-
     "health_cores": "cores",
     "health_free": "free",
-
     "insights_journal_errors_detail": "{count} error-level journal entries detected in the last 24 hours. Review with journalctl.",
-
     "security_title": "Security Audit",
     "security_world_writable": "World-Writable Files",
     "security_suid_binaries": "Unexpected SUID/SGID Binaries",
@@ -200,13 +177,11 @@
     "security_repo_trust_detail": "Trust score: {score}/100",
     "security_repair_available": "Automatic Repair Available",
     "security_repair_desc": "Broken packages can be fixed and {count} orphan package(s) can be removed.",
-
     "health_status_excellent": "Excellent",
     "health_status_good": "Good",
     "health_status_fair": "Fair",
     "health_status_poor": "Poor",
     "health_status_critical": "Critical",
-
     "rec_high_cpu": "High CPU usage detected. System responsiveness may be low.",
     "rec_high_ram": "Available Memory is low. Consider closing heavy applications.",
     "rec_disk_critical": "Disk space is critically low. Immediate cleanup recommended.",
@@ -214,7 +189,6 @@
     "rec_failed_services": "{count} system services have failed.",
     "rec_slow_service": "Service '{service}' takes {time} to start. Consider disabling or optimizing it.",
     "rec_high_errors": "Unusually high number of system errors ({count}) in last 24h.",
-
     "pardus_mirror_health": "Pardus Mirror Health",
     "pardus_mirror_reachable": "Pardus repository reachable ({ms} ms)",
     "pardus_mirror_unreachable": "Pardus repository unreachable. Check your network connection.",
@@ -226,7 +200,6 @@
     "pardus_log_summary": "{total} operations in last {days} days: {installs} installs, {removes} removals, {upgrades} upgrades.",
     "pardus_log_no_updates": "No package updates in the last {days} days. System may be outdated.",
     "pardus_log_failed": "{count} failed package operation(s) detected.",
-
     "btn_security_scan": "Run Security Scan",
     "btn_export_report": "Export Report",
     "btn_demo_report": "Generate Demo Report",
@@ -242,5 +215,14 @@
     "security_scan_complete": "Security scan complete.",
     "export_success_msg": "Report exported successfully.\nFile: {path}",
     "export_failed_msg": "Report export failed.",
-    "export_running": "Exporting report..."
+    "export_running": "Exporting report...",
+    "settings_ram_cleaner_title": "RAM Cleaner",
+    "settings_ram_cleaner_desc": "Clear system RAM cache using Drop Caches method.",
+    "info_ram_cleaning": "Cleaning RAM, please wait...",
+    "history_cat_ram": "RAM Memory (Drop Caches)",
+    "status_not_needed": "Not Needed",
+    "cat_ram_page_cache": "RAM Page Cache",
+    "desc_ram_page_cache": "Filesystem cache used by applications",
+    "cat_ram_slab_cache": "RAM Slab Cache",
+    "desc_ram_slab_cache": "Kernel-level data structures and directory cache"
 }

@@ -15,3 +15,10 @@ _project_root = os.path.dirname(_tests_dir)
 _gk_dir = os.path.join(_project_root, "gk-healter")
 if _gk_dir not in sys.path:
     sys.path.insert(0, _gk_dir)
+
+# Now that src is in path, force English for all tests
+try:
+    from src.i18n_manager import I18nManager
+    I18nManager('en')
+except ImportError:
+    pass
