@@ -710,15 +710,17 @@ class MainWindow:
 
     def on_clean_all_clicked(self, _btn: Gtk.Button) -> None:
         """Triggers both file scan/clean and RAM optimization."""
-        self.lbl_dash_clean_result.set_text(_("Temizlik başlatılıyor..."))
-        # Optimized: First boost RAM
-        ram_res = self.ram_booster.clean_ram()
-        # Then trigger generic file cleaning (requires user interaction currently in on_clean_clicked)
-        # For "all", we might want a non-interactive mode, but safety first.
-        # Let's just switch to file tab and start scan.
-        self.clean_notebook.set_current_page(1)
-        self.on_scan_clicked(None)
-        self.lbl_dash_clean_result.set_text(f"{_('RAM Boşaltıldı')}: {ram_res.get('freed_mb', 0):.1f} MB")
+        self.lbl_dash_clean_result.set_text(_("Genel temizlik başlatıldı..."))
+        
+        def _all_clean_thread():
+            # 1. Boost RAM (Silent)
+            self.ram_booster.clean_ram()
+            # 2. Trigger File Scan
+            GLib.idle_add(lambda: self.clean_notebook.set_current_page(1))
+            GLib.idle_add(self.on_scan_clicked, None)
+            GLib.idle_add(lambda: self.lbl_dash_clean_result.set_text(_("RAM boşaltıldı, dosya taraması başladı.")))
+        
+        threading.Thread(target=_all_clean_thread, daemon=True).start()
 
     def on_ram_scan_clicked(self, _btn: Gtk.Button) -> None:
         if self.is_ram_cleaning:
@@ -759,17 +761,27 @@ class MainWindow:
         threading.Thread(target=self._ram_clean_thread, args=(selected,), daemon=True).start()
 
     def _ram_clean_thread(self, selected: List[Dict[str, Any]]) -> None:
-        res = self.ram_booster.clean_ram(selected)
-        GLib.idle_add(self._on_ram_clean_done, res)
+        try:
+            res = self.ram_booster.clean_ram(selected)
+            GLib.idle_add(self._on_ram_clean_done, res)
+        except Exception as e:
+            logger.exception("RAM cleaning thread failed")
+            GLib.idle_add(self._on_ram_clean_done, {"success": False, "error": str(e)})
 
     def _on_ram_clean_done(self, res: Dict[str, Any]) -> None:
         self.is_ram_cleaning = False
         self.btn_ram_scan.set_sensitive(True)
+        self.btn_ram_clean.set_sensitive(False)  # Reset until next scan
+        
         if res.get("success"):
             freed = res.get("freed_mb", 0)
-            self.lbl_ram_result.set_text(f"{_('Başarılı')}: {freed:.1f} MB RAM {_('boşaltıldı')}.")
+            if freed > 0:
+                self.lbl_ram_result.set_text(f"{_('Başarılı')}: {freed:.1f} MB RAM {_('boşaltıldı')}.")
+            else:
+                self.lbl_ram_result.set_text(_("RAM zaten temiz veya boşaltılamadı."))
         else:
             self.lbl_ram_result.set_text(f"{_('Hata')}: {res.get('error', 'Bilinmeyen hata')}")
+        
         self.ram_list_store.clear()
 
     def on_ram_cell_toggled(self, renderer, path):

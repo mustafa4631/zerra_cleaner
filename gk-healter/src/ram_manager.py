@@ -66,21 +66,16 @@ class RAMManager:
             mem_before = psutil.virtual_memory()
             result["before_percent"] = mem_before.percent
             
-            # Güvenlik Check'i: Bellek doluluk oranı %20'nin altındaysa işlem yapma
-            if mem_before.percent < 20.0:
-                result["needed"] = False
-                result["success"] = True
-                result["after_percent"] = mem_before.percent
-                result["message"] = "Temizlik gerekmiyor"
-                return result
+            # Removed the 20% restriction to allow manual override.
+            # If user clicks the button, we perform the action regardless of current usage.
 
             # pkexec ile güvenli subprocess oluşturulması (önce veri kaybını önlemek için sync çalıştırılır)
             cmd = ["pkexec", "sh", "-c", f"sync && echo {level} > /proc/sys/vm/drop_caches"]
             
             logger.info("RAM önbellek temizliği başlatılıyor. Komut: %s", cmd)
             
-            # Kullanıcıdan root (Polkit) şifresi isteyeceği için timeout belirlemek iyi bir pratiktir (120 sn).
-            subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
+            # Subprocess without capture_output to avoid hangs with some pkexec agents.
+            subprocess.run(cmd, check=True, timeout=120)
             
             # Temizlik işlemi sonrasında belleğin durumu kontrol edilir
             mem_after = psutil.virtual_memory()
