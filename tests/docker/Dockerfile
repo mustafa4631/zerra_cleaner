@@ -19,9 +19,24 @@ RUN apt-get update \
 WORKDIR /workspace
 COPY . /workspace
 
-# install python requirements; tests expect pytest etc.
-RUN pip3 install --no-cache-dir -r requirements.txt \
-    && pip3 install --no-cache-dir pytest pytest-cov
+# allow skipping apt-get update when rebuilding frequently
+ARG SKIP_APT_UPDATE=false
+# install python requirements inside a virtual environment to avoid PEP 668 errors
+RUN if [ "$SKIP_APT_UPDATE" = "false" ]; then \
+        apt-get update && \
+        apt-get install -y --no-install-recommends python3-venv; \
+    else \
+        apt-get install -y --no-install-recommends python3-venv --no-upgrade; \
+    fi && \
+    python3 -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    pip install --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir pytest pytest-cov && \
+    rm -rf /var/lib/apt/lists/*
+
+# make the virtualenv the default python environment
+ENV PATH="/opt/venv/bin:$PATH"
 
 # default command lists available scenarios
 CMD ["bash","-c","echo 'Container ready; mount project and run \"bash tests/docker/create_scenarios.sh\" to populate test mess' && bash"]
