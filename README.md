@@ -179,7 +179,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup and contribution gu
 
 ## License
 
-This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the **GNU General Public License v3**. See the [LICENSE](LICENSE) file for details.
 
 ## Project Links
 

@@ -87,4 +87,4 @@ gk-healter/
 
 ## Lisans
 
-MIT lisansı altında katkılar kabul edilir. Katkı yaparak kodunuzun MIT lisansı ile dağıtılmasını kabul etmiş olursunuz.
+GPL-3.0 lisansı altında katkılar kabul edilir. Katkı yaparak kodunuzun GPL-3.0 lisansı ile dağıtılmasını kabul etmiş olursunuz.

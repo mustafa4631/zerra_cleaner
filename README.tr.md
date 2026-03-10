@@ -273,7 +273,7 @@ Geliştirme kurulumu ve katkı kuralları için [CONTRIBUTING.md](CONTRIBUTING.m
 
 ## Lisans
 
-Bu proje **MIT Lisansı** altında lisanslanmıştır. Ayrıntılar için [LICENSE](LICENSE) dosyasına bakınız.
+Bu proje **GNU Genel Kamu Lisansı v3 (GPL-3.0)** altında lisanslanmıştır. Ayrıntılar için [LICENSE](LICENSE) dosyasına bakınız.
 
 ---
 
