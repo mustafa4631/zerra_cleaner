@@ -9,7 +9,7 @@ This directory contains a minimal container setup to exercise the application in
 
 ## Usage
 
-Build the image from the project root:
+Build the image from the project root (using Pardus 25 base):
 
 ```sh
 cd /home/egehan/development/GK-Healter

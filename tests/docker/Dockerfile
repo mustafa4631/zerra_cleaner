@@ -1,7 +1,8 @@
-# Base image for running GK-Healter inside CI or local development
+# Base image for running GK-Healter inside CI or local development.
+# Using the official Pardus 25 (yirmibes) image as requested.
 # This container is intended to be discarded after tests complete.
 
-FROM ubuntu:24.04
+FROM pardus/yirmibes:latest
 
 ENV DEBIAN_FRONTEND=noninteractive
 
