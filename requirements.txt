@@ -1,2 +1,2 @@
 psutil
-PyGObject
+# PyGObject provided by system package (python3-gi) to avoid building from source
