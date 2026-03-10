@@ -9,20 +9,38 @@ This directory contains a minimal container setup to exercise the application in
 
 ## Usage
 
-Build the image from the project root (using Pardus 25 base):
+Build the image from the project root (using Pardus 25 base). Run this **before** launching a container, otherwise `docker run` will try to pull `gk-healter-test` from a registry and fail. You can override the base with the `etap` variant if needed:
 
 ```sh
 cd /home/egehan/development/GK-Healter
-docker build -t gk-healter-test -f tests/docker/Dockerfile .
-```
+# default uses pardus/yirmibes
+sudo docker build -t gk-healter-test -f tests/docker/Dockerfile .
 
-Run the container interactively, mount any additional volumes if needed:
+# or build against the etap flavor
+docker build --build-arg BASE_IMAGE=pardus/etap:latest \
+       -t gk-healter-test:etap \
+       -f tests/docker/Dockerfile .
+```
+(omit `sudo` once your user is in the `docker` group and you have re‑logged.)
+
+Run the container interactively, mount any additional volumes if needed.  
+
+> ⚠️ You must be root or belong to the `docker` group (log out / back in after adding yourself) to talk to the daemon. Add your user with `sudo usermod -aG docker $USER` if necessary.
 
 ```sh
-docker run --rm -it --privileged \
-    -v /dev:/dev \ # if hardware interaction ever required
+# as root
+sudo docker run --rm -it --privileged \
+    -v /dev:/dev \
     -v $(pwd):/workspace \
     gk-healter-test
+
+# or as a docker‑group member
+docker run --rm -it --privileged \
+    -v /dev:/dev \
+    -v $(pwd):/workspace \
+    gk-healter-test
+
+> **fish users:** replace `$(pwd)` with `(pwd)` when running commands interactively. keep comments on separate lines as shown above; fish treats `#` differently.
 ```
 
 Inside the container you can execute any scenario script:

@@ -2,7 +2,9 @@
 # Using the official Pardus 25 (yirmibes) image as requested.
 # This container is intended to be discarded after tests complete.
 
-FROM pardus/yirmibes:latest
+# allow switching between the main Pardus 25 base and the etap variant
+ARG BASE_IMAGE=pardus/yirmibes:latest
+FROM ${BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 
