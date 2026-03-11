@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-03-11T20:31:47.020053",
+  "tag": "pardus_repo_breakage",
+  "paths": {
+    "txt": "/workspace/artifacts/gk-healter-report-20260311-203147-pardus_repo_breakage.txt",
+    "html": "/workspace/artifacts/gk-healter-report-20260311-203147-pardus_repo_breakage.html",
+    "json": "/workspace/artifacts/gk-healter-report-20260311-203147-pardus_repo_breakage.json"
+  },
+  "summary": {
+    "critical": 4,
+    "high": 5,
+    "warning": 2,
+    "info": 1,
+    "total_issues": 12
+  },
+  "is_pardus": true,
+  "pretty_name": "Pardus GNU/Linux 25 (yirmibes)"
+}
