@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Docker-based Pardus 25 test harness** under `tests/docker/` with multiple corruption and
+  security misconfiguration scenarios (`low_bloat`, `medium_corruption`, `critical_failure`,
+  `security_misconfig`, `unattended_upgrades_disabled`, `suid_backdoor_simulation`,
+  `world_writable_storm`, `pardus_repo_breakage`, `pseudo_malware_persistence`).
+- **Headless reporting utility** (`tests/docker/run_report.py`) and helper scripts to run single
+  or all scenarios and export TXT/HTML/JSON reports plus machine-readable manifests.
+- **Evaluation document** `GKHealter_DockerSecurityEvaluation_2026-03-11.md` describing the
+  current Docker-based Pardus test results and overall security score.
+
 ## [0.1.6] — 2026-02-26
 
 ### Fixed

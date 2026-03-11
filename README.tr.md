@@ -238,6 +238,37 @@ Test altyapısı:
 - **Mocked I/O:** Tüm dosya sistemi ve subprocess testleri mock ile izole
 - **GitHub Actions CI:** flake8, AppStream doğrulama, çoklu Python sürümü (3.9–3.12)
 
+### Docker tabanlı Pardus 25 test ortamı
+
+Pardus üzerinde **bozulmuş / zaafiyetli sistem senaryolarını** güvenli bir şekilde göstermek ve
+internet bağlantısı zayıf ortamlarda offline’a yakın testler yapmak için özel bir Docker test
+ortamı bulunmaktadır:
+
+- Konum: `tests/docker/`
+- Taban imaj: `pardus/yirmibes:latest` (veya `pardus/etap`)
+- Çıktılar: TXT/HTML/JSON raporları ve `*.manifest.json` özetleri `artifacts/` altında tutulur.
+
+Önerilen akış:
+
+```bash
+# indirme yapılabilen bir makinede imajı bir kez oluşturun
+docker build -t gk-healter-test:pardus25 -f tests/docker/Dockerfile .
+docker save gk-healter-test:pardus25 -o gk-healter-test_pardus25.tar
+
+# .tar dosyasını hedef Pardus makineye (USB / yerel ağ) taşıyın
+docker load -i gk-healter-test_pardus25.tar
+docker run --rm -it --privileged -v /dev:/dev -v "$(pwd)":/workspace gk-healter-test:pardus25
+
+# konteyner içinde tüm senaryoları çalıştırın
+bash tests/docker/run_all_scenarios.sh
+ls -la /workspace/artifacts
+```
+
+Her senaryo (baseline, disk şişmesi, APT bozulması, SUID backdoor, depo bozulması, psödo-malware
+kalıcılığı vb.) için ayrı `*-<tag>.txt/html/json/manifest.json` çıktıları üretilir. Tam bir koşunun
+insan tarafından okunabilir özeti `GKHealter_DockerSecurityEvaluation_2026-03-11.md` dosyasında
+bulunmaktadır.
+
 ---
 
 ## Güvenlik Yaklaşımı

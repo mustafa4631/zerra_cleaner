@@ -175,6 +175,35 @@ pytest -v --cov=src --cov-report=term-missing
 
 **298 tests** covering 17 modules across 18 test files.
 
+### Docker-based Pardus 25 test environment
+
+For competition demos and offline verification on **vulnerable / corrupted** Pardus systems, there
+is a dedicated Docker-based test harness:
+
+- Location: `tests/docker/`
+- Base image: `pardus/yirmibes:latest` (or `pardus/etap`)
+- Artifacts: TXT/HTML/JSON reports + `*.manifest.json` stored under `artifacts/`
+
+Typical workflow:
+
+```bash
+# build once on a connected machine
+docker build -t gk-healter-test:pardus25 -f tests/docker/Dockerfile .
+docker save gk-healter-test:pardus25 -o gk-healter-test_pardus25.tar
+
+# transfer tar, then on the (offline) Pardus box
+docker load -i gk-healter-test_pardus25.tar
+docker run --rm -it --privileged -v /dev:/dev -v "$(pwd)":/workspace gk-healter-test:pardus25
+
+# inside the container
+bash tests/docker/run_all_scenarios.sh
+ls -la /workspace/artifacts
+```
+
+Each scenario (baseline, bloat, corruption, SUID backdoor, repo breakage, pseudo-malware, etc.)
+produces its own `*-<tag>.txt/html/json/manifest.json` bundle. A consolidated human-readable
+summary of one full run lives at `GKHealter_DockerSecurityEvaluation_2026-03-11.md`.
+
 ## Packaging
 
 | Format | File | Location |
