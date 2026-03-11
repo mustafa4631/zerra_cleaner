@@ -12,8 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        python3 python3-pip python3-gi gir1.2-gtk-3.0 \
-       # install venv early so later builds don't need it
-       python3.13-venv \
+       python3-venv \
        git procps jq ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +25,7 @@ ARG SKIP_APT_UPDATE=false
 # optionally skip apt update/install when rebuilding frequently
 RUN if [ "$SKIP_APT_UPDATE" = "false" ]; then \
         apt-get update && \
-        apt-get install -y --no-install-recommends python3.13-venv; \
+        apt-get install -y --no-install-recommends python3-venv; \
     else \
         echo "skipping apt update and venv install"; \
     fi && \

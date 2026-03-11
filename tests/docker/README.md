@@ -6,6 +6,8 @@ This directory contains a minimal container setup to exercise the application in
 
 - `Dockerfile` – base image with Python, GTK, and dependencies; copies the repository into `/workspace`.
 - `scenarios/` – helper scripts that deliberately corrupt the filesystem at varying severity levels (low, medium, critical).
+- `run_report.py` – GUI açmadan Pardus doğrulama + güvenlik denetimi raporu üretir (TXT/HTML/JSON).
+- `run_scenario_and_report.sh` – senaryoyu çalıştırır ve raporu `artifacts/` altına yazar.
 
 ## Usage
 
@@ -22,6 +24,27 @@ docker build --build-arg BASE_IMAGE=pardus/etap:latest \
        -f tests/docker/Dockerfile .
 ```
 (omit `sudo` once your user is in the `docker` group and you have re‑logged.)
+
+### Low-download / Offline workflow (recommended for “internet az” ortamlar)
+
+Amaç: bağımlılıkları **bir kez** indirip image’i **tar olarak taşıyarak** hedef Pardus sistemde `docker load` ile tamamen offline çalıştırmak.
+
+Connected (indirme yapılabilen) bir makinede:
+
+```sh
+cd /home/egehan/development/GK-Healter
+docker build -t gk-healter-test:pardus25 -f tests/docker/Dockerfile .
+docker save gk-healter-test:pardus25 -o gk-healter-test_pardus25.tar
+```
+
+Sonra `gk-healter-test_pardus25.tar` dosyasını hedefe (USB/yerel ağ) taşıyın.
+
+Hedef (internet yok / kısıtlı) Pardus makinede:
+
+```sh
+docker load -i gk-healter-test_pardus25.tar
+docker run --rm -it --privileged -v /dev:/dev -v $(pwd):/workspace gk-healter-test:pardus25
+```
 
 Run the container interactively, mount any additional volumes if needed.  
 
@@ -48,6 +71,23 @@ Inside the container you can execute any scenario script:
 ```sh
 bash tests/docker/scenarios/low_bloat.sh
 python3 -m pytest tests   # run unit tests against the broken state
+```
+
+Rapor üretimi (GUI açmadan, offline):
+
+```sh
+# “önce” raporu
+bash tests/docker/run_scenario_and_report.sh none pre
+
+# senaryo çalıştır + “sonra” raporu
+bash tests/docker/run_scenario_and_report.sh tests/docker/scenarios/low_bloat.sh low_bloat
+ls -la /workspace/artifacts
+```
+
+Güvenlik denetimini görünür kılmak için (zaafiyet simülasyonu):
+
+```sh
+bash tests/docker/run_scenario_and_report.sh tests/docker/scenarios/security_misconfig.sh security_misconfig
 ```
 
 Each scenario script prints a confirmation message when the junk has been created. After running GK‑Healter, re‑run the one‑liner validations listed in the project README or test files to ensure the cleaners worked.
