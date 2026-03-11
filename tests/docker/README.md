@@ -8,6 +8,7 @@ This directory contains a minimal container setup to exercise the application in
 - `scenarios/` – helper scripts that deliberately corrupt the filesystem at varying severity levels (low, medium, critical).
 - `run_report.py` – GUI açmadan Pardus doğrulama + güvenlik denetimi raporu üretir (TXT/HTML/JSON).
 - `run_scenario_and_report.sh` – senaryoyu çalıştırır ve raporu `artifacts/` altına yazar.
+- `run_all_scenarios.sh` – tüm senaryoları sırayla çalıştırır, her biri için ayrı rapor üretir.
 
 ## Usage
 
@@ -89,6 +90,15 @@ Güvenlik denetimini görünür kılmak için (zaafiyet simülasyonu):
 ```sh
 bash tests/docker/run_scenario_and_report.sh tests/docker/scenarios/security_misconfig.sh security_misconfig
 ```
+
+Tüm senaryoları tek seferde çalıştırmak için:
+
+```sh
+bash tests/docker/run_all_scenarios.sh
+ls -la /workspace/artifacts
+```
+
+Her senaryo için ayrı `*-<tag>.txt/html/json/manifest.json` dosyaları oluşur.
 
 Each scenario script prints a confirmation message when the junk has been created. After running GK‑Healter, re‑run the one‑liner validations listed in the project README or test files to ensure the cleaners worked.
 
