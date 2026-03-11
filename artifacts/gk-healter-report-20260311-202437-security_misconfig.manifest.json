@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-03-11T20:24:37.364925",
+  "tag": "security_misconfig",
+  "paths": {
+    "txt": "/workspace/artifacts/gk-healter-report-20260311-202437-security_misconfig.txt",
+    "html": "/workspace/artifacts/gk-healter-report-20260311-202437-security_misconfig.html",
+    "json": "/workspace/artifacts/gk-healter-report-20260311-202437-security_misconfig.json"
+  },
+  "summary": {
+    "critical": 3,
+    "high": 2,
+    "warning": 1,
+    "info": 1,
+    "total_issues": 7
+  },
+  "is_pardus": true,
+  "pretty_name": "Pardus GNU/Linux 25 (yirmibes)"
+}

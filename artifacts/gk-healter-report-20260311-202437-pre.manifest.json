@@ -1,0 +1,18 @@
+{
+  "generated_at": "2026-03-11T20:24:37.052924",
+  "tag": "pre",
+  "paths": {
+    "txt": "/workspace/artifacts/gk-healter-report-20260311-202437-pre.txt",
+    "html": "/workspace/artifacts/gk-healter-report-20260311-202437-pre.html",
+    "json": "/workspace/artifacts/gk-healter-report-20260311-202437-pre.json"
+  },
+  "summary": {
+    "critical": 0,
+    "high": 1,
+    "warning": 0,
+    "info": 0,
+    "total_issues": 1
+  },
+  "is_pardus": true,
+  "pretty_name": "Pardus GNU/Linux 25 (yirmibes)"
+}
