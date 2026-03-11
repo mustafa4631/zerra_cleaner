@@ -90,3 +90,6 @@ build-dir/
 _build/
 build/
 bin/gk-healter
+
+# Large Docker test images
+gk-healter-test_*.tar
